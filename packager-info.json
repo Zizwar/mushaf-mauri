@@ -1,0 +1,10 @@
+{
+  "devToolsPort": 19002,
+  "expoServerPort": 19000,
+  "packagerPort": 19001,
+  "packagerPid": 11858,
+  "expoServerNgrokUrl": "https://vh-2fn.anonymous.ayatino.exp.direct",
+  "packagerNgrokUrl": "https://packager.vh-2fn.anonymous.ayatino.exp.direct",
+  "ngrokPid": 11889,
+  "webpackServerPort": null
+}
