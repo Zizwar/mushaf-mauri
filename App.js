@@ -2,10 +2,12 @@
 console.disableYellowBox = true;
 
 //
-import Expo, { Asset,AppLoading } from "expo";
-import * as Font from 'expo-font'
 import React, { Component } from "react";
 import { AsyncStorage } from "react-native";
+import Expo, { Asset, AppLoading } from "expo";
+import * as Font from "expo-font";
+//import { Ionicons } from '@expo/vector-icons';
+//import Ionicons from "react-native-vector-icons/Ionicons";
 import { StyleProvider } from "native-base";
 //
 import { createStore, applyMiddleware } from "redux";
@@ -16,7 +18,6 @@ import Root from "./Root";
 import getTheme from "./theme/components";
 import variables from "./theme/variables/commonColor";
 
-
 import configureStore from "./store";
 const { persistor, store } = configureStore();
 export default class App extends Component {
@@ -26,7 +27,7 @@ export default class App extends Component {
       isReady: false,
       storeCreated: false,
       store: null,
-      nightly:false
+      nightly: false,
     };
   }
 
@@ -35,17 +36,20 @@ export default class App extends Component {
   }
   async loadDadaApp() {
     try {
-     const value = await AsyncStorage.getItem("isNightly");
-    //  if(value === "ok")variablesZ = variablesNight
-  //    const nightly = value == "ok" ? true : false;
+      const value = await AsyncStorage.getItem("isNightly");
+      //  if(value === "ok")variablesZ = variablesNight
+      //    const nightly = value == "ok" ? true : false;
 
       await Font.loadAsync({
-       // Roboto: require("native-base/Fonts/Roboto.ttf"),
-       // Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
-	    Roboto: require("./assets/fonts/pnu.ttf"),
+        //  Ionicons,
+        // Roboto: require("native-base/Fonts/Roboto.ttf"),
+        // Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
+        Roboto: require("./assets/fonts/pnu.ttf"),
         Roboto_medium: require("./assets/fonts/pnu-med.ttf"),
-       //Ionicons: require('@expo/vector-icons'),
-       Ionicons: require("native-base/Fonts/Ionicons.ttf")
+        Ionicons: require("native-base/Fonts/Ionicons.ttf")
+        //Ionicons: require("./assets/fonts/Ionicons.ttf"),
+        //FontAwesome: require("./assets/fonts/FontAwesome.ttf"),
+        //Ionicons: require('@expo/vector-icons'),
       });
 
       this.setState({ isReady: true });
@@ -60,16 +64,16 @@ export default class App extends Component {
       return <AppLoading />;
     }
     // if (!this.state.storeCreated) return null;
-  //  return (
-//   
+    //  return (
+    //
     return (
-  <StyleProvider style={getTheme(variables)}>
+      <StyleProvider style={getTheme(variables)}>
         <Provider store={store}>
           <PersistGate loading={null} persistor={persistor}>
             <Root />
           </PersistGate>
         </Provider>
-</StyleProvider>
+      </StyleProvider>
     );
   }
 }

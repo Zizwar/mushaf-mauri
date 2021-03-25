@@ -36,7 +36,7 @@ export const SET_TARAJEM_DB = "wino/set/SET_TARAJEM_DB";
 
 const initialState = {
   tmp: null,
-  theme: { backgroundColor: "#fffcd9", color: "#000" },
+  theme: { backgroundColor: "#fff", color: "#000" },
   tarajemDB: [],
   records: [],
   first: true,

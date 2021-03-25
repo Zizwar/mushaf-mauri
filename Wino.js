@@ -104,10 +104,11 @@ const suraAya2id = ({ sura, aya }) => `s${sura}a${aya}z`;
 //
 const THEMES = [
   { backgroundColor: "#ccc", color: "#000", night: true }, //night
-  { backgroundColor: "#fffcd9", color: "#000" }, //sandart
+    { backgroundColor: "#fff", color: "#000" },//sandart
+  { backgroundColor: "#fffcd9", color: "#000" }, 
   { backgroundColor: "#e8f7fe", color: "#000" },
 
-  { backgroundColor: "#fff", color: "#000" },
+
   { backgroundColor: "#e7f7ec", color: "#000" },
 ];
 
@@ -533,6 +534,8 @@ default:
     this.setState({ visibleModalAuthor });
   };
   toglModalMenu = (togl) => {
+     this.props.navigation.toggleDrawer();
+     return
     //const {visibleModalSearch} = this.state
     let visibleModalMenu = !this.state.visibleModalMenu;
     if (togl == "close") visibleModalMenu = false;

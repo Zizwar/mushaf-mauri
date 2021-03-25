@@ -195,13 +195,6 @@ export default {
     "unsub_twitter": "To unsubscribe from Ayat App on Twitter please send us your twitter account url",
     "mosshaf_type": "Moshaf",
     "mosshaf_hafs": "Hafs",
-		"mosshaf_hafsMadina": "Hafs Madina",
-		
-		"mosshaf_hafsDorar": "Al Doare",
-		"mosshaf_hafsShohbah": "Shoabah",
-		"mosshaf_hafsAlsose": "Al Sose",
-
-    "mosshaf_tajweed": "Hafs - Tajweed",
     "mosshaf_warsh": "Warsh",
     "view_type": "Interface",
     "view_mobile": "Mobile Interface",

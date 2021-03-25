@@ -3,8 +3,8 @@ image:
 ports:
   - port: 19000-19002
 tasks:
-  - before: npm install
-    command: expo install expo-font && npm t
+  - before: yarn install
+    command: yarn t
 vscode:
   extensions:
     - esbenp.prettier-vscode@5.1.3:t532ajsImUSrA9N8Bd7jQw==

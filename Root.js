@@ -7,7 +7,7 @@ import {
   createAppContainer,
 } from "react-navigation";
 
-import Menu from "./src/screens/oldMenu";
+import Menu from "./src/screens/Menu";
 import Wino from "./Wino";
 import Author from "./src/screens/Author";
 import Reciting from "./src/screens/Reciting";
@@ -70,7 +70,7 @@ const AppNavigator = createStackNavigator(
      Kids:{screen:Kids},
   },
   {
-    initialRouteName: "Wino",
+    initialRouteName: "Drawer",
     headerMode: "none",
     mode: "modal",
   }

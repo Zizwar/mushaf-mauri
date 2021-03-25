@@ -21,7 +21,7 @@
     "expo-asset": "~8.1.5",
     "expo-av": "~8.1.0",
     "expo-blur": "~8.1.0",
-    "expo-cli": "3.23.1",
+    "expo-cli": "^4.3.2",
     "expo-file-system": "~8.1.0",
     "expo-font": "~8.1.0",
     "expo-gl": "^8.1.0",
