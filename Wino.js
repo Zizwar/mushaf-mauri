@@ -19,7 +19,7 @@ import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; //wino
 
 import { Audio } from "expo-av";
 import { isRTL } from "expo-localization";
-
+ import { Ionicons } from '@expo/vector-icons';
 import {
   Toast,
   Button,
@@ -34,6 +34,7 @@ import {
 } from "native-base";
 import { connect } from "react-redux";
 
+import { Popover } from "react-native-modal-popover";
 //import Icon from "react-native-vector-icons/Ionicons";
 import Swiper from "./src/node/Swipino";
 import * as langs from "./i18n";
@@ -79,8 +80,10 @@ import Tafsir from "./src/screens/Tafsir";
 import Author from "./src/screens/Author";
 import First from "./src/screens/First";
 import Menu from "./src/screens/Menu";
-import { Popover } from "react-native-modal-popover";
 
+//
+import { requirePages} from "./src/data/"
+//
 const Toasti = (text) =>
   Toast.show({
     text,
@@ -91,7 +94,7 @@ const { width, height } = Dimensions.get("window");
 
 const HEIGH_PAGE = 707;
 const WIDTH_PAGE = 456;
-const MARGIN_PAGE = 54;
+const MARGIN_PAGE = 5;
 
 const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
 //
@@ -610,7 +613,8 @@ default:
       getNameBySura({ sura, lang })
     );
 
-    const source = {
+    const source =  requirePages[id-1]
+    /* {
       uri: getImagePageUri({
         quira, //this.quraa,
         id,
@@ -751,7 +755,7 @@ default:
                   style={[
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
-                      ? { backgroundColor, opacity: 0.1 } //styles.onPressAya
+                      ?styles.onPressAya //{ backgroundColor, opacity: 0.1 } 
                       :  styles.onUnPressAya,//{ opacity: 0.0 }, 
                     !isRTL
                       ? {
@@ -1227,7 +1231,7 @@ default:
         style={{ position: "absolute", left: 2, bottom: 1 }}
         onPress={this.toglModalMenu}
       >
-        <Icon style={{ color }} size={30} name="ios-settings" />
+        <Icon style={{ color }} size={30} name="md-notifications-circle" />
       </Button>
     );
     const ButtonOptionRtl = (
@@ -1417,6 +1421,9 @@ default:
                   style={styles.buttonHeader}
                   onPress={() => navigation.navigate("SearchSmart")}
                 >
+                   
+                  <Ionicons color="green" size={42} name="ios-search" />  
+                  
                   <Icon style={{ color }} size={30} name="ios-search" />
                 </Button>
                 <Button

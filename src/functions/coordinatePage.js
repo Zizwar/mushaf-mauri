@@ -5,13 +5,13 @@ let { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
 //Create layer  quran mauri
 const DEVICE_WIDTH_HEIGHT = { width: WIDTH, height: HEIGHT }; //change to dynamic dimension
 
-const ORIGINAL_WIDTH_HEIGHT = { width: 456, height: 1273 }; //no change /1273
+const ORIGINAL_WIDTH_HEIGHT = { width: 456, height: 825 }; //no change /1273
 const WIDTH_SCREEN_RENDER = 456;
 const NEXT_PAGE_LEFT = 0;
 const NEXT_PAGE_TOP = 985.8; // ORIGINAL_WIDTH_HEIGHT.height;
 const MARGIN_LEFT_AYA = 10;
 const MARGIN_TOP = 20;
-const MARGIN_HEIGHT_AYA = -5;
+const MARGIN_HEIGHT_AYA = -1;
 
 const NUMBER_LINE = 15;
 const HEIGHT_LINE =
@@ -25,7 +25,7 @@ export const coordinatePage = (page, mosshaf) => {
   const allPosition = [];
   //===>
   const [nextPageSura = null, nextAya] = coordinateMuhammadi[page + 1]
-    ? coordinateMuhammadi[page][0]
+    ? coordinateMuhammadi[page+1][0]
     : [];
 
   const coordinatePage = nextPageSura
@@ -121,7 +121,7 @@ export const coordinatePage = (page, mosshaf) => {
 //
 const renderLineFahres = ({ left, line, width, wino }) => {
   //===>
-  let top = +(HEIGHT_LINE * line).toFixed(2);
+  let top = +(HEIGHT_LINE * line).toFixed(2)//+200;
   let height = +HEIGHT_LINE.toFixed(2);
   left = +left.toFixed(2);
   width = +width.toFixed(2);
