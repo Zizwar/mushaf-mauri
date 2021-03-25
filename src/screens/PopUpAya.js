@@ -6,7 +6,7 @@ import {
   Title,
   Content,
   Button,
-  Icon,
+  //Icon,
   ListItem,
   Text,
   Left,
@@ -16,7 +16,7 @@ import {
   Separator
 } from "native-base";
 
-
+import { Ionicons as Icon } from "@expo/vector-icons";
 export default class PopUpAya extends Component {
   constructor(props) {
     super(props);

@@ -1,5 +1,5 @@
 {
-  "name": "mushaf-bidi",
+  "name": "mushaf-mauri",
   "main": "node_modules/expo/AppEntry.js",
   "private": true,
   "scripts": {
@@ -7,6 +7,7 @@
     "android": "expo start --android",
     "t": "expo start --tunnel",
     "apk": "expo build:android",
+    "stor": "expo upload:android",
     "share": "expo publish",
     "eject": "expo eject"
   },

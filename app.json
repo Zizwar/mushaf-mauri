@@ -21,7 +21,7 @@
 
     "assetBundlePatterns": [   
       "assets/*.*",
-      "assets/images/*.png",
+      "assets/pages/*.png",
       "assets/db/*.*"
     ],
     "ios": {
@@ -29,7 +29,8 @@
       "bundleIdentifier": "ma.com.mushaf.mauri"
     },
     "android": {
-      "package": "ma.com.mushaf.mauri"
+      "package": "ma.com.mushaf.mauri",
+      "versionCode":1
     },
     "packagerOpts": {
       "sourceExts": ["ts", "tsx", "js"],

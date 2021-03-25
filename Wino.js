@@ -19,7 +19,7 @@ import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; //wino
 
 import { Audio } from "expo-av";
 import { isRTL } from "expo-localization";
- import { Ionicons } from '@expo/vector-icons';
+import { Ionicons as Icon } from "@expo/vector-icons";
 import {
   Toast,
   Button,
@@ -30,7 +30,7 @@ import {
   Content,
   Item,
   Left,
-  Icon,
+  // Icon,
 } from "native-base";
 import { connect } from "react-redux";
 
@@ -82,7 +82,7 @@ import First from "./src/screens/First";
 import Menu from "./src/screens/Menu";
 
 //
-import { requirePages} from "./src/data/"
+import { requirePages } from "./src/data/";
 //
 const Toasti = (text) =>
   Toast.show({
@@ -107,10 +107,9 @@ const suraAya2id = ({ sura, aya }) => `s${sura}a${aya}z`;
 //
 const THEMES = [
   { backgroundColor: "#ccc", color: "#000", night: true }, //night
-    { backgroundColor: "#fff", color: "#000" },//sandart
-  { backgroundColor: "#fffcd9", color: "#000" }, 
+  { backgroundColor: "#fff", color: "#000" }, //sandart
+  { backgroundColor: "#fffcd9", color: "#000" },
   { backgroundColor: "#e8f7fe", color: "#000" },
-
 
   { backgroundColor: "#e7f7ec", color: "#000" },
 ];
@@ -321,15 +320,12 @@ class Wino extends Component {
     this.setState({ repeat, isRepeat });
   };
   isExistPage = (quira) => {
-    const {
-      downloadsWarsh,
-    } = this.props;
-
+    const { downloadsWarsh } = this.props;
 
     switch (quira) {
       case "warsh":
         return downloadsWarsh;
-default:
+      default:
         return 0;
     }
   };
@@ -537,8 +533,8 @@ default:
     this.setState({ visibleModalAuthor });
   };
   toglModalMenu = (togl) => {
-     this.props.navigation.toggleDrawer();
-     return
+    this.props.navigation.toggleDrawer();
+    return;
     //const {visibleModalSearch} = this.state
     let visibleModalMenu = !this.state.visibleModalMenu;
     if (togl == "close") visibleModalMenu = false;
@@ -613,7 +609,7 @@ default:
       getNameBySura({ sura, lang })
     );
 
-    const source =  requirePages[id-1]
+    const source = requirePages[id - 1];
     /* {
       uri: getImagePageUri({
         quira, //this.quraa,
@@ -755,8 +751,8 @@ default:
                   style={[
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
-                      ?styles.onPressAya //{ backgroundColor, opacity: 0.1 } 
-                      :  styles.onUnPressAya,//{ opacity: 0.0 }, 
+                      ? styles.onPressAya //{ backgroundColor, opacity: 0.1 } //
+                      : { opacity: 0.0 }, //styles.onUnPressAya,
                     !isRTL
                       ? {
                           height,
@@ -1085,7 +1081,6 @@ default:
         */
 
     const changeColor = (index) => {
- 
       if (index) {
         setTheme(THEMES[index - 1]);
         return;
@@ -1421,9 +1416,6 @@ default:
                   style={styles.buttonHeader}
                   onPress={() => navigation.navigate("SearchSmart")}
                 >
-                   
-                  <Ionicons color="green" size={42} name="ios-search" />  
-                  
                   <Icon style={{ color }} size={30} name="ios-search" />
                 </Button>
                 <Button
@@ -1441,7 +1433,6 @@ default:
                   transparent
                   style={styles.buttonHeader}
                   onPress={(_) => {
-                
                     const color = !night ? THEMES[0] : THEMES[1];
                     this.theme = !night ? 0 : 1;
                     setTheme(color);

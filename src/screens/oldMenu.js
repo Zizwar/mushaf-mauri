@@ -18,9 +18,10 @@ import {
   Badge,
   View,
   Button,
-  Icon,
+ // Icon,
   Body
 } from "native-base";
+import { Ionicons as Icon } from "@expo/vector-icons";
 import { connect } from "react-redux";
 import * as lang from "../../i18n";
 
