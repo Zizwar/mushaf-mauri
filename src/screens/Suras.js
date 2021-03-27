@@ -1,20 +1,15 @@
 import React, { Component } from "react";
 import {
   Container,
-  Header,
-  Title,
   Content,
-  Button,
-  Icon,
   List,
   ListItem,
   Text,
-  Left,
-  Right,
   Body,
 } from "native-base";
 import { isRTL } from "expo-localization";
 
+import { Icon } from "../component";
 import { allSuwar, getAllAyaSuraBySura, getJuzBySuraAya,getHizbBySuraAya,getPageBySuraAya } from "../functions";
 import { connect } from "react-redux";
 import { setExactAya } from "../../reducer";
@@ -44,7 +39,6 @@ class Suras extends Component {
   render() {
     const {
       theme: { backgroundColor, color },
-      navigation,
       lang,
     } = this.props;
     return (

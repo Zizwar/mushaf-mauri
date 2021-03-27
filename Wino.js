@@ -19,7 +19,7 @@ import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; //wino
 
 import { Audio } from "expo-av";
 import { isRTL } from "expo-localization";
-import { Ionicons as Icon } from "@expo/vector-icons";
+
 import {
   Toast,
   Button,
@@ -36,6 +36,7 @@ import { connect } from "react-redux";
 
 import { Popover } from "react-native-modal-popover";
 //import Icon from "react-native-vector-icons/Ionicons";
+import { Icon } from "./src/component";
 import Swiper from "./src/node/Swipino";
 import * as langs from "./i18n";
 import {

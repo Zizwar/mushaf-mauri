@@ -9,15 +9,21 @@ import {
   View,
   Thumbnail,
   ListItem,
-  Icon,
+  
   Right,
   Body,
   Header,
   H3,
   Col,
 } from "native-base";
+
 import { isRTL } from "expo-localization";
 
+import { Ionicons } from "@expo/vector-icons";
+
+export const Icon = ({ name, size = 32, color = "#000", style=[] }) => 
+   <Ionicons name={name} size={size} color={style.color || color} />;
+   
 export const ScreenAya = ({
   onpress,
   aya,

@@ -10,16 +10,14 @@ import {
   Card,
   Left,
   Right,
-  Icon,
   Text,
   View,
 } from "native-base";
 
 import HTMLView from "react-native-htmlview";
 import SimplePicker from "react-native-simple-picker";
-
+import { connect } from "react-redux";
 import {
-  getAyatBySuraAya,
   fetchText,
   nextAya,
   prevAya,
@@ -29,7 +27,7 @@ import {
 } from "../functions";
 import { getTafsirUri } from "../api";
 //import styles from "./styles";
-import { connect } from "react-redux";
+
 import { setExactAya, setAuthor, reRender } from "../../reducer";
 //
 import { listAuthorTafsir } from "../data";
@@ -37,6 +35,8 @@ import * as lang from "../../i18n";
 
 import { Headerino } from "../component";
 import { isRTL } from "expo-localization";
+
+import { Icon } from "../component";
 //
 class Tafsir extends Component {
   constructor(props) {
@@ -71,9 +71,11 @@ class Tafsir extends Component {
   async componentDidMount() {
     this.options = this.listAuthorTafsir.map((author) => author.id);
     this.labels = this.listAuthorTafsir.map((author) => author.name);
-    const {wino:{sura=1,aya=1}} = this.props;
-   // console.log("star porops aya =>",{aya,sura})
-    this.setState({aya,sura})
+    const {
+      wino: { sura = 1, aya = 1 },
+    } = this.props;
+    // console.log("star porops aya =>",{aya,sura})
+    this.setState({ aya, sura });
 
     await this.intialDBAuthor();
   }
@@ -97,11 +99,11 @@ class Tafsir extends Component {
     const { author } = this.props;
 
     const query = `SELECT * FROM ${author} WHERE sura=${sura} and aya=${aya}`;
- //   console.log({ query });
+    //   console.log({ query });
     if (this.dbs.ping) {
       try {
         await this.dbs.execSql(query).then((_array) => {
-       //   console.log("~~THIS is DB Author ", JSON.stringify(_array).substr(0,20));
+          //   console.log("~~THIS is DB Author ", JSON.stringify(_array).substr(0,20));
           if (!_array) return;
           const { text, id, sura, aya } = _array[0];
           if (text)
@@ -120,20 +122,18 @@ class Tafsir extends Component {
 
       const url = getTafsirUri({ sura, aya, author });
       fetchText(url).then((text) => {
-    //    console.log("~~THIS HTTPS", { text });
+        //    console.log("~~THIS HTTPS", { text });
         this.setState({
           text,
           sura,
           aya,
-          
-        }).catch((err)=>{
-             this.setState({
-          text:"",
-          sura,
-          aya,
-          
-        })
-            alert(JSON.stringify(err))
+        }).catch((err) => {
+          this.setState({
+            text: "",
+            sura,
+            aya,
+          });
+          alert(JSON.stringify(err));
         });
       });
     }
@@ -149,7 +149,6 @@ class Tafsir extends Component {
   changeAuthor = async (id) => {
     const { setAuthor } = this.props;
     setAuthor(id);
-    const author = this.lang[`tafsir_${id}`];
     await this.intialDBAuthor();
   };
   togl = () => {

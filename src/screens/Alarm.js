@@ -1,13 +1,11 @@
 import React, { Component } from "react";
-import { ListView, Image } from "react-native";
+import { ListView } from "react-native";
 import {
   Container,
-  View,
   Header,
   Title,
   Content,
   Button,
-  Icon,
   List,
   ListItem,
   Text,
@@ -17,24 +15,25 @@ import {
   Toast,
   Body,
   Switch,
-  H3
+  H3,
 } from "native-base";
 import DateTimePicker from "react-native-modal-datetime-picker";
 import { Constants, Notifications, Permissions } from "expo";
 import { connect } from "react-redux";
 import ActionButton from "react-native-action-button";
 
-import { setExactAya, setAlarm, setPlayer } from "../../reducer";
+import { Icon } from "../component";
+import { setAlarm } from "../../reducer";
 
 import * as lang from "../../i18n";
 
 import AddNote from "../component/addNote";
 
-const toasti = text =>
+const toasti = (text) =>
   Toast.show({
     text,
     type: "success",
-    duration: 3000
+    duration: 3000,
   });
 class Alarm extends Component {
   constructor(props) {
@@ -45,7 +44,7 @@ class Alarm extends Component {
       date: null,
       tomorrow: null,
       listViewData: [],
-      visibleAddNote: false
+      visibleAddNote: false,
     };
     this.lang = lang[this.props.lang];
     this.ds = new ListView.DataSource({ rowHasChanged: (r1, r2) => r1 !== r2 });
@@ -53,7 +52,7 @@ class Alarm extends Component {
   //componentWillMount() {}
   _showDateTimePicker = () => this.setState({ isDateTimePickerVisible: true });
   _hideDateTimePicker = () => this.setState({ isDateTimePickerVisible: false });
-  _handleDatePicked = date_ => {
+  _handleDatePicked = (date_) => {
     console.log("A date has been picked: ", date_);
     const date = new Date(date_);
     const hh = date.getHours();
@@ -64,7 +63,7 @@ class Alarm extends Component {
   };
   componentDidMount() {
     this.setState({
-      listViewData: this.props.alarm
+      listViewData: this.props.alarm,
     });
     this.permissionsAndListener();
   }
@@ -75,12 +74,12 @@ class Alarm extends Component {
     this.setState({ listViewData: newData });
     this.props.setAlarm(newData);
   };
-  goBack = arg => {
+  goBack = () => {
     if (this.props.togl) this.props.togl("close");
     else this.props.navigation.goBack();
     if (this.props.handleMenu) this.props.handleMenu("open");
   };
-  returnDateNotif = date_ => {
+  returnDateNotif = (date_) => {
     const date = new Date(date_);
     const hh = date.getHours();
     const mm = date.getMinutes();
@@ -100,8 +99,6 @@ class Alarm extends Component {
     if (tomorrow) this.setState({ time, tomorrow });
   };
   notifer() {
-    //   Keyboard.dismiss();
-    const sound = "http://quran.ksu.edu.sa/ayat/mp3/Hudhaify_64kbps/001001.mp3"; //device.platform == 'Android' ? 'file
     const localNotification = {
       title: "Mauri",
       body: "new version !",
@@ -112,11 +109,11 @@ class Alarm extends Component {
       priority: "high", // (optional) (min | low | high | max)
       vibrate: [0, 100],
       link: "mushaf.me",
-      repeat: "no-repeat"
+      repeat: "no-repeat",
     };
 
     const schedulingOptions = {
-      time: new Date().getTime() + 1000 // Number(e.nativeEvent.text)
+      time: new Date().getTime() + 1000, // Number(e.nativeEvent.text)
     };
 
     // Notifications show only when app is not active.
@@ -159,29 +156,28 @@ class Alarm extends Component {
         <Content>
           <AddNote
             show={this.state.visibleAddNote}
-            note={note => {
+            note={(note) => {
               this.setState({ visibleAddNote: false });
-              toasti(this.lang["mozaker_msg"]+": " + note);
+              toasti(this.lang["mozaker_msg"] + ": " + note);
               //  this.addNote(note);
 
               const listViewData = [
                 ...this.state.listViewData,
-                { note, time: this.state.time }
+                { note, time: this.state.time },
               ];
 
               this.setState({
-                listViewData
+                listViewData,
               });
               this.props.setAlarm(listViewData);
             }}
-            cancel={_ => this.setState({ visibleAddNote: false })}
+            cancel={(_) => this.setState({ visibleAddNote: false })}
           />
 
           <List
             dataSource={this.ds.cloneWithRows(this.state.listViewData)}
             // dataArray={datas}
-            renderRow={data => (
-              
+            renderRow={(data) => (
               <ListItem
                 onPress={() => {
                   //this.goBack();
@@ -191,26 +187,26 @@ class Alarm extends Component {
                 <Left>
                   <Switch trackColor="#046f98" value={true} />
                 </Left>
-                <Body style={{paddingRight:20}}>
-                <H3 style={{textAlign:"right"}}>{data.time}</H3>
+                <Body style={{ paddingRight: 20 }}>
+                  <H3 style={{ textAlign: "right" }}>{data.time}</H3>
                   <Text note>{data.note}</Text>
                 </Body>
                 <Thumbnail
-          small
-          style={{width:24,height:24,paddingRight:5}}
-          source={require("../../assets/number.png")}
-        /> 
+                  small
+                  style={{ width: 24, height: 24, paddingRight: 5 }}
+                  source={require("../../assets/number.png")}
+                />
               </ListItem>
             )}
             renderLeftHiddenRow={(data, secId, rowId, rowMap) => (
               <Button
                 full
                 danger
-                onPress={_ => this.deleteRow(secId, rowId, rowMap)}
+                onPress={(_) => this.deleteRow(secId, rowId, rowMap)}
                 style={{
                   flex: 1,
                   alignItems: "center",
-                  justifyContent: "center"
+                  justifyContent: "center",
                 }}
               >
                 <Icon active name="trash" />
@@ -220,11 +216,11 @@ class Alarm extends Component {
               <Button
                 full
                 danger
-                onPress={_ => this.deleteRow(secId, rowId, rowMap)}
+                onPress={(_) => this.deleteRow(secId, rowId, rowMap)}
                 style={{
                   flex: 1,
                   alignItems: "center",
-                  justifyContent: "center"
+                  justifyContent: "center",
                 }}
               >
                 <Icon active name="trash" />
@@ -248,16 +244,13 @@ class Alarm extends Component {
     );
   }
 }
-const mapStateToProps = ({ wino, alarm ,lang}) => ({
+const mapStateToProps = ({ alarm, lang }) => ({
   alarm,
   lang,
   // wino
 });
 
 const mapDispatchToProps = {
-  setAlarm
+  setAlarm,
 };
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Alarm);
+export default connect(mapStateToProps, mapDispatchToProps)(Alarm);

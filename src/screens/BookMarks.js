@@ -2,28 +2,24 @@ import React, { Component } from "react";
 
 import {
   Container,
-  Header,
-  Title,
   Content,
   Button,
-  Icon,
   List,
   ListItem,
   Text,
-  Thumbnail,
   Left,
   Right,
   Body,
-  View,
   Segment,
-  H3,
 } from "native-base";
 //
-import { getNameBySura, pageToSuraAya, getJuzBySuraAya } from "../functions";
 import { connect } from "react-redux";
 import { isRTL } from "expo-localization";
 
-import { setExactAya, setBookmarks,reRender } from "../../reducer";
+import { getNameBySura, pageToSuraAya, getJuzBySuraAya } from "../functions";
+
+import { Icon } from "../component";
+import { setExactAya, setBookmarks, reRender } from "../../reducer";
 import * as lang from "../../i18n";
 //
 import { Headerino } from "../component";
@@ -67,8 +63,8 @@ class BookMarks extends Component {
     newData.splice(id, 1);
     setBookmarks(newData);
     reRender("bookmarks");
-  }
-  goBack = (arg) => {
+  };
+  goBack = () => {
     if (this.props.togl) this.props.togl("close");
     else this.props.navigation.goBack();
     if (this.props.handleMenu) this.props.handleMenu("open");
@@ -76,11 +72,10 @@ class BookMarks extends Component {
 
   togl = (isActive) => this.setState({ isActive });
   renderItem = (data, id) => {
-    const { sura, aya } = pageToSuraAya(data.page);
     const {
       setExactAya,
       lang,
-      theme: { backgroundColor, color },
+      theme: { color },
     } = this.props;
     return (
       <ListItem
@@ -94,13 +89,19 @@ class BookMarks extends Component {
         <Left>
           <Button transparent>
             <Icon
-              style={{ color,fontSize:22 }}
+              style={{ color, fontSize: 22 }}
               name={data.page ? "ios-star-outline" : "bookmarks"}
             />
           </Button>
         </Left>
         <Body>
-        <Text style={{color,textAlign:isRTL && lang!=="ar"? "right":null,fontSize:15}}>
+          <Text
+            style={{
+              color,
+              textAlign: isRTL && lang !== "ar" ? "right" : null,
+              fontSize: 15,
+            }}
+          >
             {this.lang["sura_s"] +
               " " +
               getNameBySura({ sura: data.id.sura, lang }) +
@@ -112,15 +113,20 @@ class BookMarks extends Component {
               (data.page ? this.lang["page"] + " " + data.page : "")}
           </Text>
           {data.note && (
-            <Text style={{ color,textAlign:"center" }} note>
+            <Text style={{ color, textAlign: "center" }} note>
               {data.note}
             </Text>
           )}
-          <Text style={{ textAlign:isRTL && lang!=="ar"? "right":null, }}  note>{data.time}</Text>
+          <Text
+            style={{ textAlign: isRTL && lang !== "ar" ? "right" : null }}
+            note
+          >
+            {data.time}
+          </Text>
         </Body>
         <Right>
           <Button transparent onPress={() => this.delId(id)}>
-            <Icon style={{ color ,fontSize:20}} name="close" />
+            <Icon style={{ color, fontSize: 20 }} name="close" />
           </Button>
         </Right>
       </ListItem>
@@ -211,8 +217,7 @@ class BookMarks extends Component {
     );
   }
 }
-const mapStateToProps = ({ bookmarks, wino, lang, theme,  }) => ({
- 
+const mapStateToProps = ({ bookmarks, wino, lang, theme }) => ({
   theme,
   lang,
   bookmarks,
@@ -222,6 +227,6 @@ const mapStateToProps = ({ bookmarks, wino, lang, theme,  }) => ({
 const mapDispatchToProps = {
   setExactAya,
   setBookmarks,
-  reRender
+  reRender,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(BookMarks);

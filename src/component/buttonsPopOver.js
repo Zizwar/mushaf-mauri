@@ -1,24 +1,9 @@
 import React from "react";
 
-import {
-  Content,
-  Item,
-  Col,
-  Grid,
-  Icon,
-  Text,
-  Row,
-  Button,
-  ListItem,
-  Body,
-  Card,
-  CardItem,
-  View,
-  Container,
-  Thumbnail
-} from "native-base";
+import { Col, Grid, Row, Button } from "native-base";
 
-import { Clipboard, Share, Image } from "react-native";
+import { Clipboard, Share } from "react-native";
+import { Icon } from "./componentIno";
 //export const Icong = ({name }) => (<Thumbnail square small small source={{uri: '../../assets/'+name+'.png'}} />);
 
 //export const Icong= ({name,size=56 }) =>IcongTmp({name:'../../assets/'+name+'.png',size});
@@ -33,7 +18,7 @@ const onShare = async (wino, toasti, close, lang) => {
   const { text, aya, sura } = wino;
   try {
     const result = await Share.share({
-      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya} | \n Mushaf Mauri \n https://meshaf.me/a${aya}s${sura}r1z`
+      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya} | \n Mushaf Mauri \n https://meshaf.me/a${aya}s${sura}r1z`,
     });
 
     if (result.action === Share.sharedAction) {
@@ -61,21 +46,19 @@ export const ButtonPopOver = ({
   toasti,
   note,
   tarajem,
-  stop,
-  addBookmarks,
-  wino
+  wino,
 }) => (
   <Grid>
     <Row transparent style={styles.row}>
       <Col transparent style={styles.col}>
         <Button
           transparent
-          onPress={_ => {
+          onPress={(_) => {
             close();
-            setTimeout(_ => play(wino,true), 10);
+            setTimeout((_) => play(wino, true), 10);
           }}
         >
-          <Icon  name="play" style={{ color }} />
+          <Icon name="play" style={{ color }} />
         </Button>
       </Col>
 
@@ -88,28 +71,28 @@ export const ButtonPopOver = ({
       <Col style={styles.col}>
         <Button
           transparent
-          onPress={_ => {
+          onPress={(_) => {
             close();
-            setTimeout(_ => tarajem("open"), 10);
+            setTimeout((_) => tarajem("open"), 10);
           }}
         >
-          <Icon  name="book" style={{ color }} />
+          <Icon name="book" style={{ color }} />
         </Button>
       </Col>
 
       <Col style={styles.col}>
-        <Button transparent onPress={_ => onShare(wino, toasti, close, lang)}>
-          <Icon  name="share" style={{ color }} />
+        <Button transparent onPress={(_) => onShare(wino, toasti, close, lang)}>
+          <Icon name="share" style={{ color }} />
         </Button>
       </Col>
       <Col style={styles.col}>
         <Button
           transparent
-          onPress={_ =>
+          onPress={(_) =>
             writeToClipboard(wino.text, toasti, close, lang["copy_done"])
           }
         >
-          <Icon  name="copy" style={{ color }} />
+          <Icon name="copy" style={{ color }} />
         </Button>
       </Col>
     </Row>
@@ -120,19 +103,19 @@ const styles = {
   container: {
     flex: 1,
     width: null,
-    height: null
+    height: null,
     // backgroundColor: "#FFF"
   },
 
   iconText: {
-    fontSize: 12
+    fontSize: 12,
   },
   col: {
-    alignItems: "center"
+    alignItems: "center",
     //paddingHorizontal: -1,
     // padding: 2
   },
   row: {
     //  paddingBottom: 1
-  }
+  },
 };

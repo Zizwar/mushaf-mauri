@@ -1,8 +1,7 @@
 import React, { Component } from "react";
-import {
-  List,
-} from "native-base";
+import { List } from "native-base";
 
+import { Icon } from "../component";
 import { listVoiceMoqri } from "../data";
 import { connect } from "react-redux";
 import { setAuthorMoqri, setPlayer } from "../../reducer";
@@ -22,42 +21,38 @@ class AuthorMenu extends Component {
     if (this.props.handleMenu) this.props.handleMenu("open");
   };
   onPressAuthor = (id) => {
-    const { setAuthorMoqri, setPlayer, moqri ,close} = this.props;
+    const { setAuthorMoqri, setPlayer, moqri, close } = this.props;
     if (id === moqri) return;
     setAuthorMoqri(id);
     setPlayer("play");
     close();
- 
   };
 
   render() {
     const {
-      
       theme: { backgroundColor, color },
       lang,
       close,
     } = this.props;
     return (
-  
-          <List
-            dataArray={this.listAutor}
-            renderRow={(data,row,index) => (
-              <Itemino
-                onPress={() => {
-                  this.onPressAuthor(data.id);
-                  close();
-                }}
-                lang={lang}
-                backgroundColor={backgroundColor}
-                color={color}
-                text={data.voice}
-                index={index+1}
-                noborder={true}
-                height={50}
-              />
-            )}
+      <List
+        dataArray={this.listAutor}
+        renderRow={(data, row, index) => (
+          <Itemino
+            onPress={() => {
+              this.onPressAuthor(data.id);
+              close();
+            }}
+            lang={lang}
+            backgroundColor={backgroundColor}
+            color={color}
+            text={data.voice}
+            index={index + 1}
+            noborder={true}
+            height={50}
           />
-    
+        )}
+      />
     );
   }
 }

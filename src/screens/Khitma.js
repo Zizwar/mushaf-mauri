@@ -1,44 +1,27 @@
 import React, { Component } from "react";
 
-import {
-  Dimensions,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableHighlight,
-  TextInput
-} from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 import {
   CardItem,
   Card,
   Text,
-  Right,
   Content,
-  Header,
-  Left,
-  Icon,
-  Item,
   Grid,
-  View,
   Col,
   Body,
-  Title,
-  Footer,
   Container,
   Button,
-  H3,
-  Toast
+  Toast,
 } from "native-base";
 
-import { getAyatBySuraAya, calcKhitma, getNameBySura,getPageBySuraAya } from "../functions";
-import { ScreenAya,Headerino } from "../component";
+import { Icon } from "../component";
+import { getAyatBySuraAya, calcKhitma, getNameBySura } from "../functions";
+import { ScreenAya, Headerino } from "../component";
 import ModalSelector from "react-native-modal-selector";
 import { connect } from "react-redux";
 import { setExactAya, setKhitma } from "../../reducer";
 import * as lang from "../../i18n";
-const { width, height } = Dimensions.get("window");
 
 class Khitma extends Component {
   constructor(props) {
@@ -47,7 +30,7 @@ class Khitma extends Component {
       vi: [], //[...Array(NUMBER_PAGE).keys()]
       juz: 1,
       day: 3,
-      resault: null
+      resault: null,
     };
     this.lang = lang[this.props.lang];
     this.listDay = [];
@@ -90,7 +73,7 @@ class Khitma extends Component {
     let resault = calcKhitma({ juz, day, lang, _lang: this.lang });
     const calcTextJuz = this.calcTextJuz({
       rob3: resault.rob3,
-      juz: resault.juz
+      juz: resault.juz,
     });
     resault.calcTextJuz = calcTextJuz;
     // this.setState({ resault });
@@ -103,18 +86,9 @@ class Khitma extends Component {
     this.props.setExactAya({ sura, aya });
     this.goBack();
   };
-  next = _ => {
+  next = (_) => {
     let { resault } = this.state;
-    let {
-      juz,
-      rob3,
-      rob3Day,
-      playRob3,
-      endRob3,
-      day,
-      playJuz,
-      selection
-    } = resault;
+    let { rob3Day, endRob3, day, selection } = resault;
 
     if (selection >= day - 1) {
       // alert();
@@ -127,7 +101,7 @@ class Khitma extends Component {
       Toast.show({
         text: this.lang["doneKhitma"],
         type: "success",
-        duration: 3000
+        duration: 3000,
       });
       //closeAllPage();
       this.setState({ ok: false, resault: null, juz: 1, day: 3 });
@@ -146,7 +120,7 @@ class Khitma extends Component {
     //const { rob3,juz } = resault;
     const calcTextJuz = this.calcTextJuz({
       rob3: resault.resault,
-      juz: resault.juz
+      juz: resault.juz,
     });
     resault.calcTextJuz = calcTextJuz;
 
@@ -155,7 +129,7 @@ class Khitma extends Component {
     this.props.setKhitma(resault);
   };
 
-  goBack = arg => {
+  goBack = () => {
     this.props.navigation.goBack();
   };
 
@@ -163,26 +137,34 @@ class Khitma extends Component {
     const LIST_DAY = this.listDay.map((label, key) => ({ key, label }));
     const LIST_JUZ = this.listJuz.map((label, key) => ({ key, label }));
     const { resault, day, juz, ok } = this.state;
-    const {lang,fontSize,theme:{backgroundColor,color}} = this.props;
+    const {
+      lang,
+      fontSize,
+      theme: { backgroundColor, color },
+    } = this.props;
 
     return (
-     
-        <Container style={{backgroundColor}}>
+      <Container style={{ backgroundColor }}>
+        <Headerino
+          onPress={() => this.goBack()}
+          lang={lang}
+          text={this.lang["khitma"]}
+          color={color}
+          backgroundColor={backgroundColor}
+        />
 
-        <Headerino onPress={() => this.goBack()} lang={lang} text={this.lang["khitma"]} color={color} backgroundColor={backgroundColor}  />
-       
         <Content>
           {!ok && (
-            <Card  style={{backgroundColor}}>
+            <Card style={{ backgroundColor }}>
               <Grid style={{ marginTop: 20, marginBottom: 10 }}>
                 <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
-                  <Text style={{ alignSelf: "center" ,color}}>
+                  <Text style={{ alignSelf: "center", color }}>
                     {this.lang["dayKhitma"]}
                   </Text>
                   <ModalSelector
                     data={LIST_DAY}
                     initValue={day}
-                    onChange={option => {
+                    onChange={(option) => {
                       this.setState({ day: option.label });
                       // this.onChangeModal();
                     }}
@@ -191,13 +173,13 @@ class Khitma extends Component {
               </Grid>
               <Grid style={{ marginTop: 20, marginBottom: 10 }}>
                 <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
-                  <Text style={{ alignSelf: "center",color }}>
+                  <Text style={{ alignSelf: "center", color }}>
                     {this.lang["chooseJuz"]}
                   </Text>
                   <ModalSelector
                     data={LIST_JUZ}
                     initValue={juz}
-                    onChange={option => {
+                    onChange={(option) => {
                       this.setState({ juz: option.label });
                       // this.onChangeModal();
                     }}
@@ -212,11 +194,13 @@ class Khitma extends Component {
                 <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
                   <Button
                     onPress={this.onChangeModal}
-                    style={{ borderWidth: 1 ,backgroundColor:color}}
+                    style={{ borderWidth: 1, backgroundColor: color }}
                     block
                     iconRight
                   >
-                    <Text   style={{ color:backgroundColor}}>{this.lang["calcWerd"]} </Text>
+                    <Text style={{ color: backgroundColor }}>
+                      {this.lang["calcWerd"]}{" "}
+                    </Text>
                   </Button>
                 </Col>
               </Grid>
@@ -231,63 +215,92 @@ class Khitma extends Component {
                   </Text>
                 </Body>
               </CardItem>
-<CardItem>
+              <CardItem>
                 <Body>
                   <Text style={{ alignSelf: "center" }}>
-                    {this.lang["txtFromAya"] }
+                    {this.lang["txtFromAya"]}
                   </Text>
                 </Body>
               </CardItem>
               <ScreenAya
-              color={color}
-              backgroundColor={backgroundColor}
-              aya={this.lang["aya_s"] +" "+resault.starAya}
+                color={color}
+                backgroundColor={backgroundColor}
+                aya={this.lang["aya_s"] + " " + resault.starAya}
                 text={
                   getAyatBySuraAya({
                     sura: resault.starSura,
-                    aya: resault.starAya
+                    aya: resault.starAya,
                   }).text
                 }
-                sura={this.lang["sura_s"]+" "+getNameBySura({sura:resault.starSura,lang})}
-                page={getAyatBySuraAya({
-                  sura: resault.starSura,
-                  aya: resault.starAya
-                }).page}
-                 page={this.lang["enterPageNum"]+" "+ getAyatBySuraAya({sura:resault.starSura,aya:resault.starAya}).page}
-                 fontSize={fontSize}
-           />
-<CardItem>
+                sura={
+                  this.lang["sura_s"] +
+                  " " +
+                  getNameBySura({ sura: resault.starSura, lang })
+                }
+                page={
+                  getAyatBySuraAya({
+                    sura: resault.starSura,
+                    aya: resault.starAya,
+                  }).page
+                }
+                page={
+                  this.lang["enterPageNum"] +
+                  " " +
+                  getAyatBySuraAya({
+                    sura: resault.starSura,
+                    aya: resault.starAya,
+                  }).page
+                }
+                fontSize={fontSize}
+              />
+              <CardItem>
                 <Body>
                   <Text style={{ alignSelf: "center" }}>
-                    {this.lang["txtToAya"] }
+                    {this.lang["txtToAya"]}
                   </Text>
                 </Body>
               </CardItem>
 
               <ScreenAya
-               color={color}
-               backgroundColor={backgroundColor}
-                aya={this.lang["aya_s"] +" "+resault.endAya}
+                color={color}
+                backgroundColor={backgroundColor}
+                aya={this.lang["aya_s"] + " " + resault.endAya}
                 text={
                   getAyatBySuraAya({
                     sura: resault.endSura,
-                    aya: resault.endAya
+                    aya: resault.endAya,
                   }).text
                 }
-                sura={this.lang["sura_s"]+" "+getNameBySura({sura:resault.endSura,lang})}
-                page={this.lang["enterPageNum"]+" "+getAyatBySuraAya({sura:resault.endSura,aya:resault.endAya}).page}
+                sura={
+                  this.lang["sura_s"] +
+                  " " +
+                  getNameBySura({ sura: resault.endSura, lang })
+                }
+                page={
+                  this.lang["enterPageNum"] +
+                  " " +
+                  getAyatBySuraAya({
+                    sura: resault.endSura,
+                    aya: resault.endAya,
+                  }).page
+                }
                 fontSize={fontSize}
               />
-             
-              <Button style={{backgroundColor:color}}  onPress={this.next} block>
-                <Text style={{color:backgroundColor}} > {this.lang["alert_next"]}</Text>
+
+              <Button
+                style={{ backgroundColor: color }}
+                onPress={this.next}
+                block
+              >
+                <Text style={{ color: backgroundColor }}>
+                  {" "}
+                  {this.lang["alert_next"]}
+                </Text>
               </Button>
-              <Button style={{backgroundColor}}  onPress={this.play}  block>
-                <Text style={{color}} >{this.lang["play"]} </Text>
+              <Button style={{ backgroundColor }} onPress={this.play} block>
+                <Text style={{ color }}>{this.lang["play"]} </Text>
               </Button>
-              
             </Card>
-            
           )}
         </Content>
       </Container>
@@ -295,42 +308,17 @@ class Khitma extends Component {
   }
 }
 
-//
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5FCFF"
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: "center",
-    margin: 10
-  },
-  instructions: {
-    textAlign: "center",
-    color: "#333333",
-    marginBottom: 5
-  },
-  button: {
-    width: 60,
-    height: 40,
-    backgroundColor: "green"
-  }
-});
-const mapStateToProps = ({ khitma, wino, lang ,fontSize,theme}) => ({
+const mapStateToProps = ({ khitma, wino, lang, fontSize, theme }) => ({
   lang,
   fontSize,
   // repoInfo,
   theme,
   khitma,
-  wino
+  wino,
 });
 
 const mapDispatchToProps = {
   setExactAya,
-  setKhitma
+  setKhitma,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Khitma);

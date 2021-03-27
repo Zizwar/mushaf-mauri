@@ -1,28 +1,9 @@
 import React, { PureComponent } from "react";
 
-import {
-  Modal,
-  StyleSheet,
-  Dimensions,
-  TouchableOpacity,
-  Clipboard,
-  Share,
-  Alert,
-} from "react-native";
+import { Modal, StyleSheet } from "react-native";
 
-import {
-  Container,
-  Content,
-  Text,
-  View,
-  Icon,
-  Left,
-  Right,
-  Item,
-  Input,
-  Button,
-} from "native-base";
-
+import { View, Item, Input, Button } from "native-base";
+import { Icon } from "./componentIno";
 class AddNote extends PureComponent {
   state = { note: this.props.alarm ? "ورتل القران ترتيلا" : "" };
   render() {

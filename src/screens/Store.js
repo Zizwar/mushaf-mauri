@@ -18,13 +18,14 @@ import {
   ScrollableTab,
   Tab,
   Button,
-  Icon,
   TabHeading,
   Tabs,
   Left,
   Right,
 } from "native-base";
 import * as FileSystem from "expo-file-system";
+
+import { Icon } from "../component";
 import { listAuthorTafsir, listAuthorTarajem, listPage } from "../data";
 
 import * as lang from "../../i18n";
@@ -394,12 +395,9 @@ class Store extends Component {
     return false;
   };
   isExistPage = (quira) => {
-    const {
-      downloadsWarsh,
-    } = this.props;
+    const { downloadsWarsh } = this.props;
 
     switch (quira) {
-      
       case "warsh":
         return downloadsWarsh;
         return 0;

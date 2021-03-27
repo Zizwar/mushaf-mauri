@@ -1,5 +1,11 @@
 import React, { Component } from "react";
-import { Animated, Dimensions, Platform, TouchableOpacity,ActivityIndicator } from "react-native";
+import {
+  Animated,
+  Dimensions,
+  Platform,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import {
   Body,
   Header,
@@ -12,15 +18,12 @@ import {
   ScrollableTab,
   Tab,
   TabHeading,
-  Card,
-  CardItem,
-  Footer,
   ListItem,
-  Icon,
   Tabs,
-  Title
+  Title,
 } from "native-base";
 
+import { Icon } from "../component";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const IMAGE_HEIGHT = 250;
 const HEADER_HEIGHT = Platform.OS === "ios" ? 64 : 50;
@@ -34,36 +37,36 @@ class StoreItem extends Component {
   textColor = this.scroll.interpolate({
     inputRange: [0, SCROLL_HEIGHT / 5, SCROLL_HEIGHT],
     outputRange: [THEME_COLOR, FADED_THEME_COLOR, "white"],
-    extrapolate: "clamp"
+    extrapolate: "clamp",
   });
   tabBg = this.scroll.interpolate({
     inputRange: [0, SCROLL_HEIGHT],
     outputRange: ["white", THEME_COLOR],
-    extrapolate: "clamp"
+    extrapolate: "clamp",
   });
   tabY = this.nScroll.interpolate({
     inputRange: [0, SCROLL_HEIGHT, SCROLL_HEIGHT + 1],
-    outputRange: [0, 0, 1]
+    outputRange: [0, 0, 1],
   });
   headerBg = this.scroll.interpolate({
     inputRange: [0, SCROLL_HEIGHT, SCROLL_HEIGHT + 1],
     outputRange: ["transparent", "transparent", THEME_COLOR],
-    extrapolate: "clamp"
+    extrapolate: "clamp",
   });
   imgScale = this.nScroll.interpolate({
     inputRange: [-25, 0],
     outputRange: [1.1, 1],
-    extrapolateRight: "clamp"
+    extrapolateRight: "clamp",
   });
   imgOpacity = this.nScroll.interpolate({
     inputRange: [0, SCROLL_HEIGHT],
-    outputRange: [1, 0]
+    outputRange: [1, 0],
   });
 
   heights = [500, 500];
   state = {
     activeTab: 0,
-    height: 500
+    height: 500,
   };
 
   constructor(props) {
@@ -72,14 +75,21 @@ class StoreItem extends Component {
       Animated.event([{ value: this.scroll }], { useNativeDriver: false })
     );
   }
-  goBack = arg => {
+  goBack = () => {
     if (this.props.togl) this.props.togl("close");
     else this.props.navigation.goBack();
     if (this.props.handleMenu) this.props.handleMenu("open");
   };
   //
   render() {
-    const {name,downloadDB,testDB,title,loadingItem,description,fullName} = this.props
+    const {
+      downloadDB,
+      testDB,
+      title,
+      loadingItem,
+      description,
+      fullName,
+    } = this.props;
     return (
       <View>
         <Animated.View
@@ -87,7 +97,7 @@ class StoreItem extends Component {
             position: "absolute",
             width: "100%",
             backgroundColor: this.headerBg,
-            zIndex: 1
+            zIndex: 1,
           }}
         >
           <Header style={{ backgroundColor: "transparent" }} hasTabs>
@@ -107,16 +117,15 @@ class StoreItem extends Component {
             </Body>
             <Right>
               <Button
-                style={{color:"#FF4"}}
+                style={{ color: "#FF4" }}
                 onPress={downloadDB}
                 onLongPress={testDB}
               >
-                   {loadingItem ? (
-            <ActivityIndicator animating={true} size={32} />
-          ) : (
-            <Icon color="#f44" name="arrow-down"/>
-          )}
-           
+                {loadingItem ? (
+                  <ActivityIndicator animating={true} size={32} />
+                ) : (
+                  <Icon color="#f44" name="arrow-down" />
+                )}
               </Button>
             </Right>
           </Header>
@@ -134,9 +143,9 @@ class StoreItem extends Component {
             style={{
               transform: [
                 { translateY: Animated.multiply(this.nScroll, 0.65) },
-                { scale: this.imgScale }
+                { scale: this.imgScale },
               ],
-              backgroundColor: THEME_COLOR
+              backgroundColor: THEME_COLOR,
             }}
           >
             <Animated.Image
@@ -144,12 +153,12 @@ class StoreItem extends Component {
                 uri:
                   "https://cdn2.bigcommerce.com/n-d57o0b/bxx1yj/products/1334/" +
                   "images/2635/Tafsir_Ibn_Katheer_6_Vol_Urdu_Set_1__44040." +
-                  "1540400013.1280.1280.jpg?c=2"
+                  "1540400013.1280.1280.jpg?c=2",
               }}
               style={{
                 height: IMAGE_HEIGHT,
                 width: "100%",
-                opacity: this.imgOpacity
+                opacity: this.imgOpacity,
               }}
             />
           </Animated.View>
@@ -158,13 +167,13 @@ class StoreItem extends Component {
             onChangeTab={({ i }) => {
               this.setState({ height: this.heights[i], activeTab: i });
             }}
-            renderTabBar={props => (
+            renderTabBar={(props) => (
               <Animated.View
                 style={{
                   transform: [{ translateY: this.tabY }],
                   zIndex: 1,
                   width: "100%",
-                  backgroundColor: "white"
+                  backgroundColor: "white",
                 }}
               >
                 <ScrollableTab
@@ -180,14 +189,14 @@ class StoreItem extends Component {
                         style={{
                           flex: 1,
                           height: 100,
-                          backgroundColor: this.tabBg
+                          backgroundColor: this.tabBg,
                         }}
                       >
                         <TabHeading
                           scrollable
                           style={{
                             backgroundColor: "transparent",
-                            width: SCREEN_WIDTH / 2
+                            width: SCREEN_WIDTH / 2,
                           }}
                           active={active}
                         >
@@ -195,7 +204,7 @@ class StoreItem extends Component {
                             style={{
                               fontWeight: active ? "bold" : "normal",
                               color: this.textColor,
-                              fontSize: 14
+                              fontSize: 14,
                             }}
                           >
                             {name}
@@ -209,23 +218,23 @@ class StoreItem extends Component {
               </Animated.View>
             )}
           >
-            <Tab heading={fullName} >
-            <List>
-            <ListItem>
-              <Body>
-            <View style={{margin:10}}>
-              <Text>{description}</Text>
-           </View>
-                </Body>
-              </ListItem>
-            <ListItem style={{hight:200}}><Text></Text></ListItem>
-             
+            <Tab heading={fullName}>
+              <List>
+                <ListItem>
+                  <Body>
+                    <View style={{ margin: 10 }}>
+                      <Text>{description}</Text>
+                    </View>
+                  </Body>
+                </ListItem>
+                <ListItem style={{ hight: 200 }}>
+                  <Text></Text>
+                </ListItem>
               </List>
             </Tab>
           </Tabs>
-        
         </Animated.ScrollView>
-         {/* <Footer>
+        {/* <Footer>
             <Text>footer</Text>
         </Footer>
          */}

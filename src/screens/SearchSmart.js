@@ -1,18 +1,7 @@
 import React, { Component } from "react";
-import {
-  Container,
-  Header,
-  Title,
-  Button,
-  Icon,
-  Tabs,
-  Tab,
-  Text,
-  Right,
-  Left,
-  Body,
-  TabHeading,
-} from "native-base";
+import { Container, Tabs, Tab, Text, TabHeading } from "native-base";
+
+import { Icon } from "../component";
 import Search from "./Search";
 import SearchSura from "./SearchSura";
 import SearchPage from "./SearchPage";
@@ -27,7 +16,7 @@ class SearchSmart extends Component {
     super(props);
     this.lang = lang[this.props.lang];
   }
- // componentWillMount(){}
+  // componentWillMount(){}
   render() {
     const {
       theme: { backgroundColor, color },
@@ -36,7 +25,6 @@ class SearchSmart extends Component {
     } = this.props;
     return (
       <Container>
-      
         <Headerino
           onPress={navigation.goBack}
           lang={lang}
@@ -44,10 +32,15 @@ class SearchSmart extends Component {
           color={color}
           backgroundColor={backgroundColor}
         />
-        <Tabs initialPage={2} page={2} style={{ elevation: 3,backgroundColor:color }}>
-          <Tab style={{ backgroundColor:color }}
+        <Tabs
+          initialPage={2}
+          page={2}
+          style={{ elevation: 3, backgroundColor: color }}
+        >
+          <Tab
+            style={{ backgroundColor: color }}
             heading={
-              <TabHeading style={{ backgroundColor }} >
+              <TabHeading style={{ backgroundColor }}>
                 <Icon style={{ color }} name="ios-search" />
                 <Text style={{ color }}>{this.lang["search"]}</Text>
               </TabHeading>
@@ -62,7 +55,7 @@ class SearchSmart extends Component {
           <Tab
             heading={
               <TabHeading style={{ backgroundColor }}>
-                <Icon name="ios-copy" style={{ color }}/>
+                <Icon name="ios-copy" style={{ color }} />
                 <Text style={{ color }}>{this.lang["sura"]}</Text>
               </TabHeading>
             }

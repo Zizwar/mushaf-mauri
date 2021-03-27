@@ -6,34 +6,32 @@ import {
   Title,
   Content,
   Button,
-  Icon,
   ListItem,
   Text,
   Left,
   Right,
   Body,
-  Separator
+  Separator,
 } from "native-base";
 
-
+import { Icon } from "../component";
 
 export default class PopUpAya extends Component {
   constructor(props) {
     super(props);
     this.state = {
       selectedItem: undefined,
-    
     };
   }
 
   render() {
-   // const onpress = this.props.menu;
-    const onpress =arg=>alert(arg);
+    // const onpress = this.props.menu;
+    const onpress = (arg) => alert(arg);
     return (
       <Container style={{ backgroundColor: "#FFF" }}>
         <Header>
           <Left>
-            <Button transparent onPress={() => this.props.togl('close')}>
+            <Button transparent onPress={() => this.props.togl("close")}>
               <Icon name="ios-close" />
             </Button>
           </Left>
@@ -44,10 +42,13 @@ export default class PopUpAya extends Component {
         </Header>
 
         <Content>
-         // <Separator bordered noTopBorder />
+          // <Separator bordered noTopBorder />
           <ListItem icon>
             <Left>
-              <Button onPress={() => onpress('copy','copy')} style={{ backgroundColor: "#FD3C2D" }}>
+              <Button
+                onPress={() => onpress("copy", "copy")}
+                style={{ backgroundColor: "#FD3C2D" }}
+              >
                 <Icon active name="sha" />
               </Button>
             </Left>
@@ -60,7 +61,11 @@ export default class PopUpAya extends Component {
           </ListItem>
           <ListItem icon>
             <Left>
-              <Button onPress={() => onpress('share','share')} style={{ backgroundColor: "#FD3C2D" }} style={{ backgroundColor: "#8F8E93" }}>
+              <Button
+                onPress={() => onpress("share", "share")}
+                style={{ backgroundColor: "#FD3C2D" }}
+                style={{ backgroundColor: "#8F8E93" }}
+              >
                 <Icon active name="switch" />
               </Button>
             </Left>
@@ -73,7 +78,11 @@ export default class PopUpAya extends Component {
           </ListItem>
           <ListItem icon last>
             <Left>
-              <Button onPress={() => onpress('tafsir','tafsir')} style={{ backgroundColor: "#FD3C2D" }} style={{ backgroundColor: "#5855D6" }}>
+              <Button
+                onPress={() => onpress("tafsir", "tafsir")}
+                style={{ backgroundColor: "#FD3C2D" }}
+                style={{ backgroundColor: "#5855D6" }}
+              >
                 <Icon active name="moon" />
               </Button>
             </Left>
@@ -85,9 +94,13 @@ export default class PopUpAya extends Component {
             </Right>
           </ListItem>
           <Separator bordered />
-                <ListItem icon>
+          <ListItem icon>
             <Left>
-              <Button onPress={() => onpress('note','note')} style={{ backgroundColor: "#FD3C2D" }} style={{ backgroundColor: "#FD3C2D" }}>
+              <Button
+                onPress={() => onpress("note", "note")}
+                style={{ backgroundColor: "#FD3C2D" }}
+                style={{ backgroundColor: "#FD3C2D" }}
+              >
                 <Icon active name="sha" />
               </Button>
             </Left>
@@ -100,7 +113,11 @@ export default class PopUpAya extends Component {
           </ListItem>
           <ListItem icon>
             <Left>
-              <Button onPress={() => onpress('play','play')} style={{ backgroundColor: "#FD3C2D" }} style={{ backgroundColor: "#8F8E93" }}>
+              <Button
+                onPress={() => onpress("play", "play")}
+                style={{ backgroundColor: "#FD3C2D" }}
+                style={{ backgroundColor: "#8F8E93" }}
+              >
                 <Icon active name="switch" />
               </Button>
             </Left>
@@ -113,7 +130,10 @@ export default class PopUpAya extends Component {
           </ListItem>
           <ListItem icon last>
             <Left>
-              <Button onPress={() => this.props.togl('close')} style={{ backgroundColor: "#5855D6" }}>
+              <Button
+                onPress={() => this.props.togl("close")}
+                style={{ backgroundColor: "#5855D6" }}
+              >
                 <Icon active name="moon" />
               </Button>
             </Left>
@@ -121,15 +141,12 @@ export default class PopUpAya extends Component {
               <Text>close</Text>
             </Body>
             <Right>
-            {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
-              </Right>
+              {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
+            </Right>
           </ListItem>
           <Separator bordered />
-      
         </Content>
       </Container>
     );
   }
 }
-
-

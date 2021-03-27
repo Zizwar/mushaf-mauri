@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 
-import { Dimensions, Image, ActivityIndicator, StyleSheet } from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 import {
   CardItem,
@@ -10,30 +10,22 @@ import {
   Content,
   Header,
   Left,
-  Icon,
-  Thumbnail,
-  Item,
   Grid,
-  View,
   Col,
   H3,
   Body,
-  Footer,
   Switch,
   Container,
   Button,
- Title
-  
+  Title,
 } from "native-base";
-
-import { getAyatBySuraAya, allSuwar, getAllAyaSuraBySura } from "../functions";
-
-import SuraAya from "../component/modalino";
 import ModalSelector from "react-native-modal-selector";
 import { connect } from "react-redux";
+import { allSuwar, getAllAyaSuraBySura } from "../functions";
+import { Icon } from "../component";
+
 import { setExactAya, setRepeat, setTekrar, setPlayer } from "../../reducer";
 import * as lang from "../../i18n";
-const { width, height } = Dimensions.get("window");
 const arrStart = [1, 2, 3, 4, 5, 6, 7];
 class Reciting extends Component {
   constructor(props) {
@@ -45,7 +37,7 @@ class Reciting extends Component {
       suraStart: 1,
       repeat: 0,
       ayaEnd: 7,
-      suraEnd: 1
+      suraEnd: 1,
     };
     this.lang = lang[this.props.lang];
     this.listSura = allSuwar(this.props.lang);
@@ -53,7 +45,7 @@ class Reciting extends Component {
   UNSAFE_componentWillMount() {}
 
   //
-  onChangeSuraStart = option => {
+  onChangeSuraStart = (option) => {
     console.log("change aya start to ", { option });
     const suraStart = option.id;
     const listAllAyaStart = getAllAyaSuraBySura(suraStart);
@@ -61,14 +53,14 @@ class Reciting extends Component {
     this.setState({ suraStart, listAllAyaStart });
   };
 
-  onChangeSuraEnd = option => {
+  onChangeSuraEnd = (option) => {
     console.log("change aya End to ", { option });
     const suraEnd = option.id;
     const listAllAyaEnd = getAllAyaSuraBySura(suraEnd);
 
     this.setState({ suraEnd, listAllAyaEnd });
   };
-  goBack = arg => {
+  goBack = () => {
     if (this.props.togl) this.props.togl("close");
     else this.props.navigation.goBack();
     if (this.props.handleMenu) this.props.handleMenu("open");
@@ -81,27 +73,21 @@ class Reciting extends Component {
       return;
     }
 
-    const {
-      setTekrar,
-      setExactAya,
-      setPlayer,
-      setRepeat,
-      theme: { color, backgroundColor }
-    } = this.props;
+    const { setTekrar, setExactAya, setPlayer, setRepeat } = this.props;
 
     setTekrar({
       ayaStart,
       suraStart,
       repeat,
       ayaEnd,
-      suraEnd
+      suraEnd,
     });
     console.log({
       ayaStart,
       suraStart,
       repeat,
       ayaEnd,
-      suraEnd
+      suraEnd,
     });
     setRepeat(true);
     setPlayer("play");
@@ -109,7 +95,7 @@ class Reciting extends Component {
 
     this.goBack();
   };
-  disabledz = val => {
+  disabledz = () => {
     const { setRepeat } = this.props;
     setPlayer(false);
     setRepeat(false);
@@ -118,7 +104,7 @@ class Reciting extends Component {
     const listAllSura = this.listSura.map((sura, key) => ({
       key,
       label: sura.id + "." + sura.name,
-      id: sura.id
+      id: sura.id,
     }));
     //
     const { id: id_, name: name_ } = this.listSura[0];
@@ -127,12 +113,12 @@ class Reciting extends Component {
     let { listAllAyaStart, listAllAyaEnd } = this.state;
     listAllAyaStart = listAllAyaStart.map((label, key) => ({
       key,
-      label
+      label,
     }));
 
     listAllAyaEnd = listAllAyaEnd.map((label, key) => ({
       key,
-      label
+      label,
     }));
 
     //
@@ -140,7 +126,7 @@ class Reciting extends Component {
       {
         key: 0,
         label: "No Repeat",
-        section: true
+        section: true,
       },
 
       { key: 1, label: 2 },
@@ -148,12 +134,11 @@ class Reciting extends Component {
       { key: 3, label: 4 },
       { key: 4, label: 5 },
       { key: 5, label: 6 },
-      { key: 6, label: 7 }
+      { key: 6, label: 7 },
     ];
     const {
       isRepeat,
-      lang,
-      theme: { color, backgroundColor }
+      theme: { color, backgroundColor },
     } = this.props;
 
     return (
@@ -161,7 +146,7 @@ class Reciting extends Component {
         <Header style={{ backgroundColor }}>
           <Left>
             <Button transparent onPress={this.goBack}>
-              <Icon name="close" style={{ color }}/>
+              <Icon name="close" style={{ color }} />
             </Button>
           </Left>
           <Body>
@@ -179,7 +164,9 @@ class Reciting extends Component {
           <Card style={{ backgroundColor }}>
             <CardItem style={{ backgroundColor }}>
               <Body>
-                <H3 style={{ color,alignSelf: "center" }}>{this.lang["deterStart"]}</H3>
+                <H3 style={{ color, alignSelf: "center" }}>
+                  {this.lang["deterStart"]}
+                </H3>
               </Body>
               {/*
               <Thumbnail
@@ -222,7 +209,7 @@ class Reciting extends Component {
 
             <CardItem style={{ backgroundColor }}>
               <Body>
-                <H3 style={{ color,alignSelf: "center" }}>
+                <H3 style={{ color, alignSelf: "center" }}>
                   {this.lang["deterEnd"]}
                 </H3>
               </Body>
@@ -237,7 +224,7 @@ class Reciting extends Component {
             <Grid style={styles.grid}>
               <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
                 <ModalSelector
-style={{ backgroundColor, borderColor: backgroundColor }}
+                  style={{ backgroundColor, borderColor: backgroundColor }}
                   selectTextStyle={{ color }}
                   data={listAllSura}
                   initValue={firstSura}
@@ -247,9 +234,8 @@ style={{ backgroundColor, borderColor: backgroundColor }}
             </Grid>
             <Grid style={styles.grid}>
               <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
-           
                 <ModalSelector
-style={{ backgroundColor, borderColor: backgroundColor }}
+                  style={{ backgroundColor, borderColor: backgroundColor }}
                   selectTextStyle={{ color }}
                   data={listAllAyaEnd}
                   initValue={7}
@@ -261,10 +247,9 @@ style={{ backgroundColor, borderColor: backgroundColor }}
             <CardItem style={{ backgroundColor }}>
               <Grid style={styles.grid}>
                 <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
-                
                   <ModalSelector
-style={{ backgroundColor, borderColor: backgroundColor }}
-                  selectTextStyle={{ color }}
+                    style={{ backgroundColor, borderColor: backgroundColor }}
+                    selectTextStyle={{ color }}
                     data={maplistTekrar}
                     initValue={this.lang["repeat_forAya_null"]}
                     onChange={({ label }) => this.setState({ repeat: label })}
@@ -273,16 +258,18 @@ style={{ backgroundColor, borderColor: backgroundColor }}
               </Grid>
             </CardItem>
 
-          <CardItem style={{ backgroundColor }}>
+            <CardItem style={{ backgroundColor }}>
               <Grid style={styles.grid}>
                 <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
                   <Button
                     onPress={this._setRepeat}
-                    style={{  backgroundColor:color }}
+                    style={{ backgroundColor: color }}
                     block
                     iconRight
                   >
-                    <Text style={{  color:backgroundColor }}>{this.lang["start"]} </Text>
+                    <Text style={{ color: backgroundColor }}>
+                      {this.lang["start"]}{" "}
+                    </Text>
                   </Button>
                 </Col>
               </Grid>
@@ -301,24 +288,24 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F5FCFF"
+    backgroundColor: "#F5FCFF",
   },
   welcome: {
     fontSize: 20,
     textAlign: "center",
-    margin: 10
+    margin: 10,
   },
   instructions: {
     textAlign: "center",
     color: "#333333",
-    marginBottom: 5
+    marginBottom: 5,
   },
   button: {
     width: 60,
     height: 40,
-    backgroundColor: "green"
+    backgroundColor: "green",
   },
-  grid: { marginTop: 5, marginBottom: 3 }
+  grid: { marginTop: 5, marginBottom: 3 },
 });
 const mapStateToProps = ({ lang, isRepeat, theme, setPlayer }) => ({
   //repoInfo,
@@ -326,13 +313,13 @@ const mapStateToProps = ({ lang, isRepeat, theme, setPlayer }) => ({
   setPlayer,
   theme,
   isRepeat,
-  lang
+  lang,
 });
 
 const mapDispatchToProps = {
   setExactAya,
   setRepeat,
   setTekrar,
-  setPlayer
+  setPlayer,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Reciting);

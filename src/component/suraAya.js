@@ -1,34 +1,23 @@
 import React, { Component } from "react";
 
-import { Dimensions, Image, ActivityIndicator, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 
 import {
   CardItem,
   Card,
   Text,
-  Right,
-  Content,
-  Header,
-  Left,
-  Icon,
-  Item,
   Grid,
-  View,
   Col,
-  H2,
-  Body,
-  Title,
-  Container,
   Button
 } from "native-base";
 
-import { getAyatBySuraAya, allSuwar, getAllAyaSuraBySura } from "../functions";
+import { allSuwar, getAllAyaSuraBySura } from "../functions";
 
 import ModalSelector from "react-native-modal-selector";
 import * as lang from "../../i18n";
 const arrStart = [1, 2, 3, 4, 5, 6, 7];
 export default class SuraAya extends Component {
-  constructor(props) {
+  constructor() {
    // super(props);
     this.state = {
       listAllAyaStart: arrStart,
@@ -68,7 +57,7 @@ getSuraAya({sura,aya})
     const { id: id_, name: name_ } = this.listSura[0];
     const firstSura = id_ + "." + name_;
     //
-    let { listAllAyaStart, listAllAyaEnd } = this.state;
+    let { listAllAyaStart } = this.state;
     listAllAyaStart = listAllAyaStart.map((label, key) => ({
       key,
       label

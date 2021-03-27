@@ -11,11 +11,12 @@ import {
   Card,
   Left,
   Right,
-  Icon,
   Text,
 } from "native-base";
 import { connect } from "react-redux";
 import SimplePicker from "react-native-simple-picker";
+
+import { Icon } from "../component";
 
 import { setTarjama, reRender } from "../../reducer";
 import * as lang from "../../i18n";

@@ -1,30 +1,22 @@
 import React, { Component } from "react";
-import { Platform, Alert, Slider, Picker, Dimensions } from "react-native";
+import { Alert, Slider, Picker, Dimensions } from "react-native";
 import { Updates } from "expo";
 import {
   Container,
-  Header,
-  Title,
   Content,
-  Button,
-  Icon,
   ListItem,
-  Card,
   Text,
-  CheckBox,
-  Badge,
   Left, // as Leftz,
   Right, // as Rightz,
   Body,
   Switch,
-  View,
-  Radio,
   Separator,
 } from "native-base";
-import SimplePicker from "react-native-simple-picker";
 //import styles from "./styles";
-import * as lang from "../../i18n";
 import { connect } from "react-redux";
+import * as lang from "../../i18n";
+
+import { Icon } from "../component";
 import {
   setExactAya,
   setAuthor,
@@ -129,13 +121,13 @@ class Options extends Component {
     // this.appReload();
     //this.setReloadApp = true;
   };
-  renderItemPicker(option, index) {
+  renderItemPicker(option) {
     const text = this.lang["mosshaf_" + option];
     const label = text ? text : this.lang["mosshaf_type"];
 
     return <Picker.Item key={option} value={option} label={label} />;
   }
-  renderItemPickerLang(option, index) {
+  renderItemPickerLang(option) {
     const text = this.lang[option.name];
     const label = text ? text : this.lang["choose_lang"];
 
@@ -148,23 +140,12 @@ class Options extends Component {
   };
   render() {
     const {
-      navigation,
-      prorate,
       fontSize,
       setFontSize,
       awk,
       theme: { backgroundColor, color },
       lang,
     } = this.props;
-    //const { fontSize } = this.state;
-    const br = (
-      <View
-        style={{
-          borderBottomColor: "#ccc",
-          borderBottomWidth: 2,
-        }}
-      />
-    );
     return (
       <Container
         style={
@@ -192,9 +173,7 @@ class Options extends Component {
                   { name: "choose_lang", id: 0 },
                   { name: "l_english", id: "en" },
                   { name: "l_arabic", id: "ar" },
-                ].map((option, index) =>
-                  this.renderItemPickerLang(option, index)
-                )}
+                ].map((option) => this.renderItemPickerLang(option))}
               </Picker>
             </Body>
           </ListItem>
@@ -206,11 +185,9 @@ class Options extends Component {
                 onValueChange={this.changeQuira}
                 // itemStyle={itemStyle}
               >
-                {[
-                  "mosshaf_type",
-                  "hafsMadina",
-                  "warsh",
-                ].map((option, index) => this.renderItemPicker(option, index))}
+                {["mosshaf_type", "hafsMadina", "warsh"].map((option) =>
+                  this.renderItemPicker(option)
+                )}
               </Picker>
             </Body>
           </ListItem>

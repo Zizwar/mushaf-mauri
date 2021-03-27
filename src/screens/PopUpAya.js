@@ -12,16 +12,15 @@ import {
   Left,
   Right,
   Body,
-
-  Separator
+  Separator,
 } from "native-base";
 
-import { Ionicons as Icon } from "@expo/vector-icons";
+import { Icon } from "../component";
 export default class PopUpAya extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedItem: undefined
+      selectedItem: undefined,
     };
   }
 
@@ -33,113 +32,111 @@ export default class PopUpAya extends Component {
           backgroundColor: "white",
           padding: 22,
           //justifyContent: "center",
-         // alignItems: "center",
+          // alignItems: "center",
           borderRadius: 3,
           borderColor: "rgba(0, 0, 0, 0.1)",
-          height: 300
+          height: 300,
         }}
       >
-    
-            <Separator bordered />
+        <Separator bordered />
 
-            <ListItem icon>
-              <Left>
-                <Button
-                  onPress={() => menu("copy")}
-                  style={{ backgroundColor: "#FD3C2D" }}
-                >
-                  <Icon active name="notifications" />
-                </Button>
-              </Left>
-              <Body>
-                <Text>Copy</Text>
-              </Body>
-              <Right>
-                {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
-              </Right>
-            </ListItem>
-            <ListItem icon>
-              <Left>
-                <Button
-                  onPress={() => menu("share")}
-                  style={{ backgroundColor: "#8F8E93" }}
-                >
-                  <Icon active name="switch" />
-                </Button>
-              </Left>
-              <Body>
-                <Text>Share</Text>
-              </Body>
-              <Right>
-                {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
-              </Right>
-            </ListItem>
-            <ListItem icon last>
-              <Left>
-                <Button
-                  onPress={() => menu("note")}
-                  style={{ backgroundColor: "#5855D6" }}
-                >
-                  <Icon active name="moon" />
-                </Button>
-              </Left>
-              <Body>
-                <Text>Note</Text>
-              </Body>
-              <Right>
-                <Text>Voice</Text>
-              </Right>
-            </ListItem>
+        <ListItem icon>
+          <Left>
+            <Button
+              onPress={() => menu("copy")}
+              style={{ backgroundColor: "#FD3C2D" }}
+            >
+              <Icon active name="notifications" />
+            </Button>
+          </Left>
+          <Body>
+            <Text>Copy</Text>
+          </Body>
+          <Right>
+            {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
+          </Right>
+        </ListItem>
+        <ListItem icon>
+          <Left>
+            <Button
+              onPress={() => menu("share")}
+              style={{ backgroundColor: "#8F8E93" }}
+            >
+              <Icon active name="switch" />
+            </Button>
+          </Left>
+          <Body>
+            <Text>Share</Text>
+          </Body>
+          <Right>
+            {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
+          </Right>
+        </ListItem>
+        <ListItem icon last>
+          <Left>
+            <Button
+              onPress={() => menu("note")}
+              style={{ backgroundColor: "#5855D6" }}
+            >
+              <Icon active name="moon" />
+            </Button>
+          </Left>
+          <Body>
+            <Text>Note</Text>
+          </Body>
+          <Right>
+            <Text>Voice</Text>
+          </Right>
+        </ListItem>
 
-            <ListItem icon>
-              <Left>
-                <Button
-                  onPress={() => menu("tafsir")}
-                  style={{ backgroundColor: "#FD3C2D" }}
-                >
-                  <Icon active name="notifications" />
-                </Button>
-              </Left>
-              <Body>
-                <Text>Tafsir</Text>
-              </Body>
-              <Right>
-                {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
-              </Right>
-            </ListItem>
-            <ListItem icon>
-              <Left>
-                <Button
-                  onPress={() => menu("play")}
-                  style={{ backgroundColor: "#8F8E93" }}
-                >
-                  <Icon active name="switch" />
-                </Button>
-              </Left>
-              <Body>
-                <Text>Play</Text>
-              </Body>
-              <Right>
-                {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
-              </Right>
-            </ListItem>
-            <ListItem icon last>
-              <Left>
-                <Button
-                  onPress={() => togl("close")}
-                  style={{ backgroundColor: "#5855D6" }}
-                >
-                  <Icon active name="moon" />
-                </Button>
-              </Left>
-              <Body>
-                <Text>Close</Text>
-              </Body>
-              <Right>
-                {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
-              </Right>
-            </ListItem>
-      
+        <ListItem icon>
+          <Left>
+            <Button
+              onPress={() => menu("tafsir")}
+              style={{ backgroundColor: "#FD3C2D" }}
+            >
+              <Icon active name="notifications" />
+            </Button>
+          </Left>
+          <Body>
+            <Text>Tafsir</Text>
+          </Body>
+          <Right>
+            {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
+          </Right>
+        </ListItem>
+        <ListItem icon>
+          <Left>
+            <Button
+              onPress={() => menu("play")}
+              style={{ backgroundColor: "#8F8E93" }}
+            >
+              <Icon active name="switch" />
+            </Button>
+          </Left>
+          <Body>
+            <Text>Play</Text>
+          </Body>
+          <Right>
+            {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
+          </Right>
+        </ListItem>
+        <ListItem icon last>
+          <Left>
+            <Button
+              onPress={() => togl("close")}
+              style={{ backgroundColor: "#5855D6" }}
+            >
+              <Icon active name="moon" />
+            </Button>
+          </Left>
+          <Body>
+            <Text>Close</Text>
+          </Body>
+          <Right>
+            {Platform.OS === "ios" && <Icon active name="arrow-forward" />}
+          </Right>
+        </ListItem>
       </View>
     );
   }

@@ -2,20 +2,12 @@ import React, { Component } from "react";
 import {
   View,
   Dimensions,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
   StyleSheet,
-  TouchableHighlight,
-  TextInput,
   Animated
 } from "react-native";
-import { Text, Icon, Button } from "native-base";
 import Tafsir from "./Tafsir";
 
-import ModalSelector from "react-native-modal-selector";
 import GestureView from "../node/GestureView";
-const { width, height } = Dimensions.get("window");
 
 export default class Tray extends Component {
   constructor(props) {
@@ -43,7 +35,7 @@ export default class Tray extends Component {
     this.isHidden = !this.isHidden;
   }
   //  //
-  onSwipe = arg => this._toggleSubview();
+  onSwipe = () => this._toggleSubview();
 
   render() {
 
@@ -56,8 +48,8 @@ export default class Tray extends Component {
         ]}
       >
         <GestureView
-          onSwipeUp={(distance, angle) => this.onSwipe("up")}
-          onSwipeDown={(distance, angle) => this.onSwipe("down")}
+          onSwipeUp={() => this.onSwipe("up")}
+          onSwipeDown={() => this.onSwipe("down")}
         >
         <Tafsir/>
         </GestureView>

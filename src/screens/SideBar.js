@@ -1,11 +1,5 @@
 import React, { Component } from "react";
-import {
-  Image,
-  Platform,
-  Dimensions,
-  StyleSheet,
-  BackHandler
-} from "react-native";
+import { Platform, Dimensions, StyleSheet } from "react-native";
 import {
   Content,
   Text,
@@ -14,20 +8,17 @@ import {
   Thumbnail,
   Container,
   Left,
-  Right,
-  Badge,
   View,
   Button,
-  Icon,
-  
 } from "native-base";
 import { connect } from "react-redux";
+import { Icon } from "../component";
+
 import * as lang from "../../i18n";
 
 import * as FileSystem from "expo-file-system";
 const DIR = FileSystem.documentDirectory;
 const folderQuira = DIR + "warsh";
-const LinkdrawerCover = folderQuira + "/3.png"
 const drawerCover = /*{uri: LinkdrawerCover};*/ require(`../../assets/mauri.png`);
 
 class SideBar extends Component {
@@ -35,7 +26,7 @@ class SideBar extends Component {
     super(props);
     this.state = {
       shadowOffsetWidth: 1,
-      shadowRadius: 4
+      shadowRadius: 4,
     };
     this.lang = lang[this.props.lang];
     this.datas = [
@@ -51,44 +42,44 @@ class SideBar extends Component {
         name: this.lang["favs"],
         route: "BookMarks",
         icon: require("../../assets/bookmark.png"),
-        bg: "#477EEA"
+        bg: "#477EEA",
       },
       {
         name: this.lang["bu_tafaser"],
         route: "Tafsir",
         icon: require("../../assets/tafasir.png"),
-        bg: "#477EEA"
+        bg: "#477EEA",
       },
       {
         name: this.lang["bu_telawa"],
         route: "Reciting",
         icon: require("../../assets/repeat.png"),
-        bg: "#477EEA"
+        bg: "#477EEA",
       },
       {
         name: this.lang["alert_defTitle"],
         route: "Alarm",
         icon: require("../../assets/alarm.png"),
-        bg: "#477EEA"
+        bg: "#477EEA",
       },
       {
         name: this.lang["khitma"],
         route: "Khitma",
         icon: require("../../assets/khitma.png"),
-        bg: "#477EEA"
+        bg: "#477EEA",
       },
       {
         name: this.lang["options"],
         route: "Options",
         icon: require("../../assets/setting.png"),
-        bg: "#477EEA"
+        bg: "#477EEA",
       },
       {
         name: this.lang["bu_download_cnt"],
         route: "Store",
         icon: require("../../assets/addon.png"),
-        bg: "#477EEA"
-      }
+        bg: "#477EEA",
+      },
     ];
   }
 
@@ -107,7 +98,6 @@ class SideBar extends Component {
           </View>
 
           <View style={{ margin: 20 }}>
-      
             <Thumbnail
               large
               square
@@ -117,7 +107,7 @@ class SideBar extends Component {
           </View>
           <List
             dataArray={this.datas}
-            renderRow={data => (
+            renderRow={(data) => (
               <ListItem
                 button
                 noBorder
@@ -130,7 +120,7 @@ class SideBar extends Component {
               </ListItem>
             )}
           />
-{/*
+          {/*
           <ListItem button noBorder onPress={BackHandler.exitApp}>
             <Left>
               <Icon size={42} name="close" color="#d4aa1e" />
@@ -139,7 +129,6 @@ class SideBar extends Component {
           </ListItem>
           */}
         </Content>
-        
       </Container>
     );
   }
@@ -155,7 +144,7 @@ const styles = StyleSheet.create({
     position: "relative",
     */
     marginBottom: 10,
-    alignSelf: "center"
+    alignSelf: "center",
   },
   drawerImage: {
     position: "absolute",
@@ -163,28 +152,25 @@ const styles = StyleSheet.create({
     top: Platform.OS === "android" ? deviceHeight / 13 : deviceHeight / 12,
     width: 210,
     height: 75,
-    resizeMode: "cover"
+    resizeMode: "cover",
   },
   text: {
     fontWeight: Platform.OS === "ios" ? "500" : "400",
     fontSize: 16,
-    marginLeft: 20
+    marginLeft: 20,
   },
   badgeText: {
     fontSize: Platform.OS === "ios" ? 13 : 11,
     fontWeight: "400",
     textAlign: "center",
-    marginTop: Platform.OS === "android" ? -3 : undefined
-  }
+    marginTop: Platform.OS === "android" ? -3 : undefined,
+  },
 });
 
 const mapStateToProps = ({ lang }) => ({ lang });
 
 const mapDispatchToProps = {};
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(SideBar);
+export default connect(mapStateToProps, mapDispatchToProps)(SideBar);
 //export default SideBar;
 
 /*

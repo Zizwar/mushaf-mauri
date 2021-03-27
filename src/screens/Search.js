@@ -1,27 +1,19 @@
 import React, { Component } from "react";
 import {
   Item,
-  View,
   Input,
   Container,
-  Card,
-  CardItem,
   Header,
-  Title,
   Content,
-  H3,
   Button,
-  Icon,
   List,
-  ListItem,
-  Text,
   Thumbnail,
   Left,
-  Right,
-  Body
 } from "native-base";
+
+import { Icon } from "../component";
 //tajwed
-import { searchAyatByText, getPageBySuraAya,allSuwar } from "../functions";
+import { searchAyatByText, allSuwar } from "../functions";
 import { connect } from "react-redux";
 import { setExactAya } from "../../reducer";
 import * as lang from "../../i18n";
@@ -38,7 +30,7 @@ class Search extends Component {
     this.state = {
       searchText: this.props.searchText,
       resault: null,
-      items: []
+      items: [],
     };
   }
 
@@ -46,13 +38,13 @@ class Search extends Component {
   componentDidMount() {
     if (this.state.searchText !== "") this.search();
   }
-  search = text => {
-	  if(text==="wino")alert(test)//remove
+  search = (text) => {
+    if (text === "wino") alert(test); //remove
     if (this.state.searchText)
       if (this.state.searchText.length <= 2) {
         this.setState({
           searchError: true,
-          searchText: this.lang["search_err_length"]
+          searchText: this.lang["search_err_length"],
         });
       } else {
         const txt = this.state.searchText;
@@ -61,16 +53,18 @@ class Search extends Component {
         else this.setState({ resault: this.lang["search_nores"] });
       }
   };
-  goBack = arg => {
-    const {togl,handleMenu,goBack,navigation} = this.props;
-	   if (goBack) {goBack(); return}
+  goBack = () => {
+    const { togl, goBack, navigation } = this.props;
+    if (goBack) {
+      goBack();
+      return;
+    }
     if (togl) togl("close");
     else navigation.goBack();
- 
   };
-  getNameBySura = id => this.allSuwar.find(dt => dt.id === id).name;
+  getNameBySura = (id) => this.allSuwar.find((dt) => dt.id === id).name;
   render() {
-    const {backgroundColor,color} = this.props;
+    const { backgroundColor } = this.props;
     return (
       <Container style={{ backgroundColor }}>
         <Header searchBar rounded style={{ backgroundColor }}>
@@ -82,13 +76,13 @@ class Search extends Component {
             </Left>
           )}
 
-          <Item style={{ margin: 15,backgroundColor }}>
+          <Item style={{ margin: 15, backgroundColor }}>
             <Input
               placeholder={this.lang["search"]}
               value={this.state.searchText}
-              onChangeText={text => this.setState({ searchText: text })}
+              onChangeText={(text) => this.setState({ searchText: text })}
               onSubmitEditing={() => this.search(this.state.searchText)}
-              style={{ margin: 9, textAlign: "center", }}
+              style={{ margin: 9, textAlign: "center" }}
             />
             <Button
               transparent
@@ -105,9 +99,9 @@ class Search extends Component {
 
         <Content>
           {this.state.resault && (
-            <List 
+            <List
               dataArray={this.state.resault}
-              renderRow={data => (
+              renderRow={(data) => (
                 <ScreenAya
                   onpress={() => {
                     this.props.setExactAya(data);
@@ -126,17 +120,18 @@ class Search extends Component {
     );
   }
 }
-const mapStateToProps = ({ wino, lang,fontSize,theme }) => ({
+const mapStateToProps = ({ wino, lang, fontSize, theme }) => ({
   wino,
   lang,
-  fontSize,theme
+  fontSize,
+  theme,
 });
 
-  const test= `
+const test = `
 		  Dev:Ibrahim BIDI; \n
 		  Email:Zizwar@gmail.com
 		  `;
 const mapDispatchToProps = {
-  setExactAya
+  setExactAya,
 };
 export default connect(mapStateToProps, mapDispatchToProps)(Search);

@@ -5,7 +5,6 @@ import {
   Item,
   Label,
   Input,
-  Icon,
   Form,
   Text
 } from "native-base";

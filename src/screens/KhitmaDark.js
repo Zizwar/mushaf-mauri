@@ -1,14 +1,6 @@
 import React, { Component } from "react";
 
-import {
-  Dimensions,
-  TouchableOpacity,
-  Image,
-  ActivityIndicator,
-  StyleSheet,
-  TouchableHighlight,
-  TextInput
-} from "react-native";
+import { Dimensions, StyleSheet } from "react-native";
 
 import {
   CardItem,
@@ -18,25 +10,21 @@ import {
   Content,
   Header,
   Left,
-  Icon,
-  Item,
   Grid,
-  View,
   Col,
   Body,
   Title,
-  Footer,
   Container,
-  Button
+  Button,
 } from "native-base";
-
-import { getAyatBySuraAya, calcKhitma } from "../functions";
-
 import ModalSelector from "react-native-modal-selector";
 import { connect } from "react-redux";
+import { calcKhitma } from "../functions";
+
+import { Icon } from "../component";
+
 import { setExactAya, setKhitma } from "../../reducer";
 import * as lang from "../../i18n";
-const { width, height } = Dimensions.get("window");
 
 class Khitma extends Component {
   constructor(props) {
@@ -45,7 +33,7 @@ class Khitma extends Component {
       vi: [], //[...Array(NUMBER_PAGE).keys()]
       juz: null,
       day: null,
-      resault: null
+      resault: null,
     };
     this.lang = lang[this.props.lang];
     this.listDay = [];
@@ -87,7 +75,7 @@ class Khitma extends Component {
     let resault = calcKhitma({ juz, day });
     const calcTextJuz = this.calcTextJuz({
       rob3: resault.rob3,
-      juz: resault.juz
+      juz: resault.juz,
     });
     resault.calcTextJuz = calcTextJuz;
     this.setState({ resault });
@@ -97,18 +85,9 @@ class Khitma extends Component {
     this.props.setExactAya({ sura, aya });
     this.goBack();
   };
-  next = _ => {
+  next = (_) => {
     let { resault } = this.state;
-    let {
-      juz,
-      rob3,
-      rob3Day,
-      playRob3,
-      endRob3,
-      day,
-      playJuz,
-      selection
-    } = resault;
+    let { rob3Day, endRob3, day, selection } = resault;
 
     if (selection >= day - 1) {
       alert("اتممت الختمة");
@@ -132,7 +111,7 @@ class Khitma extends Component {
     //const { rob3,juz } = resault;
     const calcTextJuz = this.calcTextJuz({
       rob3: resault.resault,
-      juz: resault.juz
+      juz: resault.juz,
     });
     resault.calcTextJuz = calcTextJuz;
 
@@ -141,7 +120,7 @@ class Khitma extends Component {
     this.props.setKhitma(resault);
   };
 
-  goBack = arg => {
+  goBack = () => {
     if (this.props.togl) this.props.togl("close");
     else this.props.navigation.goBack();
     if (this.props.handleMenu) this.props.handleMenu("open");
@@ -175,7 +154,7 @@ class Khitma extends Component {
                     <ModalSelector
                       data={LIST_DAY}
                       initValue="Chose"
-                      onChange={option => {
+                      onChange={(option) => {
                         this.setState({ day: option.label });
                         // this.onChangeModal();
                       }}
@@ -188,7 +167,7 @@ class Khitma extends Component {
                     <ModalSelector
                       data={LIST_JUZ}
                       initValue="Chose"
-                      onChange={option => {
+                      onChange={(option) => {
                         this.setState({ juz: option.label });
                         // this.onChangeModal();
                       }}
@@ -231,7 +210,7 @@ class Khitma extends Component {
                   <Grid style={{ marginTop: 20, marginBottom: 10 }}>
                     <Col style={{ paddingLeft: 10, paddingRight: 5 }}>
                       <Button
-                        onPress={_ => {
+                        onPress={(_) => {
                           this.setState({ ok: true });
                           this.props.setKhitma(resault);
                         }}
@@ -293,43 +272,15 @@ class Khitma extends Component {
   }
 }
 
-//
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#F5FCFF"
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: "center",
-    margin: 10
-  },
-  instructions: {
-    textAlign: "center",
-    color: "#333333",
-    marginBottom: 5
-  },
-  button: {
-    width: 60,
-    height: 40,
-    backgroundColor: "green"
-  }
-});
 const mapStateToProps = ({ khitma, wino, lang }) => ({
   lang,
   // repoInfo,
   khitma,
-  wino
+  wino,
 });
 
 const mapDispatchToProps = {
   setExactAya,
-  setKhitma
+  setKhitma,
 };
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Khitma);
+export default connect(mapStateToProps, mapDispatchToProps)(Khitma);

@@ -5,50 +5,48 @@ import {
   Title,
   Content,
   Button,
-  Icon,
   List,
   ListItem,
   Text,
   Left,
   Right,
-  Body
+  Body,
 } from "native-base";
 
+import { Icon } from "../component";
 import { listVoiceMoqri } from "../data";
 import { connect } from "react-redux";
-import { setAuthorMoqri,setPlayer } from "../../reducer";
+import { setAuthorMoqri, setPlayer } from "../../reducer";
 import * as lang from "../../i18n";
 class Author extends Component {
-    constructor(props) {
+  constructor(props) {
     super(props);
     this.lang = lang[this.props.lang];
-      
-    }
-  UNSAFE_componentWillMount() {
-this.listAutor = listVoiceMoqri(this.lang)
   }
-   goBack = arg => {
+  UNSAFE_componentWillMount() {
+    this.listAutor = listVoiceMoqri(this.lang);
+  }
+  goBack = (arg) => {
     if (this.props.togl) this.props.togl("close");
     else this.props.navigation.goBack();
-    if (this.props.handleMenu) this.props.handleMenu('open');
+    if (this.props.handleMenu) this.props.handleMenu("open");
   };
-  onPressAuthor = id => {
-  
-    const {setAuthorMoqri, setPlayer,moqri} = this.props;
-      if(id===moqri)return;
+  onPressAuthor = (id) => {
+    const { setAuthorMoqri, setPlayer, moqri } = this.props;
+    if (id === moqri) return;
     setAuthorMoqri(id);
-    setPlayer('play');
+    setPlayer("play");
     this.goBack(true);
   };
 
   render() {
-    const {togl,moqri} = this.props;
+    const { togl, moqri } = this.props;
     return (
       <Container>
- <Header>
+        <Header>
           <Left>
             <Button transparent onPress={() => this.goBack()}>
-               <Icon name={togl?"ios-arrow-down":"ios-close" }/>
+              <Icon name={togl ? "ios-arrow-down" : "ios-close"} />
             </Button>
           </Left>
           <Body>
@@ -59,20 +57,20 @@ this.listAutor = listVoiceMoqri(this.lang)
         <Content>
           <List
             dataArray={this.listAutor}
-            renderRow={data => (
+            renderRow={(data) => (
               <ListItem
                 onPress={() => {
                   this.onPressAuthor(data.id);
                 }}
               >
                 <Left>
-                  <Icon name="star" color={moqri===data.id?"#d4aa1e":"#555" }/>
+                  <Icon
+                    name="star"
+                    color={moqri === data.id ? "#d4aa1e" : "#555"}
+                  />
                 </Left>
-              
-                  <Text>
-                    {data.voice} 
-                  </Text>
-              
+
+                <Text>{data.voice}</Text>
               </ListItem>
             )}
           />
@@ -81,14 +79,14 @@ this.listAutor = listVoiceMoqri(this.lang)
     );
   }
 }
-const mapStateToProps = ({wino,lang,moqri}) => ({
-  wino,lang,moqri
+const mapStateToProps = ({ wino, lang, moqri }) => ({
+  wino,
+  lang,
+  moqri,
 });
 
 const mapDispatchToProps = {
-  setPlayer,setAuthorMoqri
+  setPlayer,
+  setAuthorMoqri,
 };
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(Author);
+export default connect(mapStateToProps, mapDispatchToProps)(Author);
