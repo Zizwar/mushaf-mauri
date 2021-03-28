@@ -9,7 +9,6 @@ import {
   View,
   Thumbnail,
   ListItem,
-  
   Right,
   Body,
   Header,
@@ -21,9 +20,10 @@ import { isRTL } from "expo-localization";
 
 import { Ionicons } from "@expo/vector-icons";
 
-export const Icon = ({ name, size = 32, color = "#000", style=[] }) => 
-   <Ionicons name={name} size={size} color={style.color || color} />;
-   
+export const Icon = ({ name = "", size = 36, color = "#000", style = [] }) => (
+  <Ionicons name={name} size={size} color={style.color || color} />
+);
+
 export const ScreenAya = ({
   onpress,
   aya,
@@ -32,16 +32,15 @@ export const ScreenAya = ({
   page,
   fontSize = 14,
   color,
-  backgroundColor
+  backgroundColor,
 }) => (
   <Card>
-
     <CardItem button onPress={onpress}>
       <Col style={{ alignItems: "center", margin: 3 }}>
         <View style={{ alignSelf: "center" }}>
-        <Text style={{ color,textAlign: "center" }}>
-                     { sura } {aya}
-                  </Text>
+          <Text style={{ color, textAlign: "center" }}>
+            {sura} {aya}
+          </Text>
           <Text style={{ textAlign: "center", color: "#555", fontSize }}>
             {text}
           </Text>
@@ -52,7 +51,7 @@ export const ScreenAya = ({
       <CardItem>
         <Left />
         <Right>
-          <Text note style={{ color: "#555", }}>
+          <Text note style={{ color: "#555" }}>
             {page}
           </Text>
         </Right>
@@ -129,13 +128,12 @@ export const Itemino = ({
   index,
   key,
   //isRtl = false
-
 }) => {
   if (isRTL)
     return (
       <ListItem
         noBorder={noborder}
-        style={{ height:height|| 42 }}
+        style={{ height: height || 42 }}
         transparent
         onPress={onPress}
         key={key}
@@ -170,8 +168,8 @@ export const Itemino = ({
                   name={icon}
                   size={iconSize}
                 />
-              )}{index && <Text style={{ color }}>{index}</Text>}
-              
+              )}
+              {index && <Text style={{ color }}>{index}</Text>}
             </Right>
           </>
         )}
@@ -193,7 +191,8 @@ export const Itemino = ({
                 name={icon}
                 size={iconSize}
               />
-            )}{index && <Text style={{ color }}>{index}</Text>}
+            )}
+            {index && <Text style={{ color }}>{index}</Text>}
           </Button>
           <Text style={{ color }}>{text}</Text>
         </Left>
@@ -211,7 +210,8 @@ export const Itemino = ({
                 name={icon}
                 size={iconSize}
               />
-            )}{index && <Text style={{ color }}>{index}</Text>}
+            )}
+            {index && <Text style={{ color }}>{index}</Text>}
           </Right>
         </>
       ) : null}
@@ -219,30 +219,33 @@ export const Itemino = ({
   );
 };
 
-export const Headerino = ({color, backgroundColor,icon=null,onPress,lang,text}) => {
+export const Headerino = ({
+  color,
+  backgroundColor,
+  icon = null,
+  onPress,
+  lang,
+  text,
+}) => {
   if (isRTL)
     return (
-    <Header style={{ backgroundColor: color }}>
-      <Left>
-        <Button transparent onPress={onPress}>
-          <Icon style={{ color: backgroundColor }} name={icon || "close"} />
-        </Button>
-      </Left>
-      {lang === "ar" ? (
-        <Body>
-          <Text style={{ color: backgroundColor, fontSize: 20 }}>
-            {text}
-          </Text>
-        </Body>
-      ) : (
-        <Right>
-          <Text style={{ color: backgroundColor, fontSize: 20 }}>
-            {text}
-          </Text>
-        </Right>
-      )}
-    </Header>
-  );
+      <Header style={{ backgroundColor: color }}>
+        <Left>
+          <Button transparent onPress={onPress}>
+            <Icon style={{ color: backgroundColor }} name={icon || "close"} />
+          </Button>
+        </Left>
+        {lang === "ar" ? (
+          <Body>
+            <Text style={{ color: backgroundColor, fontSize: 20 }}>{text}</Text>
+          </Body>
+        ) : (
+          <Right>
+            <Text style={{ color: backgroundColor, fontSize: 20 }}>{text}</Text>
+          </Right>
+        )}
+      </Header>
+    );
   return (
     <Header style={{ backgroundColor: color }}>
       <Left>
@@ -252,15 +255,11 @@ export const Headerino = ({color, backgroundColor,icon=null,onPress,lang,text}) 
       </Left>
       {lang !== "ar" ? (
         <Body>
-          <Text style={{ color: backgroundColor, fontSize: 20 }}>
-            {text}
-          </Text>
+          <Text style={{ color: backgroundColor, fontSize: 20 }}>{text}</Text>
         </Body>
       ) : (
         <Right>
-          <Text style={{ color: backgroundColor, fontSize: 20 }}>
-            {text}
-          </Text>
+          <Text style={{ color: backgroundColor, fontSize: 20 }}>{text}</Text>
         </Right>
       )}
     </Header>

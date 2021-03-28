@@ -1256,7 +1256,7 @@ class Wino extends Component {
         style={{ position: "absolute", right: 2, bottom: 0 }}
         onPress={this.toglModalMenu}
       >
-        <Icon style={{ color }} size={30} name="ios-settings" />
+        <Icon style={{ color }} size={30} name="ios-menu" />
       </Button>
     );
     const footerMenu = (
@@ -1417,7 +1417,7 @@ class Wino extends Component {
                   style={styles.buttonHeader}
                   onPress={() => navigation.navigate("SearchSmart")}
                 >
-                  <Icon style={{ color }} size={30} name="ios-search" />
+                  <Icon style={{ color }} size={30} name="ios-menu" />
                 </Button>
                 <Button
                   transparent

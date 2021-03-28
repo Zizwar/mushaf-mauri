@@ -58,13 +58,13 @@ export const ButtonPopOver = ({
             setTimeout((_) => play(wino, true), 10);
           }}
         >
-          <Icon name="play" style={{ color }} />
+          <Icon name="md-play" style={{ color }} />
         </Button>
       </Col>
 
       <Col style={styles.col}>
         <Button transparent onPress={note}>
-          <Icon size={20} name="bookmark" style={{ color }} />
+          <Icon  name="md-bookmark" style={{ color }} />
         </Button>
       </Col>
 
@@ -76,13 +76,13 @@ export const ButtonPopOver = ({
             setTimeout((_) => tarajem("open"), 10);
           }}
         >
-          <Icon name="book" style={{ color }} />
+          <Icon name="md-book" style={{ color }} />
         </Button>
       </Col>
 
       <Col style={styles.col}>
         <Button transparent onPress={(_) => onShare(wino, toasti, close, lang)}>
-          <Icon name="share" style={{ color }} />
+          <Icon name="md-share" style={{ color }} />
         </Button>
       </Col>
       <Col style={styles.col}>
@@ -92,7 +92,7 @@ export const ButtonPopOver = ({
             writeToClipboard(wino.text, toasti, close, lang["copy_done"])
           }
         >
-          <Icon name="copy" style={{ color }} />
+          <Icon name="md-copy" style={{ color }} />
         </Button>
       </Col>
     </Row>
@@ -113,7 +113,7 @@ const styles = {
   col: {
     alignItems: "center",
     //paddingHorizontal: -1,
-    // padding: 2
+     padding: 12
   },
   row: {
     //  paddingBottom: 1
