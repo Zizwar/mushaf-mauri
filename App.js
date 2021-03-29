@@ -4,13 +4,11 @@ console.disableYellowBox = true;
 //
 import React, { Component } from "react";
 import { AsyncStorage } from "react-native";
-import Expo, { Asset, AppLoading } from "expo";
+import { AppLoading } from "expo";
 import * as Font from "expo-font";
 //import { Ionicons } from '@expo/vector-icons';
 //import Ionicons from "react-native-vector-icons/Ionicons";
 import { StyleProvider } from "native-base";
-//
-import { createStore, applyMiddleware } from "redux";
 import { Provider } from "react-redux";
 
 import { PersistGate } from "redux-persist/integration/react";
@@ -36,7 +34,6 @@ export default class App extends Component {
   }
   async loadDadaApp() {
     try {
-      const value = await AsyncStorage.getItem("isNightly");
       //  if(value === "ok")variablesZ = variablesNight
       //    const nightly = value == "ok" ? true : false;
 

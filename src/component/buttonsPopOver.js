@@ -1,6 +1,6 @@
 import React from "react";
 
-import { Col, Grid, Row, Button } from "native-base";
+import { Col, Grid, Row, Text, Button, Content } from "native-base";
 
 import { Clipboard, Share } from "react-native";
 import { Icon } from "./componentIno";
@@ -18,7 +18,7 @@ const onShare = async (wino, toasti, close, lang) => {
   const { text, aya, sura } = wino;
   try {
     const result = await Share.share({
-      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya} | \n Mushaf Mauri \n https://meshaf.me/a${aya}s${sura}r1z`,
+      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya}  \n https://meshaf.me/d/a${aya}s${sura}r1z`,
     });
 
     if (result.action === Share.sharedAction) {
@@ -38,84 +38,129 @@ const onShare = async (wino, toasti, close, lang) => {
 };
 //
 export const ButtonPopOver = ({
-  color,
-
   close,
   play,
   lang,
   toasti,
   note,
   tarajem,
+  stop,
+  color,
+  addBookmarks,
   wino,
 }) => (
-  <Grid>
-    <Row transparent style={styles.row}>
-      <Col transparent style={styles.col}>
-        <Button
-          transparent
-          onPress={(_) => {
-            close();
-            setTimeout((_) => play(wino, true), 10);
-          }}
-        >
-          <Icon name="md-play" style={{ color }} />
-        </Button>
-      </Col>
+  <Content>
+    <Grid>
+      <Row style={styles.row}>
+        <Col style={styles.col}>
+          <Button
+            transparent
+            onPress={(_) => {
+              close();
+              setTimeout((_) => play(wino), 100);
+            }}
+            style={{ marginBottom: 1 }}
+          >
+            <Icon active name="md-play" style={{ color }} />
+          </Button>
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["play"]}
+          </Text>
+        </Col>
+        <Col style={styles.col}>
+          <Button transparent onPress={note} style={{ marginBottom: 1 }}>
+            <Icon name="md-list" style={{ color }} />
+          </Button>
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["note"]}
+          </Text>
+        </Col>
 
-      <Col style={styles.col}>
-        <Button transparent onPress={note}>
-          <Icon  name="md-bookmark" style={{ color }} />
-        </Button>
-      </Col>
+        <Col style={styles.col}>
+          <Button
+            transparent
+            onPress={addBookmarks}
+            style={{ marginBottom: 1 }}
+          >
+            <Icon name="md-bookmark" style={{ color }} />
+          </Button>
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["addFav"]}
+          </Text>
+        </Col>
+        <Col style={styles.col}>
+          <Button
+            transparent
+            onPress={(_) => {
+              close();
+              setTimeout((_) => tarajem("open"), 10);
+            }}
+            style={{ marginBottom: 1 }}
+          >
+            <Icon active name="md-book" style={{ color }} />
+          </Button>
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["download_ttarajem_tarajem"]}
+          </Text>
+        </Col>
 
-      <Col style={styles.col}>
-        <Button
-          transparent
-          onPress={(_) => {
-            close();
-            setTimeout((_) => tarajem("open"), 10);
-          }}
-        >
-          <Icon name="md-book" style={{ color }} />
-        </Button>
-      </Col>
-
-      <Col style={styles.col}>
-        <Button transparent onPress={(_) => onShare(wino, toasti, close, lang)}>
-          <Icon name="md-share" style={{ color }} />
-        </Button>
-      </Col>
-      <Col style={styles.col}>
-        <Button
-          transparent
-          onPress={(_) =>
-            writeToClipboard(wino.text, toasti, close, lang["copy_done"])
-          }
-        >
-          <Icon name="md-copy" style={{ color }} />
-        </Button>
-      </Col>
-    </Row>
-  </Grid>
+        <Col style={styles.col}>
+          <Button
+            transparent
+            onPress={(_) => onShare(wino, toasti, close, lang)}
+            style={{ marginBottom: 1 }}
+          >
+            <Icon active name="md-share" style={{ color }} />
+          </Button>
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["share"]}
+          </Text>
+        </Col>
+        <Col style={styles.col}>
+          <Button
+            transparent
+            onPress={(_) =>
+              writeToClipboard(wino.text, toasti, close, lang["copy_done"])
+            }
+            style={{ marginBottom: 1 }}
+          >
+            <Icon active name="md-copy" style={{ color }} />
+          </Button>
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["copy"]}
+          </Text>
+        </Col>
+      </Row>
+    </Grid>
+  </Content>
 );
-
 const styles = {
   container: {
     flex: 1,
     width: null,
     height: null,
-    // backgroundColor: "#FFF"
+    backgroundColor: "#FFF",
   },
-
+  iconContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-around",
+    paddingLeft: 1,
+  },
   iconText: {
     fontSize: 12,
   },
+  icon: {
+    width: 45,
+    height: 45,
+    justifyContent: "center",
+  },
   col: {
     alignItems: "center",
-    //paddingHorizontal: -1,
-     padding: 12
+    paddingHorizontal: 5,
+    padding: 2,
   },
   row: {
-    //  paddingBottom: 1
+    paddingBottom: 1,
   },
 };

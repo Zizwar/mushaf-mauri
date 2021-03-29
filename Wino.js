@@ -93,9 +93,10 @@ const Toasti = (text) =>
   });
 const { width, height } = Dimensions.get("window");
 
-const HEIGH_PAGE = 707;
+const HEIGH_PAGE = 825;
 const WIDTH_PAGE = 456;
-const MARGIN_PAGE = 5;
+const MARGIN_PAGE = 55;
+const MARGIN_PAGE_WIDTH = 5;
 
 const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
 //
@@ -657,7 +658,7 @@ class Wino extends Component {
     const imagePage = ( //<BlurView tint="dark" intensity={50} >
       <Image
         key={`${id}_${index}`}
-        style={{ width: width - MARGIN_PAGE, height: heightScala }}
+        style={{ width: width - MARGIN_PAGE_WIDTH, height: heightScala }}
         // style={{ position:"absolute",left:(MARGIN_PAGE / 2), right:(MARGIN_PAGE / 2), height: heightScala }}
 
         // resizeMode="contain"
