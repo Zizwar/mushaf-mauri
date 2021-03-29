@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Platform, Dimensions, StyleSheet } from "react-native";
+import { Dimensions } from "react-native";
 import { Content, Text, List, ListItem } from "native-base";
 
 import { Icon } from "../component";
@@ -128,8 +128,6 @@ class Menu extends Component {
   }
 }
 
-const deviceHeight = Dimensions.get("window").height;
-const deviceWidth = Dimensions.get("window").width;
 
 const mapStateToProps = ({ lang }) => ({ lang });
 

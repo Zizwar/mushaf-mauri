@@ -29,7 +29,7 @@ import SideBar from "./src/screens/SideBar";
 const Drawer = createDrawerNavigator(
   {
     BookMarks: { screen: BookMarks },
-     Home: { screen: Menu },
+    Home: { screen: Menu },
     Tafsir: { screen: Tafsir },
     Wino: { screen: Wino },
     Khitma: { screen: Khitma },
@@ -45,7 +45,7 @@ const Drawer = createDrawerNavigator(
     contentOptions: {
       activeTintColor: "#e91e63",
     },
-    contentComponent: (props) => <SideBar {...props} />,
+    contentComponent: (props) => <Menu {...props} />,
   }
 );
 //
