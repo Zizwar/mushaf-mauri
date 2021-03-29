@@ -14,7 +14,6 @@ import {
   ImageBackground,
 } from "react-native";
 import { ScreenOrientation } from "expo";
-import * as FileSystem from "expo-file-system";
 import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; //wino permission
 
 import { Audio } from "expo-av";
@@ -36,13 +35,11 @@ import { connect } from "react-redux";
 
 import { Popover } from "react-native-modal-popover";
 //import Icon from "react-native-vector-icons/Ionicons";
-import { Icon } from "./src/component";
 import Swiper from "./src/node/Swipino";
 import * as langs from "./i18n";
 import {
   coordinatePage,
   paddingAya,
-  aya2id,
   nextAya,
   prevAya,
   getAyatBySuraAya,
@@ -53,7 +50,7 @@ import {
   getJuzBySuraAya,
   dbs,
 } from "./src/functions";
-import { getImagePageUri, getAudioMoqriUri } from "./src/api";
+import { getAudioMoqriUri } from "./src/api";
 //import { Asset } from "expo-asset";
 
 //const SOURCE_ASSETS_IMAGE = Asset.fromModule(require("./assets/wino23.png")).uri;
@@ -73,7 +70,7 @@ import {
 } from "./reducer";
 //
 
-import { ButtonPopOver } from "./src/component";
+import { ButtonPopOver, Icon } from "./src/component";
 import Modalino from "./src/component/modalino";
 import AddNote from "./src/component/addNote";
 import Tarajem from "./src/screens/Tarajem";
@@ -104,7 +101,7 @@ const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
 const NUMBER_PAGE = 638;
 const MINIMAL_PAGE_RENDER = 25; //8;
 const SWIPE_horizontal = true;
-const currentPage = (p) => (NUMBER_PAGE - p ? NUMBER_PAGE - p : 0);
+const currentPage = (p) => NUMBER_PAGE - p || 0;
 const suraAya2id = ({ sura, aya }) => `s${sura}a${aya}z`;
 //
 const THEMES = [
@@ -171,6 +168,7 @@ class Wino extends Component {
     this.repeat = 1;
     this.currentId = 1;
     this.existPage = 0;
+    this.listScrollPage = [];
     //this.prorate = this.props.prorate?0.7:1;
   }
   /*
@@ -198,20 +196,21 @@ class Wino extends Component {
     }
     */
 
-  async componentDidMount() {
+  async componentWillMount() {
     const { quira, awk, wino: winos, prorate, bookmarks } = this.props;
     this.bookmarksPage = bookmarks.map((d) => d && d.page);
     this.setAwk(awk);
     if (prorate) this.prorate();
     console.log("WORKING...");
     let vi = [];
-    let i = 1;
+    let id = NUMBER_PAGE;
     for (;;) {
-      if (i > NUMBER_PAGE) break;
+      if (1 > id) break;
+      this.listScrollPage.push({ id });
       vi.push({
-        id: i,
+        id,
       });
-      i++;
+      id--;
     }
     // vi.push({
     //   id: 1
@@ -275,7 +274,6 @@ class Wino extends Component {
         case "stop":
           this.playSound(false);
           return;
-          break;
 
         //
       }
@@ -464,7 +462,6 @@ class Wino extends Component {
   };
   playNextAya = () => {
     const { isRepeat } = this.state;
-    // if (this.props.isRepeat) this.itRepeat();
     if (isRepeat) this.itRepeatz();
     else this.forcePlayNextAya();
   };
@@ -478,10 +475,6 @@ class Wino extends Component {
   scrollTo = (num) => {
     if (!this.refs.swiper) {
       return;
-      setTimeout((_) => {
-        this.scrollTo(num);
-      }, 500);
-      // return
     }
     if (!num) return;
     if (num == "prev") {
@@ -499,14 +492,8 @@ class Wino extends Component {
     if (index === this.index) return;
     if (!index) index = 0;
 
-    //  if (index > 603) index = 1;
     this.currentId = index - this.index;
-    // this.statePage(this.currentId)
-    // this.index = index;
-    // console.log(
-    //   ">ScrollTo index => " + index,
-    //   ">ScrollTo current=>" + currentI
-    // );
+
     this.refs.swiper.scrollBy(this.currentId, false);
   };
   statePage(positionPage) {
@@ -514,21 +501,18 @@ class Wino extends Component {
   }
 
   toglModalTafsir = (togl) => {
-    //const {visibleModalSearch} = this.state
     let visibleModalTafsir = !this.state.visibleModalTafsir;
     if (togl == "close") visibleModalTafsir = false;
     if (togl == "open") visibleModalTafsir = true;
     this.setState({ visibleModalTafsir });
   };
   toglShowPopover = (togl) => {
-    //const {visibleModalSearch} = this.state
     let showPopover = !this.state.showPopover;
     if (togl == "close") showPopover = false;
     if (togl == "open") showPopover = true;
     this.setState({ showPopover });
   };
   toglModalAuthor = (togl) => {
-    //const {visibleModalSearch} = this.state
     let visibleModalAuthor = !this.state.visibleModalAuthor;
     if (togl == "close") visibleModalAuthor = false;
     if (togl == "open") visibleModalAuthor = true;
@@ -537,11 +521,6 @@ class Wino extends Component {
   toglModalMenu = (togl) => {
     this.props.navigation.toggleDrawer();
     return;
-    //const {visibleModalSearch} = this.state
-    let visibleModalMenu = !this.state.visibleModalMenu;
-    if (togl == "close") visibleModalMenu = false;
-    if (togl == "open") visibleModalMenu = true;
-    this.setState({ visibleModalMenu });
   };
 
   toglModalSearch = (togl, ok) => {
@@ -549,7 +528,6 @@ class Wino extends Component {
       alert("main 2 char");
       return;
     }
-    //const {visibleModalSearch} = this.state
     let visibleModalSearch = this.state.visibleModalSearch;
     if (togl == "close") visibleModalSearch = false;
     if (togl == "open") visibleModalSearch = true;
@@ -561,36 +539,12 @@ class Wino extends Component {
   _onIndexChanged = (index) => {
     const page = currentPage(index);
     const isFaves = this.bookmarksPage.includes(page);
-    //  console.log({ isFaves });
-    //const thisindex = this.index;
     this.index = index;
 
     this.setState({ positionPage: index, isFaves });
-
-    //this.statePage(index)
-    //this.setState({ menuSercl: false });
-    //  console.log("ChangeIndex=>", { index },"page=",currentPage(index));
-    // alert(index)
   };
-  _onMomentumScrollEnd = () =>
-    //console.log({ e, state, context });
-    //
-    (toglMenuDownUp = () => {
-      // this.toglTray()
-      //if (this.awitino) return;
-      // this.awitino = true;
-      const { menuSercl } = this.state;
-      this.setState({ menuSercl: !menuSercl });
-      // this.props.handleMenu("open");
-      // setTimeout(_ => this.toglSearch(), 100);
-    });
-  /*
-  getImagePageLocal = ({ quira = "warsh", id }) =>
-    quira === "warsh" ?  requirePages[id-1] :{uri: `${DIR + quira}/${id}.png`};
-*/
 
   renderItemPage = ({ id, index }) => {
-    // console.log("render Item", { id, index });
     const {
       quira,
       lang,
@@ -659,9 +613,6 @@ class Wino extends Component {
       <Image
         key={`${id}_${index}`}
         style={{ width: width - MARGIN_PAGE_WIDTH, height: heightScala }}
-        // style={{ position:"absolute",left:(MARGIN_PAGE / 2), right:(MARGIN_PAGE / 2), height: heightScala }}
-
-        // resizeMode="contain"
         resizeMode="stretch"
         source={source}
 
@@ -697,15 +648,7 @@ class Wino extends Component {
           }}
           key={index}
         >
-          {
-            imagePage
-            /*night
-                        ? positionPage === index
-                          ? imageNight
-                          : imagePage
-                        : imagePage
-                      */
-          }
+          {imagePage}
 
           {/*
         <View
@@ -737,16 +680,16 @@ class Wino extends Component {
 		 
   */}
           {positionPage === index &&
-            positions.map(({ left, top, height, width, id, wino }) => (
+            positions.map(({ left, top, height, width, id, wino }, index) => (
               <TouchableNativeFeedback
                 //style={{backgroundColor:'#f61',opacity:0.3}}
                 //delayLongPress={5}
                 //onPress={this.toglMenuDownUp}
                 onPress={(_) => this.onLongPressAya({ id, wino })}
-                key={`toche${id}`}
+                key={`toche${id + index}`}
               >
                 <View
-                  key={`vto${id}`}
+                  key={`vto${id + index}`}
                   ref={(t) => {
                     this.pages[id] = { index, t };
                   }}
@@ -754,7 +697,7 @@ class Wino extends Component {
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
                       ? styles.onPressAya //{ backgroundColor, opacity: 0.1 } //
-                      : { opacity: 0.0 }, //styles.onUnPressAya,
+                      : styles.onUnPressAya, //,{ opacity: 0.0 }, //
                     !isRTL
                       ? {
                           height,
@@ -1237,7 +1180,7 @@ class Wino extends Component {
         style={{ position: "absolute", left: 2, bottom: 1 }}
         onPress={() => navigation.navigate("Suras")}
       >
-        <Icon style={{ color }} size={30} name="ios-menu" />
+        <Icon style={{ color }} size={30} name="md-book" />
       </Button>
     );
 
@@ -1247,7 +1190,7 @@ class Wino extends Component {
         style={{ position: "absolute", right: 5, bottom: 0 }}
         onPress={() => navigation.navigate("Suras")}
       >
-        <Icon style={{ color }} size={30} name="ios-menu" />
+        <Icon style={{ color }} size={30} name="md-book" />
       </Button>
     );
 
@@ -1262,8 +1205,6 @@ class Wino extends Component {
     );
     const footerMenu = (
       <View style={styles.footerMenu}>
-        {!isRTL ? ButtonMenu : ButtonMenuRtl}
-
         {openTool && (
           <Item
             style={{
@@ -1337,8 +1278,6 @@ class Wino extends Component {
             </Button>
           </Item>
         )}
-
-        {!isRTL ? ButtonOption : ButtonOptionRtl}
       </View>
     );
     const popOver = (
@@ -1416,9 +1355,16 @@ class Wino extends Component {
                 <Button
                   transparent
                   style={styles.buttonHeader}
-                  onPress={() => navigation.navigate("SearchSmart")}
+                  onPress={this.toglModalMenu}
                 >
                   <Icon style={{ color }} size={30} name="ios-menu" />
+                </Button>
+                <Button
+                  transparent
+                  style={styles.buttonHeader}
+                  onPress={() => navigation.navigate("SearchSmart")}
+                >
+                  <Icon style={{ color }} size={30} name="md-search" />
                 </Button>
                 <Button
                   transparent
@@ -1431,6 +1377,7 @@ class Wino extends Component {
                     name={isFaves ? "ios-star" : "ios-star-outline"}
                   />
                 </Button>
+                {/*
                 <Button
                   transparent
                   style={styles.buttonHeader}
@@ -1445,6 +1392,14 @@ class Wino extends Component {
                     size={26}
                     name={night ? "ios-sunny" : "ios-moon"}
                   />
+                </Button>
+                */}
+                <Button
+                  transparent
+                  style={styles.buttonHeader}
+                  onPress={() => navigation.navigate("Suras")}
+                >
+                  <Icon style={{ color }} size={30} name="md-book" />
                 </Button>
               </Item>
             </View>
@@ -1486,7 +1441,9 @@ class Wino extends Component {
                 }}
                 showsHorizontalScrollIndicator={true}
               >
-                {vi.map(({ id }, index) => this.renderItemPage({ id, index }))}
+                {this.listScrollPage.map(({ id }, index) =>
+                  this.renderItemPage({ id, index })
+                )}
               </Swiper>
             </ScrollView>
           </View>
