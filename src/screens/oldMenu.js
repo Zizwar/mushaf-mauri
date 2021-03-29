@@ -118,7 +118,7 @@ class Menu extends Component {
         {/*
           <ListItem button noBorder onPress={BackHandler.exitApp}>
             <Left>
-              <Icon size={42} name="close" color="#d4aa1e" />
+              <Icon size={42} name="md-close" color="#d4aa1e" />
               <Text style={styles.text}>{this.lang["close"]}</Text>
             </Left>
           </ListItem>

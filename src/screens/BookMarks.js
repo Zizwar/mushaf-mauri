@@ -90,7 +90,7 @@ class BookMarks extends Component {
           <Button transparent>
             <Icon
               style={{ color, fontSize: 22 }}
-              name={data.page ? "ios-star-outline" : "bookmarks"}
+              name={data.page ? "md-star" : "md-bookmarks"}
             />
           </Button>
         </Left>
@@ -126,7 +126,7 @@ class BookMarks extends Component {
         </Body>
         <Right>
           <Button transparent onPress={() => this.delId(id)}>
-            <Icon style={{ color, fontSize: 20 }} name="close" />
+            <Icon style={{ color, fontSize: 20 }} name="md-close" />
           </Button>
         </Right>
       </ListItem>

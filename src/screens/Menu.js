@@ -6,7 +6,7 @@ import * as lang from "../../i18n";
 
 import { Itemino } from "../component";
 import AuthorMenu from "./AuthorMenu";
-import { setLang, reRender, setQuira ,setTheme} from "../../reducer";
+import { setLang, reRender, setQuira, setTheme } from "../../reducer";
 class Menu extends Component {
   constructor(props) {
     super(props);
@@ -16,49 +16,47 @@ class Menu extends Component {
       {
         name: this.lang["tafsir"],
         route: "Tafsir",
-        icon: "document",
+        icon: "md-document",
         bg: "#477EEA",
       },
       {
         name: this.lang["favs"],
         route: "BookMarks",
-        icon: "bookmark",
+        icon: "md-bookmark",
         bg: "#477EEA",
       },
 
       {
         name: this.lang["bu_download_recites"],
         route: "author",
-        icon: "headset",
+        icon: "md-headset",
         bg: "#477EEA",
       },
       {
         name: this.lang["mosshaf_type"],
         route: "mushaf",
-        icon: "book",
+        icon: "md-book",
       },
       {
         name: this.lang["color"],
         route: "color",
-        icon: "color-fill",
+        icon: "md-color-fill",
         bg: "#477EEA",
       },
       {
         name: this.lang["choose_lang"],
         route: "choose_lang",
-        icon: "flag",
+        icon: "md-flag",
         bg: "#477EEA",
       },
       {
         name: this.lang["bu_download_cnt"],
         route: "Store",
-        icon: "cloud-download",
+        icon: "md-cloud-download",
         bg: "#477EEA",
       },
     ];
-    this.dataMushaf = [
-      "warsh",
-    ];
+    this.dataMushaf = ["warsh"];
 
     this.state = {
       active: "menu",
@@ -89,7 +87,7 @@ class Menu extends Component {
       <List
         transparent
         dataArray={this.menus}
-        renderRow={(data,i,index) => (
+        renderRow={(data, i, index) => (
           <Content style={{ flex: 1, backgroundColor: "#ffffff00" }}>
             <Itemino
               onPress={() => {
@@ -130,14 +128,14 @@ class Menu extends Component {
               onPress={() => {
                 setTheme({ backgroundColor: "#fff", color: "#000" });
                 setQuira(data);
-                             
+
                 close();
               }}
               lang={lang}
               color={color}
               text={this.lang[`mosshaf_${data}`]}
               index={index + 1}
-               key={`mus_${index}`}
+              key={`mus_${index}`}
               noborder={true}
             />
           </Content>
@@ -190,5 +188,5 @@ class Menu extends Component {
 
 const mapStateToProps = ({ lang }) => ({ lang });
 
-const mapDispatchToProps = { reRender, setLang, setQuira,setTheme };
+const mapDispatchToProps = { reRender, setLang, setQuira, setTheme };
 export default connect(mapStateToProps, mapDispatchToProps)(Menu);

@@ -57,7 +57,7 @@ export const ButtonPopOver = ({
             transparent
             onPress={(_) => {
               close();
-              setTimeout((_) => play(wino), 100);
+              setTimeout((_) => play(wino,true), 100);
             }}
             style={{ marginBottom: 1 }}
           >

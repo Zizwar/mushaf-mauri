@@ -93,7 +93,7 @@ class SideBar extends Component {
         >
           <View style={{ position: "absolute", top: 10, right: 5 }}>
             <Button transparent onPress={navigation.closeDrawer}>
-              <Icon name="close" color="#555" />
+              <Icon name="md-close" color="#555" />
             </Button>
           </View>
 
@@ -123,7 +123,7 @@ class SideBar extends Component {
           {/*
           <ListItem button noBorder onPress={BackHandler.exitApp}>
             <Left>
-              <Icon size={42} name="close" color="#d4aa1e" />
+              <Icon size={42} name="md-close" color="#d4aa1e" />
               <Text style={styles.text}>{this.lang["close"]}</Text>
             </Left>
           </ListItem>

@@ -146,7 +146,7 @@ class Reciting extends Component {
         <Header style={{ backgroundColor }}>
           <Left>
             <Button transparent onPress={this.goBack}>
-              <Icon name="close" style={{ color }} />
+              <Icon name="md-close" style={{ color }} />
             </Button>
           </Left>
           <Body>
