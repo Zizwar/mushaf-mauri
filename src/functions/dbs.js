@@ -9,7 +9,6 @@ const execSql = async (sql, params = [], db) => {
   );
 };
 
-
 export class dbs {
   constructor(author) {
     this.author = author;

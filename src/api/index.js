@@ -8,8 +8,8 @@ NetInfo.fetch().then(state => {
 */
 //
 const BASE_URL = "https://alquran.cloud/api/";
-const BASE_URL2 = "http://www.everyayah.com/data/";//http://www.everyayah.com/data/AbdulSamad_64kbps_QuranExplorer.Com/001001.mp3
-const base_URL3 = "http://quran.ksu.edu.sa/";//ayat/mp3/Hudhaify_64kbps/001001.mp3";
+const BASE_URL3 = "http://www.everyayah.com/data/";//http://www.everyayah.com/data/AbdulSamad_64kbps_QuranExplorer.Com/001001.mp3
+const BASE_URL2 = "http://quran.ksu.edu.sa/";//ayat/mp3/Hudhaify_64kbps/001001.mp3";
 
 
 //
