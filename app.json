@@ -30,7 +30,7 @@
     },
     "android": {
       "package": "ma.com.mushaf.mauri",
-      "versionCode":2
+      "versionCode":3
     },
     "packagerOpts": {
       "sourceExts": ["ts", "tsx", "js"],
