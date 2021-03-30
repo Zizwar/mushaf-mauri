@@ -14642,11 +14642,6 @@ react-native-modal@^9.0.0:
     prop-types "^15.6.2"
     react-native-animatable "^1.2.4"
 
-react-native-off-canvas-menu@^0.1.32:
-  version "0.1.32"
-  resolved "https://registry.npmjs.org/react-native-off-canvas-menu/-/react-native-off-canvas-menu-0.1.32.tgz"
-  integrity sha512-oHYYqECXf63ndQsHItCRkiAGgPNoWPjiTQO+4t6zahDKEmS1KkwG5fhzucr8sSMthZx4qXo+qZyQwv90vMjCeQ==
-
 react-native-safe-area-view@^0.14.8:
   version "0.14.9"
   resolved "https://registry.npmjs.org/react-native-safe-area-view/-/react-native-safe-area-view-0.14.9.tgz"
@@ -14681,15 +14676,6 @@ react-native-tab-view@^1.2.0, react-native-tab-view@^1.4.1:
   integrity sha512-Bke8KkDcDhvB/z0AS7MnQKMD2p6Kwfc1rSKlMOvg9CC5CnClQ2QEnhPSbwegKDYhUkBI92iH/BYy7hNSm5kbUQ==
   dependencies:
     prop-types "^15.6.1"
-
-react-native-vector-icons@^6.6.0:
-  version "6.7.0"
-  resolved "https://registry.npmjs.org/react-native-vector-icons/-/react-native-vector-icons-6.7.0.tgz"
-  integrity sha512-LKdwqDIGVxV1+4HnmFIPaok9hba3WyTQ7H2Wj5RFv54zIdIjixrAiV9VD/Ej9Mc5/rUhTpmMiIVF3LVmVYD7dg==
-  dependencies:
-    lodash "^4.17.15"
-    prop-types "^15.7.2"
-    yargs "^15.0.2"
 
 react-native-vector-icons@^7.0.0:
   version "7.0.0"

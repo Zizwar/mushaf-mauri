@@ -69,21 +69,22 @@ class Menu extends Component {
       active: "menu",
     };
   }
+  backHome = () => this.props.navigation.closeDrawer();
   backMenu = () => this.setState({ active: "menu" });
   author = () => this.setState({ active: "author" });
   shooselang = () => this.setState({ active: "lang" });
   changeMushaf = () => this.setState({ active: "mushaf" });
   switchLangTo = (lang) => {
-    const { setLang, reRender, close } = this.props;
+    const { setLang, reRender } = this.props;
     setLang(lang);
     reRender("switchLang");
-    close();
+    this.backHome();
+    // close();
   };
   render() {
     const {
       navigation,
       setQuira,
-      close,
       lang,
       setTheme,
       theme: { backgroundColor, color },
@@ -117,30 +118,32 @@ class Menu extends Component {
         transparent
         dataArray={this.menus}
         renderRow={(data, i, index) => (
-          <Itemino
-            onPress={() => {
-              switch (data.route) {
-                case "color":
-                  return changeColor();
-                case "mushaf":
-                  return this.changeMushaf();
-                case "author":
-                  return this.author();
-                case "choose_lang":
-                  return this.shooselang();
-                default: {
-                  navigation.navigate(data.route);
-                  close();
+          <Content style={{ flex: 1, backgroundColor: "#ffffff00" }}>
+            <Itemino
+              onPress={() => {
+                switch (data.route) {
+                  case "color":
+                    return changeColor();
+                  case "mushaf":
+                    return this.changeMushaf();
+                  case "author":
+                    return this.author();
+                  case "choose_lang":
+                    return this.shooselang();
+                  default: {
+                    navigation.navigate(data.route);
+                    this.backHome();
+                  }
                 }
-              }
-            }}
-            lang={lang}
-            color={color}
-            text={data.name}
-            icon={data.icon}
-            noborder={true}
-            key={`menu_${index}`}
-          />
+              }}
+              lang={lang}
+              color={color}
+              text={data.name}
+              icon={data.icon}
+              noborder={true}
+              key={`menu_${index}`}
+            />
+          </Content>
         )}
       />
     );
@@ -151,13 +154,13 @@ class Menu extends Component {
         <List
           transparent
           dataArray={this.dataMushaf}
-          renderRow={(data, i, index) => (
+          renderRow={(data, _i, index) => (
             <Content style={{ flex: 1, backgroundColor }}>
               <Itemino
                 onPress={() => {
                   // setTheme({ backgroundColor: "#fff", color: "#000" });
                   setQuira(data);
-
+                  this.backHome();
                   // close();
                 }}
                 lang={lang}
@@ -176,7 +179,10 @@ class Menu extends Component {
       <Content style={{ flex: 1, backgroundColor }}>
         <BackMenu />
         <Itemino
-          onPress={() => this.switchLangTo("ar")}
+          onPress={() => {
+            this.switchLangTo("ar");
+            this.backHome();
+          }}
           lang={lang}
           color={color}
           text={this.lang["l_arabic"]}
@@ -185,7 +191,10 @@ class Menu extends Component {
           noborder={true}
         />
         <Itemino
-          onPress={() => this.switchLangTo("en")}
+          onPress={() => {
+            this.switchLangTo("en");
+            this.backHome();
+          }}
           lang={lang}
           color={color}
           text={this.lang["l_english"]}
@@ -207,7 +216,7 @@ class Menu extends Component {
       case "author":
         return (
           <Content style={{ flex: 1, backgroundColor }}>
-            <AuthorMenu close={close} back={BackMenu} />
+            <AuthorMenu back={BackMenu} />
           </Content>
         );
 

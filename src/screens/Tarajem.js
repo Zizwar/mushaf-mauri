@@ -63,7 +63,7 @@ changeTarjama,
         <Header style={{ backgroundColor: color }}>
           <Left>
             <Button transparent onPress={() => togl("close")}>
-              <Icon style={{ color: backgroundColor }} name="ios-arrow-down" />
+              <Icon size={24} style={{ color: backgroundColor }} name="ios-arrow-down" />
             </Button>
           </Left>
           <Body>
@@ -77,25 +77,25 @@ changeTarjama,
             <Text style={{ color: backgroundColor ,fontSize:11}} note>
               {listAuthorTarajem.filter((itm) => itm.id === tarjama)[0].name}
             </Text>
-            <Icon style={{ color:backgroundColor,fontSize:20 }} name="create" />
+            <Icon size={24} style={{ color:backgroundColor }} name="md-create" />
        
             </Button>
           </Body>
           <Right>
             <Button transparent onPress={prevAya}>
-              <Icon
+              <Icon size={24}
                 style={{ color: backgroundColor }}
                 name="md-skip-backward"
               />
             </Button>
             <Button transparent onPress={toglPlayer}>
-              <Icon
+              <Icon size={24}
                 style={{ color: backgroundColor }}
                 name={isPlaying ? "ios-square" : "md-play"}
               />
             </Button>
             <Button transparent onPress={nextAya}>
-              <Icon style={{ color: backgroundColor }} name="md-skip-forward" />
+              <Icon size={24} style={{ color: backgroundColor }} name="md-skip-forward" />
             </Button>
           </Right>
         </Header>

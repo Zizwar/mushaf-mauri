@@ -1,10 +1,5 @@
 import React, { Component } from "react";
-import {
-  View,
-  Dimensions,
-  StyleSheet,
-  Animated
-} from "react-native";
+import { View, StyleSheet, Animated } from "react-native";
 import Tafsir from "./Tafsir";
 
 import GestureView from "../node/GestureView";
@@ -13,14 +8,13 @@ export default class Tray extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      bounceValue: new Animated.Value(300)
+      bounceValue: new Animated.Value(300),
     };
     this.isHidden = true;
     this.toValue = 0;
   }
   UNSAFE_componentWillMount() {}
   _toggleSubview() {
-
     this.toValue = 300;
 
     if (this.isHidden) this.toValue = 0;
@@ -29,7 +23,7 @@ export default class Tray extends Component {
       toValue: this.toValue,
       velocity: 3,
       tension: 2,
-      friction: 8
+      friction: 8,
     }).start();
 
     this.isHidden = !this.isHidden;
@@ -38,22 +32,21 @@ export default class Tray extends Component {
   onSwipe = () => this._toggleSubview();
 
   render() {
-
     return (
       <View>
-            <Animated.View
-        style={[
-          styles.subView,
-          { transform: [{ translateY: this.state.bounceValue }] }
-        ]}
-      >
-        <GestureView
-          onSwipeUp={() => this.onSwipe("up")}
-          onSwipeDown={() => this.onSwipe("down")}
+        <Animated.View
+          style={[
+            styles.subView,
+            { transform: [{ translateY: this.state.bounceValue }] },
+          ]}
         >
-        <Tafsir/>
-        </GestureView>
-               </Animated.View>
+          <GestureView
+            onSwipeUp={() => this.onSwipe("up")}
+            onSwipeDown={() => this.onSwipe("down")}
+          >
+            <Tafsir />
+          </GestureView>
+        </Animated.View>
       </View>
     );
   }
@@ -67,28 +60,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#346",
-    marginTop:66
+    marginTop: 66,
   },
   welcome: {
     fontSize: 20,
     textAlign: "center",
-    margin: 10
+    margin: 10,
   },
   instructions: {
     textAlign: "center",
     color: "#333333",
-    marginBottom: 5
+    marginBottom: 5,
   },
   button: {
     width: 60,
     height: 40,
-    backgroundColor: "green"
+    backgroundColor: "green",
   },
-    subView: {
+  subView: {
     position: "relative",
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: "#FFFFFF",
     height: 250,
-}});
+  },
+});

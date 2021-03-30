@@ -262,7 +262,7 @@ class Tafsir extends Component {
                 this.refs.picker.show();
               }}
             >
-              <Icon style={{ color }} name="create" />
+              <Icon style={{ color }} name="md-create" />
               <Text style={{ textAlign: "center", color, fontSize: 15 }}>
                 {
                   this.listAuthorTafsir.filter((itm) => itm.id == author)[0]
