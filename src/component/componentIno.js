@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React from "react";
 
 import {
   Button,
@@ -32,7 +32,6 @@ export const ScreenAya = ({
   page,
   fontSize = 14,
   color,
-  backgroundColor,
 }) => (
   <Card>
     <CardItem button onPress={onpress}>
@@ -232,7 +231,7 @@ export const Headerino = ({
       <Header style={{ backgroundColor: color }}>
         <Left>
           <Button transparent onPress={onPress}>
-            <Icon style={{ color: backgroundColor }} name={icon || "close"} />
+            <Icon style={{ color: backgroundColor }} name={icon || "md-close-circle"} />
           </Button>
         </Left>
         {lang === "ar" ? (
@@ -250,7 +249,7 @@ export const Headerino = ({
     <Header style={{ backgroundColor: color }}>
       <Left>
         <Button transparent onPress={onPress}>
-          <Icon style={{ color: backgroundColor }} name={icon || "close"} />
+          <Icon style={{ color: backgroundColor }} name={icon || "md-close-circle"} />
         </Button>
       </Left>
       {lang !== "ar" ? (

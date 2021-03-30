@@ -33,7 +33,7 @@ class First extends Component {
         <Content>
           <Col style={{ alignItems: "center", marginButton: 20 }}>
             <Button transparent style={{ alignSelf: "center" }}>
-              <Icon name="globe" />
+              <Icon name="md-globe" />
             </Button>
 
             <H3>{this.lang["choose_lang"]}</H3>

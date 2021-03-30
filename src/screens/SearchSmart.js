@@ -26,7 +26,7 @@ class SearchSmart extends Component {
     return (
       <Container>
         <Headerino
-          onPress={navigation.goBack}
+          onPress={_=>navigation.goBack()}
           lang={lang}
           text={this.lang["search"]}
           color={color}

@@ -34,6 +34,7 @@ import {
 import { connect } from "react-redux";
 
 import { Popover } from "react-native-modal-popover";
+import { MaterialIcons } from '@expo/vector-icons'; 
 //import Icon from "react-native-vector-icons/Ionicons";
 import Swiper from "./src/node/Swipino";
 import * as langs from "./i18n";
@@ -398,7 +399,7 @@ class Wino extends Component {
   };
   ///
   itRepeat = () => {
-    console.log("yes repeat");
+    //console.log("yes repeat");
     const { setRepeat, tekrar, wino, setPlayer } = this.props;
     const { ayaStart, suraStart, ayaEnd, suraEnd, repeat } = tekrar;
     const { isPlaying } = this.state;
@@ -587,8 +588,8 @@ class Wino extends Component {
     const titleSura = (
       <>
         <Left>
-          <Text note style={{ textAlign: "left", color }}>
-            {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : "Jus' " + hizb}
+          <Text note style={{ transform: [{rotateY: '180deg'}],textAlign: "left", color }}>
+           ss {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : "Jus' " + hizb}
           </Text>
         </Left>
 
@@ -1355,9 +1356,9 @@ class Wino extends Component {
                 <Button
                   transparent
                   style={styles.buttonHeader}
-                  onPress={this.toglModalMenu}
+                  onPress={() => navigation.navigate("Suras")}
                 >
-                  <Icon style={{ color }} size={30} name="ios-menu" />
+                  <Icon style={{ color }} size={30} name="md-book" />
                 </Button>
                 <Button
                   transparent
@@ -1365,6 +1366,13 @@ class Wino extends Component {
                   onPress={() => navigation.navigate("SearchSmart")}
                 >
                   <Icon style={{ color }} size={30} name="md-search" />
+                </Button>  
+                <Button
+                  transparent
+                  style={styles.buttonHeader}
+                 
+                >
+                <Icon style={{ color }} size={30} name="ios-hand" />
                 </Button>
                 <Button
                   transparent
@@ -1374,8 +1382,15 @@ class Wino extends Component {
                   <Icon
                     size={26}
                     style={isFaves ? "#090" : { color }}
-                    name={isFaves ? "ios-star" : "ios-star-outline"}
+                    name={isFaves ? "md-star" : "md-star-outline"}
                   />
+                </Button>
+                <Button
+                  transparent
+                  style={styles.buttonHeader}
+                  onPress={this.toglModalMenu}
+                >
+                  <Icon style={{ color }} size={30} name="md-menu" />
                 </Button>
                 {/*
                 <Button
@@ -1394,13 +1409,6 @@ class Wino extends Component {
                   />
                 </Button>
                 */}
-                <Button
-                  transparent
-                  style={styles.buttonHeader}
-                  onPress={() => navigation.navigate("Suras")}
-                >
-                  <Icon style={{ color }} size={30} name="md-book" />
-                </Button>
               </Item>
             </View>
 

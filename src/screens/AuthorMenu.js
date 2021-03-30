@@ -1,7 +1,6 @@
 import React, { Component } from "react";
-import { List } from "native-base";
+import { List, View } from "native-base";
 
-import { Icon } from "../component";
 import { listVoiceMoqri } from "../data";
 import { connect } from "react-redux";
 import { setAuthorMoqri, setPlayer } from "../../reducer";
@@ -16,43 +15,52 @@ class AuthorMenu extends Component {
     this.listAutor = listVoiceMoqri(this.lang);
   }
   goBack = () => {
-    if (this.props.togl) this.props.togl("close");
-    else this.props.navigation.goBack();
-    if (this.props.handleMenu) this.props.handleMenu("open");
+    //this.props.back();
+    //  if (this.props.togl) this.props.togl("close");
+    //else
+    // this.props.navigation.goBack();
+    //  if (this.props.handleMenu) this.props.handleMenu("open");
+    //  this.props.navigation.toggleDrawer();
   };
   onPressAuthor = (id) => {
-    const { setAuthorMoqri, setPlayer, moqri, close } = this.props;
+    const { setAuthorMoqri, setPlayer, moqri } = this.props;
     if (id === moqri) return;
     setAuthorMoqri(id);
     setPlayer("play");
-    close();
+    // close();
+    this.goBack();
   };
 
   render() {
     const {
       theme: { backgroundColor, color },
       lang,
-      close,
+      back,
     } = this.props;
     return (
-      <List
-        dataArray={this.listAutor}
-        renderRow={(data, row, index) => (
-          <Itemino
-            onPress={() => {
-              this.onPressAuthor(data.id);
-              close();
-            }}
-            lang={lang}
-            backgroundColor={backgroundColor}
-            color={color}
-            text={data.voice}
-            index={index + 1}
-            noborder={true}
-            height={50}
-          />
-        )}
-      />
+      <View>
+        {back}
+        <List
+          dataArray={this.listAutor}
+          renderRow={(data, _row, index) => (
+            <Itemino
+              onPress={() => {
+                this.onPressAuthor(data.id);
+                this.goBack();
+                //   close();
+              }}
+              lang={lang}
+              backgroundColor={backgroundColor}
+              color={color}
+              text={data.voice}
+              index={index + 1}
+              noborder={true}
+              height={50}
+              key={index}
+            />
+          )}
+        />
+      </View>
     );
   }
 }
