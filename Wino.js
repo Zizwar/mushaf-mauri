@@ -34,7 +34,7 @@ import {
 import { connect } from "react-redux";
 
 import { Popover } from "react-native-modal-popover";
-import { MaterialIcons } from '@expo/vector-icons'; 
+import { MaterialIcons } from "@expo/vector-icons";
 //import Icon from "react-native-vector-icons/Ionicons";
 import Swiper from "./src/node/Swipino";
 import * as langs from "./i18n";
@@ -588,8 +588,8 @@ class Wino extends Component {
     const titleSura = (
       <>
         <Left>
-          <Text note style={{ transform: [{rotateY: '180deg'}],textAlign: "left", color }}>
-           ss {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : "Jus' " + hizb}
+          <Text note style={{ textAlign: "left", color }}>
+            {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : "Jus' " + hizb}
           </Text>
         </Left>
 
@@ -1366,13 +1366,17 @@ class Wino extends Component {
                   onPress={() => navigation.navigate("SearchSmart")}
                 >
                   <Icon style={{ color }} size={30} name="md-search" />
-                </Button>  
+                </Button>
                 <Button
                   transparent
-                  style={styles.buttonHeader}
-                 
+                  style={[
+                    wino.page % 2 !== 0
+                      ? { transform: [{ rotateY: "180deg" }] }
+                      : null,
+                    styles.buttonHeader,
+                  ]}
                 >
-                <Icon style={{ color }} size={30} name="ios-hand" />
+                  <Icon style={{ color }} size={30} name="ios-hand" />
                 </Button>
                 <Button
                   transparent

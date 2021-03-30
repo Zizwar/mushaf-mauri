@@ -22,7 +22,7 @@ export class dbs {
       : null;
     console.log({ listDB });
 
-    this.db = listDB.includes(`${this.author}.db`)
+    this.db = listDB && listDB.includes(`${this.author}.db`)
       ? SQLite.openDatabase(`${this.author}.db`)
       : null;
   }
