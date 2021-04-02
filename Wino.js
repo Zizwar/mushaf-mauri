@@ -197,7 +197,7 @@ class Wino extends Component {
     }
     */
 
-  async componentWillMount() {
+  async UNSAFE_componentWillMount() {
     const { quira, awk, wino: winos, prorate, bookmarks } = this.props;
     this.bookmarksPage = bookmarks.map((d) => d && d.page);
     this.setAwk(awk);
