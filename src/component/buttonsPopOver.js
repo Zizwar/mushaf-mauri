@@ -18,7 +18,7 @@ const onShare = async (wino, toasti, close, lang) => {
   const { text, aya, sura } = wino;
   try {
     const result = await Share.share({
-      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya}  \n https://meshaf.me/d/a${aya}s${sura}r1z`,
+      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya}  \n https://meshaf.ma/d/a${aya}s${sura}r1z`,
     });
 
     if (result.action === Share.sharedAction) {
@@ -52,7 +52,7 @@ export const ButtonPopOver = ({
   <Content>
     <Grid>
       <Row style={styles.row}>
-        <Col style={[styles.col,styles.iconContainer]}>
+        <Col style={styles.col}>
           <Button
             transparent
             onPress={(_) => {
@@ -76,7 +76,7 @@ export const ButtonPopOver = ({
           </Text>
         </Col>
 
-        <Col style={[styles.col,styles.iconContainer]}>
+        <Col style={styles.col}>
           <Button
             transparent
             onPress={addBookmarks}
@@ -88,7 +88,7 @@ export const ButtonPopOver = ({
             {lang["addFav"]}
           </Text>
         </Col>
-        <Col style={[styles.col,styles.iconContainer]}>
+        <Col style={styles.col}>
           <Button
             transparent
             onPress={(_) => {
@@ -104,7 +104,7 @@ export const ButtonPopOver = ({
           </Text>
         </Col>
 
-        <Col style={[styles.col,styles.iconContainer]}>
+        <Col style={styles.col}>
           <Button
             transparent
             onPress={(_) => onShare(wino, toasti, close, lang)}
@@ -116,7 +116,7 @@ export const ButtonPopOver = ({
             {lang["share"]}
           </Text>
         </Col>
-        <Col style={[styles.col,styles.iconContainer]}>
+        <Col style={styles.col}>
           <Button
             transparent
             onPress={(_) =>

@@ -75,12 +75,17 @@ class Suras extends Component {
                   >
                     {`${getAllAyaSuraBySura(data.id).length} ${
                       this.lang["aya_s"]
-                    }, ${this.lang["juz"]} ${parseInt(
-                      getJuzBySuraAya({ sura: data.id, aya: 1 }) / 4
-                    )}, ${this.lang["hizb"]} ${getHizbBySuraAya({
+                    }, ${this.lang["juz"]} ${getJuzBySuraAya({
                       sura: data.id,
                       aya: 1,
-                    })}, ${this.lang["page"]} ${getPageBySuraAya({
+                    })}, ${this.lang["hizb"]} ${
+                      parseInt(
+                        getHizbBySuraAya({
+                          sura: data.id,
+                          aya: 1,
+                        }) / 4
+                      ) || 1
+                    }, ${this.lang["page"]} ${getPageBySuraAya({
                       sura: data.id,
                       aya: 1,
                     })}`}

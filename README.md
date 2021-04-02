@@ -3,4 +3,4 @@
 # mushaf-mauri
 مصحف موري - القران الكريم ورش
 
-https://www.mushaf.me
+https://www.mushaf.ma

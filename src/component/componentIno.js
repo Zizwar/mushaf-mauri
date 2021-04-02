@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Component } from "react";
 
 import {
   Button,
@@ -114,8 +114,112 @@ export const ScreenBookmark = ({
     </CardItem>
   </Card>
 );
+export class Itemino extends Component {
+  render() {
+    const {
+      onPress,
+      icon,
+      iconSize = 26,
+      text = null,
+      color = "#555",
+      lang = "en",
+      noborder = null,
+      height,
+      index,
+      key,
+      //isRtl = false
+    } = this.props;
+    if (isRTL)
+      return (
+        <ListItem
+          noBorder={noborder}
+          style={{ height: height || 42 }}
+          transparent
+          onPress={onPress}
+          key={key}
+        >
+          {lang === "ar" ? (
+            <Left style={{ color, marginLeft: -15 }}>
+              <Button transparent>
+                {icon && (
+                  <Icon
+                    style={{ color, paddingLeft: -5 }}
+                    name={icon}
+                    size={iconSize}
+                  />
+                )}
+                {index && <Text style={{ color }}>{index}</Text>}
+              </Button>
+              <Text style={{ color }}>{text}</Text>
+            </Left>
+          ) : null}
 
-export const Itemino = ({
+          {lang === "ar" ? null : (
+            <>
+              <Body>
+                <Text style={{ color, marginRight: -5, textAlign: "right" }}>
+                  {text}
+                </Text>
+              </Body>
+              <Right>
+                {icon && (
+                  <Icon
+                    style={{ color, paddingRight: 5 }}
+                    name={icon}
+                    size={iconSize}
+                  />
+                )}
+                {index && <Text style={{ color }}>{index}</Text>}
+              </Right>
+            </>
+          )}
+        </ListItem>
+      );
+    return (
+      <ListItem
+        noBorder={noborder}
+        style={{ height: 42 }}
+        transparent
+        onPress={onPress}
+      >
+        {lang === "ar" ? null : (
+          <Left style={{ color, marginLeft: -15 }}>
+            <Button transparent>
+              {icon && (
+                <Icon
+                  style={{ color, paddingLeft: -5 }}
+                  name={icon}
+                  size={iconSize}
+                />
+              )}
+              {index && <Text style={{ color }}>{index}</Text>}
+            </Button>
+            <Text style={{ color }}>{text}</Text>
+          </Left>
+        )}
+
+        {lang === "ar" ? (
+          <>
+            <Body>
+              <Text style={{ color, marginRight: -5 }}>{text}</Text>
+            </Body>
+            <Right>
+              {icon && (
+                <Icon
+                  style={{ color, paddingRight: 5 }}
+                  name={icon}
+                  size={iconSize}
+                />
+              )}
+              {index && <Text style={{ color }}>{index}</Text>}
+            </Right>
+          </>
+        ) : null}
+      </ListItem>
+    );
+  }
+}
+export const Itemino__ = ({
   onPress,
   icon,
   iconSize = 26,
@@ -231,7 +335,10 @@ export const Headerino = ({
       <Header style={{ backgroundColor: color }}>
         <Left>
           <Button transparent onPress={onPress}>
-            <Icon style={{ color: backgroundColor }} name={icon || "md-close-circle"} />
+            <Icon
+              style={{ color: backgroundColor }}
+              name={icon || "md-close-circle"}
+            />
           </Button>
         </Left>
         {lang === "ar" ? (
@@ -249,7 +356,10 @@ export const Headerino = ({
     <Header style={{ backgroundColor: color }}>
       <Left>
         <Button transparent onPress={onPress}>
-          <Icon style={{ color: backgroundColor }} name={icon || "md-close-circle"} />
+          <Icon
+            style={{ color: backgroundColor }}
+            name={icon || "md-close-circle"}
+          />
         </Button>
       </Left>
       {lang !== "ar" ? (
