@@ -697,7 +697,7 @@ class Wino extends Component {
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
                       ? styles.onPressAya //{ backgroundColor, opacity: 0.1 } //
-                      : { opacity: 0.0 }, //styles.onUnPressAya,
+                      : styles.onUnPressAya,//{ opacity: 0.0 }, //
                     !isRTL
                       ? {
                           height,
@@ -746,7 +746,7 @@ class Wino extends Component {
     this.wino = wino;
     //if (scroll) {
 
-    let page = wino.page ? wino.page : getPageBySuraAya(wino);
+    let page = wino.page || getPageBySuraAya(wino);
     if (!page) page = 1;
     //this.statePage(page)
     this.scrollTo(page);
