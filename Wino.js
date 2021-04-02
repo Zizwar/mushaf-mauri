@@ -616,7 +616,6 @@ class Wino extends Component {
         style={{ width: width - MARGIN_PAGE_WIDTH, height: heightScala }}
         resizeMode="stretch"
         source={source}
-
         //  {...{preview, uri}}
         //tintColor={night ? "#fff" : null}
       />
@@ -698,7 +697,7 @@ class Wino extends Component {
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
                       ? styles.onPressAya //{ backgroundColor, opacity: 0.1 } //
-                      : styles.onUnPressAya, //,{ opacity: 0.0 }, //
+                      : { opacity: 0.0 }, //styles.onUnPressAya,
                     !isRTL
                       ? {
                           height,
@@ -1580,6 +1579,7 @@ const styles = StyleSheet.create({
     right: 0,
     // backgroundColor: "#FFFFFF01",
     height: 32,
+    zIndex:999
     // opacity:0.0
   },
   subViewHeader: {

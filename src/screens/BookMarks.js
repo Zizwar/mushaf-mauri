@@ -64,11 +64,7 @@ class BookMarks extends Component {
     setBookmarks(newData);
     reRender("bookmarks");
   };
-  goBack = () => {
-    if (this.props.togl) this.props.togl("close");
-    else this.props.navigation.goBack();
-    if (this.props.handleMenu) this.props.handleMenu("open");
-  };
+  goBack = () => this.props.navigation.goBack();
 
   togl = (isActive) => this.setState({ isActive });
   renderItem = (data, id) => {
@@ -102,15 +98,13 @@ class BookMarks extends Component {
               fontSize: 15,
             }}
           >
-            {this.lang["sura_s"] +
-              " " +
-              getNameBySura({ sura: data.id.sura, lang }) +
-              " " +
-              this.lang["juz"] +
-              " " +
-              getJuzBySuraAya({ sura: data.id.sura, aya: data.id.sura }) +
-              " " +
-              (data.page ? this.lang["page"] + " " + data.page : "")}
+            {`${this.lang["sura_s"]} ${getNameBySura({
+              sura: data.id.sura,
+              lang,
+            })} ${this.lang["juz"]} ${getJuzBySuraAya({
+              sura: data.id.sura,
+              aya: data.id.sura,
+            })} ${data.page ? `${this.lang["page"]} ${data.page}` : ""}`}
           </Text>
           {data.note && (
             <Text style={{ color, textAlign: "center" }} note>

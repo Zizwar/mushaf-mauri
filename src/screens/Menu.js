@@ -37,6 +37,16 @@ class Menu extends Component {
         route: "mushaf",
         icon: "md-book",
       },
+         {
+        name: this.lang["bu_telawa"],
+        route: "Reciting",
+        icon: "md-repeat",
+      },
+        {
+        name: this.lang["khitma"],
+        route: "Khitma",
+        icon: "md-time",
+      },
       {
         name: this.lang["color"],
         route: "color",
