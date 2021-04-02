@@ -52,7 +52,7 @@ export const ButtonPopOver = ({
   <Content>
     <Grid>
       <Row style={styles.row}>
-        <Col style={styles.col}>
+        <Col style={[styles.col,styles.iconContainer]}>
           <Button
             transparent
             onPress={(_) => {
@@ -76,7 +76,7 @@ export const ButtonPopOver = ({
           </Text>
         </Col>
 
-        <Col style={styles.col}>
+        <Col style={[styles.col,styles.iconContainer]}>
           <Button
             transparent
             onPress={addBookmarks}
@@ -88,7 +88,7 @@ export const ButtonPopOver = ({
             {lang["addFav"]}
           </Text>
         </Col>
-        <Col style={styles.col}>
+        <Col style={[styles.col,styles.iconContainer]}>
           <Button
             transparent
             onPress={(_) => {
@@ -104,7 +104,7 @@ export const ButtonPopOver = ({
           </Text>
         </Col>
 
-        <Col style={styles.col}>
+        <Col style={[styles.col,styles.iconContainer]}>
           <Button
             transparent
             onPress={(_) => onShare(wino, toasti, close, lang)}
@@ -116,7 +116,7 @@ export const ButtonPopOver = ({
             {lang["share"]}
           </Text>
         </Col>
-        <Col style={styles.col}>
+        <Col style={[styles.col,styles.iconContainer]}>
           <Button
             transparent
             onPress={(_) =>
