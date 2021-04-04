@@ -96,7 +96,8 @@ const WIDTH_PAGE = 456;
 const MARGIN_PAGE = 55;
 const MARGIN_PAGE_WIDTH = 5;
 
-const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
+//const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
+const heightScala = (width * 1.471676300578035) - MARGIN_PAGE_WIDTH;
 //
 
 const NUMBER_PAGE = 638;
