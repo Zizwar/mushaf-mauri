@@ -698,7 +698,7 @@ class Wino extends Component {
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
                       ? styles.onPressAya //{ backgroundColor, opacity: 0.1 } //
-                      : styles.onUnPressAya,//{ opacity: 0.0 }, //
+                      : { opacity: 0.0 }, //styles.onUnPressAya,//
                     !isRTL
                       ? {
                           height,
