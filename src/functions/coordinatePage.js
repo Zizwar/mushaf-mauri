@@ -1,32 +1,36 @@
 import { coordinateMuhammadi } from "../data";
 import { Dimensions } from "react-native";
 
-let { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
+const { width: WIDTH } = Dimensions.get("window");
 //Create layer  quran mauri
-const DEVICE_WIDTH_HEIGHT = { width: WIDTH-1, height: HEIGHT }; //change to dynamic dimension
+//change to dynamic dimension
 
-const ORIGINAL_WIDTH_HEIGHT = { width: 456, height: 825 }; //no change /1273
-const WIDTH_SCREEN_RENDER = 456;
 const NEXT_PAGE_LEFT = 0;
-const NEXT_PAGE_TOP = 985.8; // ORIGINAL_WIDTH_HEIGHT.height;
-const MARGIN_LEFT_AYA = 10;
-const MARGIN_PAGE_TOP = 0;
-const MARGIN_HEIGHT_AYA = 0.3;
-const MARGIN_PAGE = 10;
+
+const MARGIN_LEFT_AYA = 15;
+const MARGIN_PAGE_TOP = 4.2;
+const MARGIN_HEIGHT_AYA = 0;
+const MARGIN_PAGE_top = 0;
 const MARGIN_HEIGHT_SCALA = 0;
-
-const HEIGHT_SCALA =
-  ((NEXT_PAGE_TOP - MARGIN_PAGE) *
+const MARGIN_WIDTH = 25;
+const ORIGIN_PAGE_TOP = 985.8;
+const ORIGINAL_WIDTH_HEIGHT = {
+  width: 456,
+  height: ORIGIN_PAGE_TOP + MARGIN_PAGE_TOP,
+};
+/*
+  ((ORIGIN_PAGE_TOP - MARGIN_PAGE) *
   (WIDTH / ORIGINAL_WIDTH_HEIGHT.width))+ MARGIN_HEIGHT_SCALA;
-
+  */
+const HEIGHT_SCALA = WIDTH * 1.471676300578035 - MARGIN_WIDTH;
+const DEVICE_WIDTH_HEIGHT = { width: WIDTH, height: HEIGHT_SCALA };
 const NUMBER_LINE = 15;
 const HEIGHT_LINE = HEIGHT_SCALA / NUMBER_LINE + MARGIN_HEIGHT_AYA;
 
 export const coordinatePage = (page, mosshaf) => {
   let oldLine = 0;
   let oldLeft = DEVICE_WIDTH_HEIGHT.width;
-  let oldTop = 0;
-  let line = 0;
+
   const allPosition = [];
   //===>
   const [nextPageSura = null, nextAya] = coordinateMuhammadi[page + 1]
@@ -36,7 +40,7 @@ export const coordinatePage = (page, mosshaf) => {
   const coordinatePage = nextPageSura
     ? [
         ...coordinateMuhammadi[page],
-        [nextPageSura, nextAya, NEXT_PAGE_LEFT, NEXT_PAGE_TOP],
+        [nextPageSura, nextAya, NEXT_PAGE_LEFT, ORIGIN_PAGE_TOP],
       ]
     : coordinateMuhammadi[page];
 
@@ -44,14 +48,13 @@ export const coordinatePage = (page, mosshaf) => {
     left =
       (left / ORIGINAL_WIDTH_HEIGHT.width) * DEVICE_WIDTH_HEIGHT.width -
       MARGIN_LEFT_AYA;
-    top = (top / HEIGHT_SCALA) * DEVICE_WIDTH_HEIGHT.height;
     let line = parseInt(
-      ((top / HEIGHT_SCALA) * DEVICE_WIDTH_HEIGHT.height) / HEIGHT_LINE
+      ((top / ORIGINAL_WIDTH_HEIGHT.height) * DEVICE_WIDTH_HEIGHT.height) /
+        HEIGHT_LINE
     );
 
     //if 1 line
     const lineNumber = line - oldLine;
-
     thisLine = line;
     const wino = {
       aya,
@@ -62,7 +65,7 @@ export const coordinatePage = (page, mosshaf) => {
     if (!lineNumber) {
       //alert("lineNumber1")
       allPosition.push(
-        renderLineFahres({ left, top, line, width: oldLeft - left, wino })
+        renderLineFahres({ left, line, width: oldLeft - left, wino })
       );
       // oldLeft = left;
       //  return;
@@ -116,7 +119,6 @@ export const coordinatePage = (page, mosshaf) => {
     }
     oldLine = thisLine;
     oldLeft = left;
-    oldTop = top;
   }
 
   return allPosition;

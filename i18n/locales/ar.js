@@ -100,13 +100,10 @@ export default {
   autoStop_sura: "نهاية السورة",
   autoStop_page: "نهاية الصفحة",
   autoStop_juz: "نهاية الجزء",
-
   autoStop_page_msg: "تم تفعيل الإيقاف التلقائي عند نهاية الصفحة",
   autoStop_sura_msg: "تم تفعيل الإيقاف التلقائي عند نهاية السورة",
   autoStop_juz_msg: "تم تفعيل الإيقاف التلقائي عند نهاية الجزء",
-
   autoStop_deactivate: "إلغاء الإيقاف التلقائي",
-
   activateRepeat: "تفعيل التكرار",
   deactivateRepeat: "إلغاء التكرار",
   deterStart: "تحديد البدء",
@@ -134,7 +131,6 @@ export default {
   recite_mujawwad: "مجود",
   recite_moalim: "معلم",
   recite_warsh: "ورش",
-  recite_kh_res: "خليفة الطنيجي - المصحف المعلم، متوفر آخر خمسة أجزاء فقط",
   recite_trans: "التراجم الصوتية",
   recite_sudais: "عبد الرحمن السديس",
   recite_shuraym: "سعود الشريم",
@@ -236,8 +232,6 @@ export default {
   copyWOT: "نسخ بدون تشكيل",
   send: "إرسال",
   sendWOT: "إرسال بدون تشكيل",
-  sendSMS: "برسالة نصية",
-  sendMail: "بالبريد",
   share: "مشاركة",
   shareFB: "فيس بوك",
   shareTwit: "تويتر",
@@ -251,15 +245,13 @@ export default {
   c: "طريقة القراءة",
   vision_normal: "قراءة عادية",
   vision_night: "قراءة ليلية",
-  hint_1: "يمكنك تحديد الآية عن طريق النقر المزدوج او الضغط لمدة طويلة",
+  hint_1: "يمكنك تحديد الآية عن طريق الضغط لمدة طويلة",
   hint_2:
     "ستظهر لك قائمة بالأسفل خاصة بالآية المحددة، تمكنك من الاستماع للتلاوة وعرض التفسير",
   hint_pls_download:
     "ينصح بالبدء بتنزيل ملفات الصور والتلاوة والتفاسير لكي تتمكن من استخدام التطبيق دون اتصال بالانترنت",
   hpd_ok: "تنزيل المحتوى",
   hpd_no: "ليس الآن",
-  confirm_restartApp:
-    "لتفعيل هذا الإعداد يحتاج التطبيق للإغلاق وإعادة التشغيل مرة أخرى هل ترغب في إغلاقه الآن",
 
   setting_keeplight: "الإبقاء على إضاءة الشاشة",
   setting_keepworking: "عمل التطبيق بعد غلق الشاشة",
@@ -294,7 +286,6 @@ export default {
 
   mozaker: "المنبه",
   mozaker_msg: "رسالة التنبيه",
-  mozaker_msg_default: "ورتل القرآن ترتيلا",
 
   mozaker_alert: "صوت التنبيه",
   mozaker_alert_null: "بدون",
