@@ -18,18 +18,15 @@ const onShare = async (wino, toasti, close, lang) => {
   const { text, aya, sura } = wino;
   try {
     const result = await Share.share({
-      message: `${text} | ${lang["sura_s"]}:${sura} ${lang["aya"]}:${aya}  \n https://meshaf.ma/d/a${aya}s${sura}r1z`,
+      message: `${text} | ${lang["sura_s"]}:${sura}  \n https://meshaf.ma/d/a${aya}s${sura}r1z`,
     });
 
-    if (result.action === Share.sharedAction) {
+    if (result.action === Share.sharedAction)
       if (result.activityType) {
         // shared with activity type of result.activityType
         // toasti('shared with activity type of'+ result.activityType)
-      } else {
-        // shared
-        close();
-      }
-    } else if (result.action === Share.dismissedAction) {
+      } else close();
+    else if (result.action === Share.dismissedAction) {
       // dismissed
     }
   } catch (error) {
@@ -57,9 +54,9 @@ export const ButtonPopOver = ({
             transparent
             onPress={(_) => {
               close();
-              setTimeout((_) => play(wino,true), 100);
+              setTimeout((_) => play(wino, true), 100);
             }}
-            style={{ marginBottom: 1 }}
+            style={styles.iconButton}
           >
             <Icon active name="md-play" style={{ color }} />
           </Button>
@@ -68,7 +65,7 @@ export const ButtonPopOver = ({
           </Text>
         </Col>
         <Col style={styles.col}>
-          <Button transparent onPress={note} style={{ marginBottom: 1 }}>
+          <Button transparent onPress={note} style={styles.iconButton}>
             <Icon name="md-list" style={{ color }} />
           </Button>
           <Text numberOfLines={1} style={styles.iconText}>
@@ -77,15 +74,11 @@ export const ButtonPopOver = ({
         </Col>
 
         <Col style={styles.col}>
-          <Button
-            transparent
-            onPress={addBookmarks}
-            style={{ marginBottom: 1 }}
-          >
+          <Button transparent onPress={addBookmarks} style={styles.iconButton}>
             <Icon name="md-bookmark" style={{ color }} />
           </Button>
           <Text numberOfLines={1} style={styles.iconText}>
-            {lang["addFav"]}
+            {lang["favs"]}
           </Text>
         </Col>
         <Col style={styles.col}>
@@ -95,7 +88,7 @@ export const ButtonPopOver = ({
               close();
               setTimeout((_) => tarajem("open"), 10);
             }}
-            style={{ marginBottom: 1 }}
+            style={styles.iconButton}
           >
             <Icon active name="md-book" style={{ color }} />
           </Button>
@@ -108,7 +101,7 @@ export const ButtonPopOver = ({
           <Button
             transparent
             onPress={(_) => onShare(wino, toasti, close, lang)}
-            style={{ marginBottom: 1 }}
+            style={styles.iconButton}
           >
             <Icon active name="md-share" style={{ color }} />
           </Button>
@@ -122,7 +115,7 @@ export const ButtonPopOver = ({
             onPress={(_) =>
               writeToClipboard(wino.text, toasti, close, lang["copy_done"])
             }
-            style={{ marginBottom: 1 }}
+            style={styles.iconButton}
           >
             <Icon active name="md-copy" style={{ color }} />
           </Button>
@@ -148,11 +141,11 @@ const styles = {
     paddingLeft: 1,
   },
   iconText: {
-    fontSize: 12,
+    fontSize: 9,
   },
-  icon: {
-    width: 45,
-    height: 45,
+  iconButton: {
+    width: "100%",
+
     justifyContent: "center",
   },
   col: {

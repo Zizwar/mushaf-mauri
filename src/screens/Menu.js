@@ -15,53 +15,53 @@ class Menu extends Component {
     this.lang = lang[this.props.lang];
     this.menus = [
       {
-        name:"tafsir",
+        name: "tafsir",
         route: "Tafsir",
         icon: "md-document",
         bg: "#477EEA",
       },
       {
-        name:"favs",
+        name: "favs",
         route: "BookMarks",
         icon: "md-bookmark",
         bg: "#477EEA",
       },
 
       {
-        name:"bu_download_recites",
+        name: "bu_download_recites",
         route: "author",
         icon: "md-headset",
         bg: "#477EEA",
       },
       {
-        name:"mosshaf_type",
+        name: "mosshaf_type",
         route: "mushaf",
         icon: "md-book",
       },
       {
-        name:"bu_telawa",
+        name: "bu_telawa",
         route: "Reciting",
         icon: "md-repeat",
       },
       {
-        name:"khitma",
+        name: "khitma",
         route: "Khitma",
         icon: "md-time",
       },
       {
-        name:"color",
+        name: "color",
         route: "color",
         icon: "md-color-fill",
         bg: "#477EEA",
       },
       {
-        name:"choose_lang",
+        name: "choose_lang",
         route: "choose_lang",
         icon: "md-flag",
         bg: "#477EEA",
       },
       {
-        name:"bu_download_cnt",
+        name: "bu_download_cnt",
         route: "Store",
         icon: "md-cloud-download",
         bg: "#477EEA",
@@ -80,7 +80,10 @@ class Menu extends Component {
       active: "menu",
     };
   }
-  backHome = () => this.props.navigation.closeDrawer();
+  backHome = () => {
+    this.setState({ active: "menu" });
+    this.props.navigation.closeDrawer();
+  };
   backMenu = () => this.setState({ active: "menu" });
   author = () => this.setState({ active: "author" });
   shooselang = () => this.setState({ active: "lang" });
@@ -215,7 +218,7 @@ class Menu extends Component {
         />
         <Itemino
           onPress={() => {
-            this.switchLangTo("en");
+            this.switchLangTo("fr");
             this.backHome();
           }}
           lang={lang}
