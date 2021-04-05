@@ -423,4 +423,5 @@ export default {
   and: "و",
   txtFromAya: "من قوله عز وجل",
   txtToAya: "إلى قوله عز وجل",
+  french: "French",
 };

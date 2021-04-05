@@ -61,6 +61,17 @@ class First extends Component {
               </Text>
             </Body>
           </ListItem>
+              <ListItem
+            onPress={() => {
+              this.onPressLang("fr");
+            }}
+          >
+            <Body>
+              <Text style={{ textAlign: "center", color: "#555" }}>
+                Français
+              </Text>
+            </Body>
+          </ListItem>
         </Content>
       </Container>
     );

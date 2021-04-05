@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Content, List, View, Container } from "native-base";
+import { Content, List, View, Container, Thumbnail, Button } from "native-base";
 import { connect } from "react-redux";
 
 import * as lang from "../../i18n";
@@ -7,60 +7,61 @@ import * as lang from "../../i18n";
 import { Itemino } from "../component";
 import AuthorMenu from "./AuthorMenu";
 import { setLang, reRender, setQuira, setTheme } from "../../reducer";
+
+const drawerCover = require(`../../assets/icon.png`);
 class Menu extends Component {
   constructor(props) {
     super(props);
-
     this.lang = lang[this.props.lang];
     this.menus = [
       {
-        name: this.lang["tafsir"],
+        name:"tafsir",
         route: "Tafsir",
         icon: "md-document",
         bg: "#477EEA",
       },
       {
-        name: this.lang["favs"],
+        name:"favs",
         route: "BookMarks",
         icon: "md-bookmark",
         bg: "#477EEA",
       },
 
       {
-        name: this.lang["bu_download_recites"],
+        name:"bu_download_recites",
         route: "author",
         icon: "md-headset",
         bg: "#477EEA",
       },
       {
-        name: this.lang["mosshaf_type"],
+        name:"mosshaf_type",
         route: "mushaf",
         icon: "md-book",
       },
-         {
-        name: this.lang["bu_telawa"],
+      {
+        name:"bu_telawa",
         route: "Reciting",
         icon: "md-repeat",
       },
-        {
-        name: this.lang["khitma"],
+      {
+        name:"khitma",
         route: "Khitma",
         icon: "md-time",
       },
       {
-        name: this.lang["color"],
+        name:"color",
         route: "color",
         icon: "md-color-fill",
         bg: "#477EEA",
       },
       {
-        name: this.lang["choose_lang"],
+        name:"choose_lang",
         route: "choose_lang",
         icon: "md-flag",
         bg: "#477EEA",
       },
       {
-        name: this.lang["bu_download_cnt"],
+        name:"bu_download_cnt",
         route: "Store",
         icon: "md-cloud-download",
         bg: "#477EEA",
@@ -113,7 +114,7 @@ class Menu extends Component {
       <Itemino
         onPress={this.backMenu}
         lang={lang}
-        backgroundColor={backgroundColor}
+        // backgroundColor={backgroundColor}
         color={color}
         text={this.lang["menu_hint"]}
         icon="md-arrow-back"
@@ -148,7 +149,7 @@ class Menu extends Component {
               }}
               lang={lang}
               color={color}
-              text={data.name}
+              text={this.lang[data.name]}
               icon={data.icon}
               noborder={true}
               key={`menu_${index}`}
@@ -160,7 +161,7 @@ class Menu extends Component {
 
     const ListMushaf = (
       <View>
-        <BackMenu />
+        {BackMenu}
         <List
           transparent
           dataArray={this.dataMushaf}
@@ -186,8 +187,8 @@ class Menu extends Component {
       </View>
     );
     const ListLang = (
-      <Content style={{ flex: 1, backgroundColor }}>
-        <BackMenu />
+      <List>
+        {BackMenu}
         <Itemino
           onPress={() => {
             this.switchLangTo("ar");
@@ -212,27 +213,51 @@ class Menu extends Component {
           key={`lng_${2}`}
           noborder={true}
         />
-      </Content>
+        <Itemino
+          onPress={() => {
+            this.switchLangTo("en");
+            this.backHome();
+          }}
+          lang={lang}
+          color={color}
+          text={this.lang["french"]}
+          index={2}
+          key={`lng_${3}`}
+          noborder={true}
+        />
+      </List>
     );
+    const ResaultMenu = () => {
+      switch (active) {
+        case "menu":
+          return ListMenu;
+        case "lang":
+          return ListLang;
+        case "mushaf":
+          return ListMushaf;
 
-    switch (active) {
-      case "menu":
-        return ListMenu;
-      case "lang":
-        return ListLang;
-      case "mushaf":
-        return ListMushaf;
+        case "author":
+          return <AuthorMenu back={BackMenu} />;
 
-      case "author":
-        return (
-          <Content style={{ flex: 1, backgroundColor }}>
-            <AuthorMenu back={BackMenu} />
-          </Content>
-        );
-
-      default:
-        return ListMenu;
-    }
+        default:
+          return ListMenu;
+      }
+    };
+    return (
+      <Container>
+        <Content bounces={false} style={{ flex: 1, backgroundColor, top: -1 }}>
+          <View style={{ margin: 20 }}>
+            <Thumbnail
+              large
+              square
+              source={drawerCover}
+              style={{ marginBottom: 10, alignSelf: "center" }}
+            />
+          </View>
+          {ResaultMenu()}
+        </Content>
+      </Container>
+    );
   }
 }
 

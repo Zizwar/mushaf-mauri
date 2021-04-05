@@ -182,18 +182,18 @@ export const Itemino = ({
       onPress={onPress}
     >
       {lang === "ar" ? null : (
-        <Left style={{ color, marginLeft: -15 }}>
+        <Left style={{ color, marginLeft: 5 }}>
           <Button transparent>
             {icon && (
               <Icon
-                style={{ color, paddingLeft: -5 }}
+                style={{ color,  }}
                 name={icon}
                 size={iconSize}
               />
             )}
             {index && <Text style={{ color }}>{index}</Text>}
           </Button>
-          <Text style={{ color }}>{text}</Text>
+          <Text style={{ color,marginLeft: 7  }}>{text}</Text>
         </Left>
       )}
 

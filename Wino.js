@@ -97,7 +97,7 @@ const MARGIN_PAGE = 55;
 const MARGIN_PAGE_WIDTH = 5;
 
 //const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
-const heightScala = (width * 1.471676300578035) - MARGIN_PAGE_WIDTH;
+const heightScala = width * 1.471676300578035 - MARGIN_PAGE_WIDTH;
 //
 
 const NUMBER_PAGE = 638;
@@ -1571,7 +1571,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: "#FFFFFF08",
-    height: 210,
+    height: 270,
   },
   footerMenu: {
     position: "absolute",
@@ -1580,7 +1580,7 @@ const styles = StyleSheet.create({
     right: 0,
     // backgroundColor: "#FFFFFF01",
     height: 32,
-    zIndex:999
+    zIndex: 999,
     // opacity:0.0
   },
   subViewHeader: {
