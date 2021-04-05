@@ -32,7 +32,7 @@ export default {
   cancel: "Annuler",
   hide: "Masquer",
 
-  bu_download_cnt: "Télécharger le contenu",
+  bu_download_cnt: "Télécharger",
   bu_download_images: "Pages",
   bu_download_recites: "Recitations",
   bu_download_ttarajem: "Traductions",

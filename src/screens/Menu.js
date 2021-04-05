@@ -81,8 +81,9 @@ class Menu extends Component {
     };
   }
   backHome = () => {
-    this.setState({ active: "menu" });
+    
     this.props.navigation.closeDrawer();
+    this.setState({ active: "menu" });
   };
   backMenu = () => this.setState({ active: "menu" });
   author = () => this.setState({ active: "author" });
