@@ -50,19 +50,23 @@ class BookMarks extends Component {
     const { bookmarks, setBookmarks } = this.props;
 
     rowMap[`${secId}${rowId}`].props.closeRow();
-    const listViewData = bookmarks.filter(({id=[]})=>id.sura!==sura && id.aya!==sura);
-   // newData.splice(rowId, 1);
+    const listViewData = bookmarks.filter(
+      ({ id = [] }) => id.sura !== sura && id.aya !== sura
+    );
+    // newData.splice(rowId, 1);
 
     this.setState({ listViewData });
     setBookmarks(listViewData);
   }
 
-  delId = (id,{sura,aya}) => {
-    const { bookmarks, setBookmarks, reRender } = this.props;
+  delId = (id, { sura, aya }) => {
+    const { bookmarks=[], setBookmarks, reRender } = this.props;
 
-   // const newData = [...bookmarks];
-       const listViewData = bookmarks.filter(({id=[]})=>id.sura!==sura && id.aya!==aya);
-   // newData.splice(rowId, 1);
+    // const newData = [...bookmarks];
+    const listViewData = bookmarks.filter(
+      ({ id = [] }) => id.sura !== sura && id.aya !== aya
+    );
+    // newData.splice(rowId, 1);
 
     this.setState({ listViewData });
     setBookmarks(listViewData);
@@ -70,7 +74,7 @@ class BookMarks extends Component {
     //setBookmarks(newData);
     reRender("bookmarks");
   };
-  confirm = (cb, {sura,aya}) => {
+  confirm = (cb, { sura, aya }) => {
     Alert.alert(
       this.lang["remove"],
       `${this.lang["sura"]}:${sura},${this.lang["aya"]}:${aya}`,
@@ -145,7 +149,7 @@ class BookMarks extends Component {
         <Right>
           <Button
             transparent
-            onPress={() => this.confirm(() => this.delId(id,data.id),data.id)}
+            onPress={() => this.confirm(() => this.delId(id, data.id), data.id)}
           >
             <Icon style={{ color, fontSize: 20 }} name="md-close" />
           </Button>
