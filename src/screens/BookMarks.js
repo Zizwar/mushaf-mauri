@@ -60,7 +60,7 @@ class BookMarks extends Component {
     const { bookmarks, setBookmarks, reRender } = this.props;
 
     const newData = [...bookmarks];
-    newData.splice(id, 1);
+    newData.splice(bookmarks.length - id, 1);
     setBookmarks(newData);
     reRender("bookmarks");
   };

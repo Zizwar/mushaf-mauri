@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Content, List, View, Container, Thumbnail, Button } from "native-base";
 import { connect } from "react-redux";
 
-import * as lang from "../../i18n";
+import * as langs from "../../i18n";
 
 import { Itemino } from "../component";
 import AuthorMenu from "./AuthorMenu";
@@ -12,7 +12,7 @@ const drawerCover = require(`../../assets/icon.png`);
 class Menu extends Component {
   constructor(props) {
     super(props);
-    this.lang = lang[this.props.lang];
+    
     this.menus = [
       {
         name: "tafsir",
@@ -97,6 +97,7 @@ class Menu extends Component {
     // close();
   };
   render() {
+      
     const {
       navigation,
       setQuira,
@@ -104,6 +105,7 @@ class Menu extends Component {
       setTheme,
       theme: { backgroundColor, color },
     } = this.props;
+    this.lang = langs[lang];
     const { active } = this.state;
     const changeColor = (index) => {
       if (index) {

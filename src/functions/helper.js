@@ -416,6 +416,5 @@ export const fetchJSON = (url) =>
 export const fetchText = (url) =>
   fetch(url)
     .then((response) => response.text())
-    .catch((err) => alert(err));
 export const wait = (ms = 200) =>
   new Promise((resolve) => setTimeout(resolve, ms));
