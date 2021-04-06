@@ -39,18 +39,18 @@ class Search extends Component {
     if (this.state.searchText !== "") this.search();
   }
   search = (text) => {
+    const { searchText } = this.state;
     if (text === "wino") alert(test); //remove
-    if (this.state.searchText)
-      if (this.state.searchText.length <= 2) {
+    if (searchText)
+      if (searchText.length <= 2) {
         this.setState({
           searchError: true,
           searchText: this.lang["search_err_length"],
         });
       } else {
-        const txt = this.state.searchText;
-        const resault = searchAyatByText(txt);
-        if (resault) this.setState({ resault });
-        else this.setState({ resault: this.lang["search_nores"] });
+        const resault =
+          searchAyatByText(searchText) || this.lang["search_nores"];
+        this.setState({ resault });
       }
   };
   goBack = () => {
@@ -64,7 +64,8 @@ class Search extends Component {
   };
   getNameBySura = (id) => this.allSuwar.find((dt) => dt.id === id).name;
   render() {
-    const { backgroundColor } = this.props;
+    const { backgroundColor,fontSize,setExactAya } = this.props;
+      const { searchText,resault } = this.state;
     return (
       <Container style={{ backgroundColor }}>
         <Header searchBar rounded style={{ backgroundColor }}>
@@ -79,14 +80,14 @@ class Search extends Component {
           <Item style={{ margin: 15, backgroundColor }}>
             <Input
               placeholder={this.lang["search"]}
-              value={this.state.searchText}
+              value={searchText}
               onChangeText={(text) => this.setState({ searchText: text })}
-              onSubmitEditing={() => this.search(this.state.searchText)}
+              onSubmitEditing={() => this.search(searchText)}
               style={{ margin: 9, textAlign: "center" }}
             />
             <Button
               transparent
-              onPress={() => this.search(this.state.searchText)}
+              onPress={() => this.search(searchText)}
             >
               <Thumbnail
                 small
@@ -98,19 +99,19 @@ class Search extends Component {
         </Header>
 
         <Content>
-          {this.state.resault && (
+          {resault && (
             <List
-              dataArray={this.state.resault}
+              dataArray={resault}
               renderRow={(data) => (
                 <ScreenAya
                   onpress={() => {
-                    this.props.setExactAya(data);
+                    setExactAya(data);
                     this.goBack(true);
                   }}
                   aya={data.aya}
                   text={data.text}
                   sura={this.getNameBySura(data.sura)}
-                  fontSize={this.props.fontSize}
+                  fontSize={fontSize}
                 />
               )}
             />

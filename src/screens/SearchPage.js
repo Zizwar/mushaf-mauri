@@ -10,7 +10,6 @@ import {
   Text,
 } from "native-base";
 
-import { Icon } from "../component";
 //import styles from "./styles";
 import { connect } from "react-redux";
 import { setExactAya } from "../../reducer";
@@ -27,7 +26,7 @@ class SearchPage extends Component {
   search = () => {
     const number = this.state.searchText;
     if (!number) return;
-    const { sura, aya } = pageToSuraAya(number + 2);
+    const { sura, aya } = pageToSuraAya(+number + 2);
 
     console.log("#go pag", { sura, aya });
     if (sura) {
@@ -35,11 +34,7 @@ class SearchPage extends Component {
       this.props.setExactAya({ aya, sura });
     } else alert("no check page");
   };
-  goBack = () => {
-    if (this.props.togl) this.props.togl("close");
-    else this.props.goBack();
-    if (this.props.handleMenu) this.props.handleMenu("open");
-  };
+  goBack = () => this.props.goBack();
   render() {
     const { pageNumber, go } = this.props;
     const { searchText } = this.state;
