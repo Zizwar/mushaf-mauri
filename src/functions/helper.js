@@ -143,7 +143,7 @@ export const searchAyatByText = (txt) =>
       text: el[3],
       textNoT: el[4],
       //  page: el[5],
-      page: getPageBySuraAya({ sura: el[1], aya: el[2] }),
+      page:0, //getPageBySuraAya({ sura: el[1], aya: el[2] }),
     }));
 
 export const getAyatBySuraAya = ({ aya, sura }) => {

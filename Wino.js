@@ -589,12 +589,12 @@ class Wino extends Component {
     const titleSura = (
       <>
         <Left>
-          <Text note style={{ textAlign: "left", color }}>
+          <Text  style={{ textAlign: "left", color,fontSize:12 }}>
             {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : "Jus' " + hizb}
           </Text>
         </Left>
 
-        <Text note style={{ textAlign: "right", color }}>
+        <Text  style={{ textAlign: "right", color,fontSize:12 }}>
           {nameSuwarPage.join(",")}
         </Text>
       </>
