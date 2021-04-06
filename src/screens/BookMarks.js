@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-
+import { Alert } from "react-native";
 import {
   Container,
   Content,
@@ -50,19 +50,43 @@ class BookMarks extends Component {
     const { bookmarks, setBookmarks } = this.props;
 
     rowMap[`${secId}${rowId}`].props.closeRow();
-    const newData = [...bookmarks];
-    newData.splice(rowId, 1);
-    this.setState({ listViewData: newData });
-    setBookmarks(newData);
+    const listViewData = bookmarks.filter(({id=[]})=>id.sura!==sura && id.aya!==sura);
+   // newData.splice(rowId, 1);
+
+    this.setState({ listViewData });
+    setBookmarks(listViewData);
   }
 
-  delId = (id) => {
+  delId = (id,{sura,aya}) => {
     const { bookmarks, setBookmarks, reRender } = this.props;
 
-    const newData = [...bookmarks];
-    newData.splice(bookmarks.length - id, 1);
-    setBookmarks(newData);
+   // const newData = [...bookmarks];
+       const listViewData = bookmarks.filter(({id=[]})=>id.sura!==sura && id.aya!==aya);
+   // newData.splice(rowId, 1);
+
+    this.setState({ listViewData });
+    setBookmarks(listViewData);
+    //newData.splice(id, 1);
+    //setBookmarks(newData);
     reRender("bookmarks");
+  };
+  confirm = (cb, {sura,aya}) => {
+    Alert.alert(
+      this.lang["remove"],
+      `${this.lang["sura"]}:${sura},${this.lang["aya"]}:${aya}`,
+      [
+        {
+          text: this.lang["cancel"],
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel",
+        },
+        {
+          text: this.lang["alert_ok"],
+          onPress: cb,
+        },
+      ],
+      { cancelable: false }
+    );
   };
   goBack = () => this.props.navigation.goBack();
 
@@ -119,7 +143,10 @@ class BookMarks extends Component {
           </Text>
         </Body>
         <Right>
-          <Button transparent onPress={() => this.delId(id)}>
+          <Button
+            transparent
+            onPress={() => this.confirm(() => this.delId(id,data.id),data.id)}
+          >
             <Icon style={{ color, fontSize: 20 }} name="md-close" />
           </Button>
         </Right>
@@ -148,20 +175,20 @@ class BookMarks extends Component {
 
         <Segment style={{ backgroundColor }}>
           <Button
-            onPress={() => this.togl(false)}
+            onPress={() => this.togl(true)}
             first
-            style={!isActive ? { backgroundColor: color } : { backgroundColor }}
+            style={isActive ? { backgroundColor: color } : { backgroundColor }}
           >
-            <Text style={isActive ? { color } : { color: backgroundColor }}>
+            <Text style={!isActive ? { color } : { color: backgroundColor }}>
               {this.lang["addFav"]}
             </Text>
           </Button>
           <Button
-            onPress={() => this.togl(true)}
+            onPress={() => this.togl(false)}
             last
-            style={isActive ? { backgroundColor: color } : { backgroundColor }}
+            style={!isActive ? { backgroundColor: color } : { backgroundColor }}
           >
-            <Text style={!isActive ? { color } : { color: backgroundColor }}>
+            <Text style={isActive ? { color } : { color: backgroundColor }}>
               {this.lang["note"]}
             </Text>
           </Button>
