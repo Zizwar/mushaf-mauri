@@ -1,4 +1,9 @@
 import React, { Component } from "react";
+import {
+  Dimensions,
+  StyleSheet,
+  Image,
+} from "react-native";
 import { Content, List, View, Container, Thumbnail, Button } from "native-base";
 import { connect } from "react-redux";
 
@@ -7,8 +12,9 @@ import * as langs from "../../i18n";
 import { Itemino } from "../component";
 import AuthorMenu from "./AuthorMenu";
 import { setLang, reRender, setQuira, setTheme } from "../../reducer";
+const drawerCover = require(`../../assets/cover3.png`);
+const {height:deviceHeight} = Dimensions.get("window");
 
-const drawerCover = require(`../../assets/icon.png`);
 class Menu extends Component {
   constructor(props) {
     super(props);
@@ -252,20 +258,25 @@ class Menu extends Component {
     return (
       <Container>
         <Content bounces={false} style={{ flex: 1, backgroundColor, top: -1 }}>
-          <View style={{ margin: 20 }}>
-            <Thumbnail
-              large
-              square
-              source={drawerCover}
-              style={{ marginBottom: 10, alignSelf: "center" }}
-            />
-          </View>
-          {ResaultMenu()}
+     <Image source={drawerCover} style={styles.drawerCover} />  
+        {ResaultMenu()}
+        
         </Content>
       </Container>
     );
   }
 }
+
+
+const styles = StyleSheet.create({
+  drawerCover: {
+    alignSelf: "stretch",
+    height: deviceHeight / 3.5,
+    width: null,
+    position: "relative",
+    marginBottom: 10
+  },
+})
 
 const mapStateToProps = ({ lang, theme }) => ({ lang, theme });
 
