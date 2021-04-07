@@ -26,11 +26,11 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "ma.com.mushaf.mauri"
+      "bundleIdentifier": "wino.ma.mushaf.mauri"
     },
     "android": {
-      "package": "ma.com.mushaf.mauri",
-      "versionCode":6
+      "package": "wino.ma.mushaf.mauri",
+      "versionCode":7
     },
     "packagerOpts": {
       "sourceExts": ["ts", "tsx", "js"],
