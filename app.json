@@ -28,7 +28,8 @@
     },
     "android": {
       "package": "wino.ma.mushaf.mauri",
-      "versionCode":7
+       "permissions": [],
+      "versionCode":4
     }
   }
 }
