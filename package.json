@@ -7,7 +7,7 @@
     "android": "expo start --android",
     "t": "expo start --tunnel",
     "apk": "expo build:android",
-    "stor": "expo upload:android",
+    "store": "expo upload:android",
     "reload": "expo r -c",
     "share": "expo publish",
     "eject": "expo eject"
