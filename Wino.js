@@ -1468,7 +1468,7 @@ class Wino extends Component {
           {modalTafsir}
           {/*modalShowPopover*/}
           {modalAuthor}
-          {popOver}
+          {/*popOver*/}
         </Content>
         {modalMenu}
       </Container>

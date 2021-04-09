@@ -46,7 +46,7 @@ class Author extends Component {
         <Content>
           <List
             dataArray={this.listAutor}
-            renderRow={(data) => (
+            renderRow={(data, _i, index) => (
               <Itemino
                 onPress={() => {
                   this.onPressAuthor(data.id);
@@ -55,6 +55,7 @@ class Author extends Component {
                 color={color}
                 text={data.voice}
                 icon={"arrow-back"}
+                key={"auth"+index}
               />
             )}
           />

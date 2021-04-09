@@ -164,7 +164,7 @@ class Menu extends Component {
               text={this.lang[data.name]}
               icon={data.icon}
               noborder={true}
-              key={`menu_${index}`}
+              key={`menu_${index}${i}`}
             />
           </Content>
         )}

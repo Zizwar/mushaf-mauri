@@ -114,7 +114,7 @@ export const ScreenBookmark = ({
     </CardItem>
   </Card>
 );
-
+let keyGener=123;
 export const Itemino = ({
   onPress,
   icon,
@@ -125,7 +125,7 @@ export const Itemino = ({
   noborder = null,
   height,
   index,
-  key,
+  key=keyGener++,
   //isRtl = false
 }) => {
   if (isRTL)
