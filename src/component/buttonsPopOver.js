@@ -141,7 +141,8 @@ const styles = {
     paddingLeft: 1,
   },
   iconText: {
-    fontSize: 12,
+      
+    fontSize: 11,
   },
   iconButton: {
     width: "100%",

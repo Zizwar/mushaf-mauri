@@ -33,9 +33,8 @@ import {
 } from "native-base";
 import { connect } from "react-redux";
 
-//import { Popover } from "react-native-modal-popover";
-import Popover, { Rect } from "react-native-popover-view";
-import { MaterialIcons } from "@expo/vector-icons";
+import { Popover } from "react-native-modal-popover";
+//import Popover, { Rect } from "react-native-popover-view";
 //import Icon from "react-native-vector-icons/Ionicons";
 import Swiper from "./src/node/Swipino";
 import * as langs from "./i18n";
@@ -92,8 +91,6 @@ const Toasti = (text) =>
   });
 const { width, height } = Dimensions.get("window");
 
-const HEIGH_PAGE = 825;
-const WIDTH_PAGE = 456;
 const MARGIN_PAGE = 55;
 const MARGIN_PAGE_WIDTH = 5;
 
@@ -145,8 +142,7 @@ class Wino extends Component {
       visibleModalSearch: false,
       ///popOver
       showPopover: false,
-      //popoverAnchor: { x: 0, y: 0, width: 0, height: 0 },
-      popoverAnchor: new Rect(0, 0, 0, 0),
+      popoverAnchor: { x: 0, y: 0, width: 0, height: 0 },
       dataPopOver: null,
       isPlaying: false,
       //tafsir tarajem
@@ -522,7 +518,7 @@ class Wino extends Component {
     if (togl == "open") visibleModalAuthor = true;
     this.setState({ visibleModalAuthor });
   };
-  toglModalMenu = (togl) => {
+  toglModalMenu = () => {
     this.props.navigation.toggleDrawer();
     return;
   };
@@ -592,7 +588,9 @@ class Wino extends Component {
       <>
         <Left>
           <Text style={{ textAlign: "left", color, fontSize: 12 }}>
-            {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : `${langs[lang]["juz"]}'${hizb}`}
+            {lang == "ar"
+              ? langs[lang]["juzString"][hizb - 1]
+              : `${langs[lang]["juz"]}'${hizb}`}
           </Text>
         </Left>
 
@@ -855,7 +853,7 @@ class Wino extends Component {
     if (handle) {
       NativeModules.UIManager.measure(handle, (x0, y0, width, height, x, y) => {
         this.setState({
-          popoverAnchor:new Rect(  x, y, width, height ),
+          popoverAnchor:{x, y, width, height},
           dataPopOver,
           showPopover: true,
         });
@@ -995,7 +993,6 @@ class Wino extends Component {
   /////////////////
   render() {
     const {
-      vi,
       showPopover,
       dataPopOver,
       visibleModalTafsir,
@@ -1016,7 +1013,7 @@ class Wino extends Component {
       wino,
       navigation,
       first,
-      theme: { color, backgroundColor, night },
+      theme: { color, backgroundColor },
       setTheme,
       lang,
     } = this.props;
@@ -1168,44 +1165,8 @@ class Wino extends Component {
       </View>
     );
 
-    const ButtonOption = (
-      <Button
-        transparent
-        style={{ position: "absolute", left: 2, bottom: 1 }}
-        onPress={this.toglModalMenu}
-      >
-        <Icon style={{ color }} size={30} name="md-notifications-circle" />
-      </Button>
-    );
-    const ButtonOptionRtl = (
-      <Button
-        transparent
-        style={{ position: "absolute", left: 2, bottom: 1 }}
-        onPress={() => navigation.navigate("Suras")}
-      >
-        <Icon style={{ color }} size={30} name="md-book" />
-      </Button>
-    );
 
-    const ButtonMenu = (
-      <Button
-        transparent
-        style={{ position: "absolute", right: 5, bottom: 0 }}
-        onPress={() => navigation.navigate("Suras")}
-      >
-        <Icon style={{ color }} size={30} name="md-book" />
-      </Button>
-    );
 
-    const ButtonMenuRtl = (
-      <Button
-        transparent
-        style={{ position: "absolute", right: 2, bottom: 0 }}
-        onPress={this.toglModalMenu}
-      >
-        <Icon style={{ color }} size={30} name="ios-menu" />
-      </Button>
-    );
     const footerMenu = (
       <View style={styles.footerMenu}>
         {openTool && (
@@ -1284,7 +1245,6 @@ class Wino extends Component {
       </View>
     );
     const popOver = (
-      /*
       <Popover
         contentStyle={{
           backgroundColor,
@@ -1320,27 +1280,6 @@ class Wino extends Component {
           backgroundColor={backgroundColor}
         />
       </Popover>
-      */
-      <Popover
-       // from={popoverAnchor}
-        isVisible={showPopover}
-        onRequestClose={this.closePopover}
-      >
-        <ButtonPopOver
-          lang={this.lang}
-          close={this.closePopover}
-          wino={dataPopOver}
-          stop={this.playSound}
-          play={this.buildPlayAudio}
-          navigate={navigation.navigate}
-          addBookmarks={this.addBookmarks}
-          note={(_) => this.setState({ visibleAddNote: true })}
-          toasti={Toasti}
-          tarajem={(_) => this.toglTray("open")}
-          color={color}
-          backgroundColor={backgroundColor}
-        />
-      </Popover>
     );
 
     if (first)
@@ -1357,7 +1296,7 @@ class Wino extends Component {
     return (
       <Container style={{ backgroundColor }}>
         <Content style={{ backgroundColor }}>
-          <View style={{ flex: 1, width, height }}>
+          <View style={{ flex: 1, width, height:height-20 }}>
             <StatusBar
               backgroundColor={backgroundColor}
               barStyle="light-content"
@@ -1492,7 +1431,7 @@ class Wino extends Component {
           {modalTafsir}
           {/*modalShowPopover*/}
           {modalAuthor}
-          {/*popOver*/}
+          {popOver}
         </Content>
         {modalMenu}
       </Container>

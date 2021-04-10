@@ -14,25 +14,22 @@
   },
   "nonPersistent": true,
   "dependencies": {
+    "expo": "^38.0.0",
+    "expo-asset": "~8.1.7",
+    "expo-av": "~8.2.1",
+    "expo-font": "~8.2.1",
+    "react": "16.11.0",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-38.0.2.tar.gz",
     "@react-native-community/netinfo": "5.9.6",
     "@react-native-community/toolbar-android": "^0.1.0-rc.2",
     "@react-native-community/viewpager": "^4.1.6",
-    "expo": "^39.0.0",
-    "expo-asset": "~8.2.0",
-    "expo-av": "~8.6.0",
     "expo-file-system": "~9.2.0",
-    "expo-font": "~8.3.0",
     "expo-keep-awake": "~8.3.0",
     "expo-localization": "^9.0.0",
     "expo-permissions": "~9.3.0",
     "expo-sqlite": "~8.4.0",
-    "gl-react": "^4.0.1",
-    "gl-react-expo": "^4.0.1",
-    "global": "^4.4.0",
     "native-base": "^2.12.1",
-    "react": "16.13.1",
     "react-dom": "^16.8.6",
-    "react-native": "https://github.com/expo/react-native/archive/sdk-39.0.3.tar.gz",
     "react-native-action-button": "^2.8.5",
     "react-native-action-picker": "^1.0.2",
     "react-native-bottom-sheet-behavior": "^1.0.0",
@@ -59,6 +56,7 @@
     "turtle-cli": "^0.14.9"
   },
   "devDependencies": {
-    "@expo/vector-icons": "^10.0.2"
+    "@expo/vector-icons": "^10.0.2",
+    "babel-preset-expo": "^8.2.3"
   }
 }

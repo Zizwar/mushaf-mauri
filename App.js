@@ -3,9 +3,9 @@
 
 //
 import React, { Component } from "react";
-//console.disableYellowBox = true;
-import { LogBox } from "react-native";
-LogBox.ignoreAllLogs(true)
+console.disableYellowBox = true;
+//import { LogBox } from "react-native";
+//LogBox.ignoreAllLogs(true)
 import { AppLoading } from "expo";
 import * as Font from "expo-font";
 //import { Ionicons } from '@expo/vector-icons';
