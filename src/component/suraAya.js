@@ -89,7 +89,7 @@ const {textButton} = this.props;
                   </Text>
                   <ModalSelector
                     data={listAllAyaStart}
-                    initValue={1}
+                    initValue="1"
                     onChange={({ label }) => this.setState({ ayaStart: label })}
                   />
                 </Col>

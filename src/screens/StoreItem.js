@@ -135,7 +135,7 @@ class StoreItem extends Component {
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: this.nScroll } } }],
-            { useNativeDriver: true }
+            { useNativeDriver: false }
           )}
           style={{ zIndex: 0 }}
         >
