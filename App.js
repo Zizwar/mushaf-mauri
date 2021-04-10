@@ -1,9 +1,11 @@
 //console.ignoredYellowBox = ['Warning: Each', 'Warning: Failed'];
-console.disableYellowBox = true;
+
 
 //
 import React, { Component } from "react";
-import { AsyncStorage } from "react-native";
+//console.disableYellowBox = true;
+import { LogBox } from "react-native";
+LogBox.ignoreAllLogs(true)
 import { AppLoading } from "expo";
 import * as Font from "expo-font";
 //import { Ionicons } from '@expo/vector-icons';
@@ -30,7 +32,7 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-    this.loadDadaApp();
+   this.loadDadaApp();
   }
   async loadDadaApp() {
     try {
@@ -41,8 +43,8 @@ export default class App extends Component {
         //  Ionicons,
         // Roboto: require("native-base/Fonts/Roboto.ttf"),
         // Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
-        Roboto: require("./assets/fonts/pnu.ttf"),
-        Roboto_medium: require("./assets/fonts/pnu-med.ttf"),
+       Roboto: require("./assets/fonts/pnu.ttf"),
+       Roboto_medium: require("./assets/fonts/pnu-med.ttf"),
       //  Ionicons: require("native-base/Fonts/Ionicons.ttf")
         //Ionicons: require("./assets/fonts/Ionicons.ttf"),
         //FontAwesome: require("./assets/fonts/FontAwesome.ttf"),
@@ -57,9 +59,9 @@ export default class App extends Component {
   }
 
   render() {
-    if (!this.state.isReady) {
+    if (!this.state.isReady) 
       return <AppLoading />;
-    }
+    
     // if (!this.state.storeCreated) return null;
     //  return (
     //
