@@ -78,7 +78,7 @@ export const ButtonPopOver = ({
             <Icon name="md-bookmark" style={{ color }} />
           </Button>
           <Text numberOfLines={1} style={styles.iconText}>
-            {lang["favs"]}
+            {lang["fav"]}
           </Text>
         </Col>
         <Col style={styles.col}>
@@ -141,7 +141,7 @@ const styles = {
     paddingLeft: 1,
   },
   iconText: {
-    fontSize: 9,
+    fontSize: 12,
   },
   iconButton: {
     width: "100%",
