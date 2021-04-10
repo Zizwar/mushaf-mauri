@@ -35,10 +35,7 @@ class First extends Component {
             <Button transparent style={{ alignSelf: "center" }}>
               <Icon name="md-globe" />
             </Button>
-
-            <H3>{this.lang["choose_lang"]}</H3>
           </Col>
-
           <ListItem
             onPress={() => {
               this.onPressLang("ar");
@@ -47,6 +44,17 @@ class First extends Component {
             <Body>
               <Text style={{ textAlign: "center", color: "#555" }}>
                 العربية
+              </Text>
+            </Body>
+          </ListItem>
+           <ListItem
+            onPress={() => {
+              this.onPressLang("amz");
+            }}
+          >
+            <Body>
+              <Text style={{ textAlign: "center", color: "#555" }}>
+                ⵜⴰⵎⴰⵣⵉⵖⵜ
               </Text>
             </Body>
           </ListItem>
