@@ -210,6 +210,18 @@ class Menu extends Component {
           color={color}
           text={this.lang["l_arabic"]}
           index={1}
+          key={`lng_${0}`}
+          noborder={true}
+        />
+            <Itemino
+          onPress={() => {
+            this.switchLangTo("amz");
+            this.backHome();
+          }}
+          lang={lang}
+          color={color}
+          text={this.lang["tamazight"]}
+          index={1}
           key={`lng_${1}`}
           noborder={true}
         />
