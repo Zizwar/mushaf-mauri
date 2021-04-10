@@ -201,7 +201,7 @@ class Reciting extends Component {
                   data={listAllAyaStart}
                   style={{ backgroundColor, borderColor: backgroundColor }}
                   selectTextStyle={{ color }}
-                  initValue={1}
+                  initValue="1"
                   onChange={({ label }) => this.setState({ ayaStart: label })}
                 />
               </Col>
@@ -238,7 +238,7 @@ class Reciting extends Component {
                   style={{ backgroundColor, borderColor: backgroundColor }}
                   selectTextStyle={{ color }}
                   data={listAllAyaEnd}
-                  initValue={7}
+                  initValue="7"
                   onChange={({ label }) => this.setState({ ayaEnd: label })}
                 />
               </Col>

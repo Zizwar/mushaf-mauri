@@ -163,7 +163,7 @@ class Khitma extends Component {
                   </Text>
                   <ModalSelector
                     data={LIST_DAY}
-                    initValue={day}
+                    initValue={day+""}
                     onChange={(option) => {
                       this.setState({ day: option.label });
                       // this.onChangeModal();
@@ -178,7 +178,7 @@ class Khitma extends Component {
                   </Text>
                   <ModalSelector
                     data={LIST_JUZ}
-                    initValue={juz}
+                    initValue={juz+""}
                     onChange={(option) => {
                       this.setState({ juz: option.label });
                       // this.onChangeModal();
