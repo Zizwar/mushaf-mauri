@@ -33,7 +33,8 @@ import {
 } from "native-base";
 import { connect } from "react-redux";
 
-import { Popover } from "react-native-modal-popover";
+//import { Popover } from "react-native-modal-popover";
+import Popover, { Rect } from "react-native-popover-view";
 import { MaterialIcons } from "@expo/vector-icons";
 //import Icon from "react-native-vector-icons/Ionicons";
 import Swiper from "./src/node/Swipino";
@@ -144,7 +145,8 @@ class Wino extends Component {
       visibleModalSearch: false,
       ///popOver
       showPopover: false,
-      popoverAnchor: { x: 0, y: 0, width: 0, height: 0 },
+      //popoverAnchor: { x: 0, y: 0, width: 0, height: 0 },
+      popoverAnchor: new Rect(0, 0, 0, 0),
       dataPopOver: null,
       isPlaying: false,
       //tafsir tarajem
@@ -589,12 +591,12 @@ class Wino extends Component {
     const titleSura = (
       <>
         <Left>
-          <Text  style={{ textAlign: "left", color,fontSize:12 }}>
-            {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : "Jus' " + hizb}
+          <Text style={{ textAlign: "left", color, fontSize: 12 }}>
+            {lang == "ar" ? langs[lang]["juzString"][hizb - 1] : `${langs[lang]["juz"]}'${hizb}`}
           </Text>
         </Left>
 
-        <Text  style={{ textAlign: "right", color,fontSize:12 }}>
+        <Text style={{ textAlign: "right", color, fontSize: 12 }}>
           {nameSuwarPage.join(",")}
         </Text>
       </>
@@ -853,7 +855,7 @@ class Wino extends Component {
     if (handle) {
       NativeModules.UIManager.measure(handle, (x0, y0, width, height, x, y) => {
         this.setState({
-          popoverAnchor: { x, y, width, height },
+          popoverAnchor:new Rect(  x, y, width, height ),
           dataPopOver,
           showPopover: true,
         });
@@ -1282,6 +1284,7 @@ class Wino extends Component {
       </View>
     );
     const popOver = (
+      /*
       <Popover
         contentStyle={{
           backgroundColor,
@@ -1301,6 +1304,27 @@ class Wino extends Component {
         onClose={this.closePopover}
         // placement="bottom"
         duration={100}
+      >
+        <ButtonPopOver
+          lang={this.lang}
+          close={this.closePopover}
+          wino={dataPopOver}
+          stop={this.playSound}
+          play={this.buildPlayAudio}
+          navigate={navigation.navigate}
+          addBookmarks={this.addBookmarks}
+          note={(_) => this.setState({ visibleAddNote: true })}
+          toasti={Toasti}
+          tarajem={(_) => this.toglTray("open")}
+          color={color}
+          backgroundColor={backgroundColor}
+        />
+      </Popover>
+      */
+      <Popover
+       // from={popoverAnchor}
+        isVisible={showPopover}
+        onRequestClose={this.closePopover}
       >
         <ButtonPopOver
           lang={this.lang}
@@ -1571,7 +1595,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: "#FFFFFF08",
-    height: 270,
+    height: 300,
   },
   footerMenu: {
     position: "absolute",
