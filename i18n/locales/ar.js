@@ -9,7 +9,7 @@ export default {
   quit: "انقر مرة اخرى للخروج من تطبيق ايات",
   arabic: "عربي",
   english: "English",
-  french: "فرنسي",
+  french: "Français",
   tamazight:"ⵜⴰⵎⴰⵣⵉⵖⵜ",
   all: "الكل",
   title: "القرآن الكريم للجوال ",

@@ -72,7 +72,7 @@ class StoreItem extends Component {
   constructor(props) {
     super(props);
     this.nScroll.addListener(
-      Animated.event([{ value: this.scroll }], { useNativeDriver: false })
+      Animated.event([{ value: this.scroll }], { useNativeDriver: true })
     );
   }
   goBack = () => {
@@ -135,7 +135,7 @@ class StoreItem extends Component {
           showsVerticalScrollIndicator={false}
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: this.nScroll } } }],
-            { useNativeDriver: false }
+            { useNativeDriver: true }
           )}
           style={{ zIndex: 0 }}
         >

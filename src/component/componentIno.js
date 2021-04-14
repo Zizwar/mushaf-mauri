@@ -20,7 +20,7 @@ import { isRTL } from "expo-localization";
 
 import { Ionicons } from "@expo/vector-icons";
 
-export const Icon = ({ name = "", size = 36, color = "#000", style = [] }) => (
+export const Icon = ({ name = "", size = 32, color = "#000", style = [] }) => (
   <Ionicons name={name} size={size} color={style.color || color} />
 );
 
@@ -125,7 +125,6 @@ export const Itemino = ({
   noborder = null,
   height,
   index,
-  key=keyGener++,
   //isRtl = false
 }) => {
   if (isRTL)
@@ -135,7 +134,6 @@ export const Itemino = ({
         style={{ height: height || 42 }}
         transparent
         onPress={onPress}
-        key={key}
       >
         {lang === "ar" ? (
           <Left style={{ color, marginLeft: -15 }}>

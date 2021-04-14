@@ -7,7 +7,7 @@
     "sdkVersion": "38.0.0",
     "platforms": ["android"],
     "scheme": "mushafmauri",
-    "version": "0.7.3",
+    "version": "0.7.3b",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -29,7 +29,7 @@
     "android": {
       "package": "wino.ma.mushaf.mauri",
        "permissions": [],
-      "versionCode":7
+      "versionCode":8
     }
   }
 }

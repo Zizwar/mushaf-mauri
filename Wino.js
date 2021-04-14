@@ -36,7 +36,8 @@ import { connect } from "react-redux";
 import { Popover } from "react-native-modal-popover";
 //import Popover, { Rect } from "react-native-popover-view";
 //import Icon from "react-native-vector-icons/Ionicons";
-import Swiper from "./src/node/Swipino";
+//import Swiper from "./src/node/Swipino";
+import Swiper from "react-native-swiper";
 import * as langs from "./i18n";
 import {
   coordinatePage,
@@ -853,7 +854,7 @@ class Wino extends Component {
     if (handle) {
       NativeModules.UIManager.measure(handle, (x0, y0, width, height, x, y) => {
         this.setState({
-          popoverAnchor:{x, y, width, height},
+          popoverAnchor: { x, y, width, height },
           dataPopOver,
           showPopover: true,
         });
@@ -1165,8 +1166,6 @@ class Wino extends Component {
       </View>
     );
 
-
-
     const footerMenu = (
       <View style={styles.footerMenu}>
         {openTool && (
@@ -1296,7 +1295,7 @@ class Wino extends Component {
     return (
       <Container style={{ backgroundColor }}>
         <Content style={{ backgroundColor }}>
-          <View style={{ flex: 1, width, height:height-20 }}>
+          <View style={{ flex: 1, width, height: height - 2 }}>
             <StatusBar
               backgroundColor={backgroundColor}
               barStyle="light-content"

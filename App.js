@@ -40,7 +40,7 @@ export default class App extends Component {
       //    const nightly = value == "ok" ? true : false;
 
       await Font.loadAsync({
-        //  Ionicons,
+        // Ionicons,
         // Roboto: require("native-base/Fonts/Roboto.ttf"),
         // Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
        Roboto: require("./assets/fonts/pnu.ttf"),
@@ -49,6 +49,8 @@ export default class App extends Component {
         //Ionicons: require("./assets/fonts/Ionicons.ttf"),
         //FontAwesome: require("./assets/fonts/FontAwesome.ttf"),
         //Ionicons: require('@expo/vector-icons'),
+      //  Ionicons: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf"),
+   
       });
 
       this.setState({ isReady: true });

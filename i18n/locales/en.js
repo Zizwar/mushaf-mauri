@@ -14,6 +14,7 @@ export default {
   quit: "Press again to exit",
   arabic: "عربي",
   english: "English",
+  french: "Français",
   tamazight:"ⵜⴰⵎⴰⵣⵉⵖⵜ",
   all: "All",
   title: "Al Quran for mobile",
@@ -424,5 +425,4 @@ export default {
   and: "و",
   txtFromAya: "من قوله عز وجل",
   txtToAya: "إلى قوله عز وجل",
-  french: "French",
 };
