@@ -1,4 +1,3 @@
-#FROM gitpod/workspace-full-vnc
-#USER gitpod
-FROM reactnativecommunity/react-native-android
+FROM gitpod/workspace-full-vnc
+USER gitpod
 RUN yarn add global expo-cli
