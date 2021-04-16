@@ -9,7 +9,7 @@ import { en } from "../../i18n";
 
 import { getTarjama, getTafsirUri } from "../api";
 //
-const lngS = (lang) => (lang == "ar" ? 4 : 5);
+const lngS = (lang) => (lang === "ar" ? 0 : lang === "amz" ? 1 : 2);
 export const paddingAya = (aya) => {
   aya = aya + "";
   if (aya.length < 2) {
@@ -143,7 +143,7 @@ export const searchAyatByText = (txt) =>
       text: el[3],
       textNoT: el[4],
       //  page: el[5],
-      page:0, //getPageBySuraAya({ sura: el[1], aya: el[2] }),
+      page: 0, //getPageBySuraAya({ sura: el[1], aya: el[2] }),
     }));
 
 export const getAyatBySuraAya = ({ aya, sura }) => {
@@ -197,12 +197,13 @@ export const allSuwar = (a) => {
   let i = 1; // a ? 3 : 1;
   const min = 114; //a ? a : 114;
   let surLoop = [];
+  
   for (i; i <= min; i++) {
     //	if(!a)
     surLoop.push({
       id: i,
       name: QuranData.Sura[i][lngS(a)],
-      makan: QuranData.Sura[i][6],
+      makan: QuranData.Sura[i][3],
     });
     //	else surLoop.push({ id: i});
   }
@@ -414,7 +415,6 @@ export const fetchJSON = (url) =>
     .catch((err) => alert(err));
 
 export const fetchText = (url) =>
-  fetch(url)
-    .then((response) => response.text())
+  fetch(url).then((response) => response.text());
 export const wait = (ms = 200) =>
   new Promise((resolve) => setTimeout(resolve, ms));
