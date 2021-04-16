@@ -29,7 +29,7 @@
     "android": {
       "package": "wino.ma.mushaf.mauri",
        "permissions": [],
-      "versionCode":8
+      "versionCode":9
     }
   }
 }

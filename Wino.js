@@ -13,7 +13,7 @@ import {
   Animated,
   ImageBackground,
 } from "react-native";
-import { ScreenOrientation } from "expo";
+import * as ScreenOrientation from "expo-screen-orientation";
 import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; //wino permission
 
 import { Audio } from "expo-av";
@@ -72,7 +72,7 @@ import {
 } from "./reducer";
 //
 
-import { ButtonPopOver, Icon } from "./src/component";
+import { ButtonPopOverCard, Icon } from "./src/component";
 import Modalino from "./src/component/modalino";
 import AddNote from "./src/component/addNote";
 import Tarajem from "./src/screens/Tarajem";
@@ -139,6 +139,7 @@ class Wino extends Component {
       visibleModalTarjama: false,
       visibleModalMenu: false,
       visibleModalAuthor: false,
+      visibleModalPopOver: false,
 
       visibleModalSearch: false,
       ///popOver
@@ -201,7 +202,7 @@ class Wino extends Component {
     const { quira, awk, wino: winos, prorate, bookmarks } = this.props;
     this.bookmarksPage = bookmarks.map((d) => d && d.page);
     this.setAwk(awk);
-    if (prorate) this.prorate();
+    //if (prorate) await this.prorate();
     console.log("WORKING...");
     let vi = [];
     let id = NUMBER_PAGE;
@@ -306,7 +307,10 @@ class Wino extends Component {
     // await this.setTarjama()
   }
   prorate = async (_) =>
-    await ScreenOrientation.allowAsync(ScreenOrientation.Orientation.LANDSCAPE);
+    await ScreenOrientation.lockAsync(
+      ScreenOrientation.OrientationLock.LANDSCAPE_LEFT
+    );
+  // await ScreenOrientation.allowAsync(ScreenOrientation.Orientation.LANDSCAPE);
 
   setAwk = (bel) => {
     if (bel) activateKeepAwake();
@@ -503,21 +507,27 @@ class Wino extends Component {
 
   toglModalTafsir = (togl) => {
     let visibleModalTafsir = !this.state.visibleModalTafsir;
-    if (togl == "close") visibleModalTafsir = false;
-    if (togl == "open") visibleModalTafsir = true;
+    if (togl === "close") visibleModalTafsir = false;
+    if (togl === "open") visibleModalTafsir = true;
     this.setState({ visibleModalTafsir });
   };
   toglShowPopover = (togl) => {
     let showPopover = !this.state.showPopover;
-    if (togl == "close") showPopover = false;
-    if (togl == "open") showPopover = true;
+    if (togl === "close") showPopover = false;
+    if (togl === "open") showPopover = true;
     this.setState({ showPopover });
   };
   toglModalAuthor = (togl) => {
     let visibleModalAuthor = !this.state.visibleModalAuthor;
-    if (togl == "close") visibleModalAuthor = false;
-    if (togl == "open") visibleModalAuthor = true;
+    if (togl === "close") visibleModalAuthor = false;
+    if (togl === "open") visibleModalAuthor = true;
     this.setState({ visibleModalAuthor });
+  };
+  toglModalPopOver = (togl) => {
+    let visibleModalPopOver = !this.state.visibleModalPopOver;
+    if (togl === "close") visibleModalPopOver = false;
+    if (togl === "open") visibleModalPopOver = true;
+    this.setState({ visibleModalPopOver });
   };
   toglModalMenu = () => {
     this.props.navigation.toggleDrawer();
@@ -530,8 +540,8 @@ class Wino extends Component {
       return;
     }
     let visibleModalSearch = this.state.visibleModalSearch;
-    if (togl == "close") visibleModalSearch = false;
-    if (togl == "open") visibleModalSearch = true;
+    if (togl === "close") visibleModalSearch = false;
+    if (togl === "open") visibleModalSearch = true;
 
     this.setState({
       visibleModalSearch,
@@ -847,21 +857,28 @@ class Wino extends Component {
   showPopover(index, wino) {
     //this.selectFullAya(wino);
     const dataPopOver = getAyatBySuraAya(wino);
-    this.setState({ dataPopOver, showPopover: true });
-    // this.toglShowPopover('open');
-    //return;
+    this.setState({
+      dataPopOver,
+      //showPopover: true
+    });
+    this.toglModalPopOver("open");
+    return;
     const handle = findNodeHandle(this.pages[index].t);
     if (handle) {
-      NativeModules.UIManager.measure(handle, (x0, y0, width, height, x, y) => {
-        this.setState({
-          popoverAnchor: { x, y, width, height },
-          dataPopOver,
-          showPopover: true,
-        });
-      });
+      NativeModules.UIManager.measure(
+        handle,
+        (_x0, _y0, width, height, x, y) => {
+          this.setState({
+            popoverAnchor: { x, y, width, height },
+            dataPopOver,
+            //  showPopover: true,
+          });
+        }
+      );
     }
   }
-  closePopover = () => this.setState({ showPopover: false });
+  closePopover = () =>
+    this.setState({ visibleModalPopOver: false, showPopover: false });
   //
   /*
     addBookmarks = (_) => {
@@ -1002,6 +1019,7 @@ class Wino extends Component {
       isPlaying,
       loadingSound,
       visibleModalAuthor,
+      visibleModalPopOver,
       bounceValue,
       visibleModalMenu,
       visibleModalTarjama,
@@ -1138,6 +1156,29 @@ class Wino extends Component {
         visible={visibleModalAuthor}
       />
     );
+    const modalPopOver = (
+      <Modalino
+        togl={this.toglModalPopOver}
+        style={{ paddingLeft: 10, paddingRight: 10, paddingTop: "50%" }}
+        data={
+          <ButtonPopOverCard
+            lang={this.lang}
+            close={this.toglModalPopOver}
+            wino={dataPopOver}
+            stop={this.playSound}
+            play={this.buildPlayAudio}
+            navigate={navigation.navigate}
+            addBookmarks={this.addBookmarks}
+            note={(_) => this.setState({ visibleAddNote: true })}
+            toasti={Toasti}
+            tarajem={(_) => this.toglTray("open")}
+            color={color}
+            backgroundColor={backgroundColor}
+          />
+        }
+        visible={visibleModalPopOver}
+      />
+    );
     const trayFirst = (
       <View style={styles.subViewFirst}>
         <First />
@@ -1264,7 +1305,7 @@ class Wino extends Component {
         // placement="bottom"
         duration={100}
       >
-        <ButtonPopOver
+        <ButtonPopOverCard
           lang={this.lang}
           close={this.closePopover}
           wino={dataPopOver}
@@ -1428,7 +1469,7 @@ class Wino extends Component {
           {addNote}
           {tray}
           {modalTafsir}
-          {/*modalShowPopover*/}
+          {modalPopOver}
           {modalAuthor}
           {popOver}
         </Content>
