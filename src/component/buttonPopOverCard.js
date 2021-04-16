@@ -1,18 +1,7 @@
 import React from "react";
 
-import {
-  Content,
-  Col,
-  Text,
-  Button,
-  Right,
-  Left,
-  Body,
-  Thumbnail,
-  Grid,
-  Row,
-} from "native-base";
-import { Clipboard, Share } from "react-native";
+import { Content, Col, Button, Grid, Row } from "native-base";
+import { Clipboard, Share, Text } from "react-native";
 import { Icon } from "./componentIno";
 //export const Icong = ({name }) => (<Thumbnail square source={{uri: '../../assetsme+'.png'}} />);
 
@@ -54,12 +43,11 @@ export const ButtonPopOverCard = ({
   tarajem,
   navigate,
   addBookmarks,
-  stop,
-  color,
+  theme: { color = "#000", backgroundColor = "#fff" },
   wino,
 }) => (
   <Content>
-    <Grid style={styles.container}>
+    <Grid style={[styles.container, { backgroundColor }]}>
       <Row style={styles.row}>
         <Col style={styles.col}>
           <Button
@@ -76,18 +64,21 @@ export const ButtonPopOverCard = ({
             {lang["play"]}
           </Text>
         </Col>
-  <Col style={styles.col}>
-              <Button
+        <Col style={styles.col}>
+          <Button
             transparent
-            onPress={_ =>{close();navigate("Reciting"); }}
-            style={{ marginBottom: 1 }}
+            onPress={(_) => {
+              close();
+              navigate("Reciting");
+            }}
+           style={styles.iconButton}
           >
-           <Icon name="md-document" style={{ color }} />
+            <Icon name="md-document" style={{ color }} />
           </Button>
-              <Text numberOfLines={1} style={styles.iconText}>
-             {lang["bu_telawa"]}
+          <Text numberOfLines={1} style={styles.iconText}>
+            {lang["bu_telawa"]}
           </Text>
-              </Col>
+        </Col>
         <Col style={styles.col}>
           <Button transparent onPress={addBookmarks} style={styles.iconButton}>
             <Icon name="md-bookmark" style={{ color }} />
@@ -150,29 +141,25 @@ export const ButtonPopOverCard = ({
           </Text>
         </Col>
 
-       <Col style={styles.col}>
-          <Button
-            transparent
-        
-            style={styles.iconButton}
-          >
-            <Icon active name="md-recorder" style={{ color }} />
+        <Col style={styles.col}>
+          <Button transparent style={styles.iconButton}>
+            <Icon active name="ios-close" style={{ color }} />
           </Button>
           <Text numberOfLines={1} style={styles.iconText}>
-            {lang["record"]}
+            {lang["close"]}
           </Text>
         </Col>
-</Row>
+      </Row>
     </Grid>
   </Content>
 );
 
 const styles = {
   container: {
+    borderRaduis: 25,
     flex: 1,
     width: null,
     height: null,
-    backgroundColor: "#FFF",
   },
   iconContainer: {
     flexDirection: "row",
@@ -191,10 +178,10 @@ const styles = {
   col: {
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 10,
-    margin: 10,
+    paddingHorizontal: 5,
+    margin: 6,
     paddingHorizontal: 0,
-    padding: 2,
+    padding: 6,
   },
   row: {
     paddingBottom: 5,

@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 //import { StyleSheet, View } from "react-native";
-import Modal from "react-native-modal"; // 2.4.0
+//import Modal from "react-native-modal"; // 2.4.0
+import Modal from "react-native-modalbox";
 
 export default class Modalino extends Component {
   render() {
@@ -8,28 +9,28 @@ export default class Modalino extends Component {
       visible,
       togl,
       data,
-      position,
+      position = "center",
       noSwipe,
       backDrop,
       style,
       opacity,
       disbledSwip,
       animationIn = "slideInUp",
-      animationOut = "slideOutDown"
+      animationOut = "slideOutDown",
     } = this.props;
     return (
       <Modal
-        isVisible={visible}
+        isOpen={visible}
         backdropColor={"#000"}
         backdropOpacity={opacity ? opacity : 0.5}
         animationIn={animationIn}
         animationOut={animationOut}
         //scrollOffsetMax={400 - 300}
         style={
-          position == "down"
+          position === "down"
             ? {
                 justifyContent: "flex-end",
-                margin: 0
+                margin: 0,
               }
             : style
             ? style
@@ -47,6 +48,8 @@ export default class Modalino extends Component {
             return null;
           }
         }}
+        onClosed={() => togl("close")}
+        backdropPressToClose={true}
         // onBackButtonPress={() => togl("close")}
         onSwipe={() => {
           if (!noSwipe) togl("close");
