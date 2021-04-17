@@ -1,5 +1,5 @@
 export default {
-    color:"Color",
+  color: "Color",
   khitma: "Khitma",
   doneread: "Fin de la lecture",
   cloud: "Enregistrer",
@@ -31,7 +31,7 @@ export default {
   download: "Télécharger",
   cancel: "Annuler",
   hide: "Masquer",
-
+play: "Play",
   bu_download_cnt: "Télécharger",
   bu_download_images: "Pages",
   bu_download_recites: "Recitations",

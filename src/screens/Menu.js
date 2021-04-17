@@ -208,7 +208,7 @@ class Menu extends Component {
           }}
           lang={lang}
           color={color}
-          text={this.lang["l_arabic"]}
+          text={this.lang["arabic"]}
           index={1}
           key={`lng_${0}`}
           noborder={true}
@@ -232,7 +232,7 @@ class Menu extends Component {
           }}
           lang={lang}
           color={color}
-          text={this.lang["l_english"]}
+          text={this.lang["english"]}
           index={2}
           key={`lng_${2}`}
           noborder={true}

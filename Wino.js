@@ -1,6 +1,5 @@
 import React, { Component } from "react";
 import {
-    
   Dimensions,
   Image,
   ActivityIndicator,
@@ -128,7 +127,7 @@ class Wino extends Component {
       openTool: false,
       repeat: 1,
       isRepeat: false,
-      bounceValue: new Animated.Value(this.toValue,{useNativeDriver: true}),
+      bounceValue: new Animated.Value(this.toValue, { useNativeDriver: true }),
       //modallvisible
       visibleAddNote: false,
       isFaves: false,
@@ -147,11 +146,11 @@ class Wino extends Component {
       ///popOver
       showPopover: false,
       popoverAnchor: { x: 0, y: 0, width: 0, height: 0 },
-      dataPopOver: null,
+      dataPopOver: [],
       isPlaying: false,
       //tafsir tarajem
       textTarajem: "",
-      bounceValueHeader: new Animated.Value(-150,{useNativeDriver: true}),
+      bounceValueHeader: new Animated.Value(-150, { useNativeDriver: true }),
       positionPage: [],
     };
 
@@ -857,14 +856,15 @@ class Wino extends Component {
   //
 
   showPopover(index, wino) {
+     this.toglModalPopOver("open");
+    return;
     //this.selectFullAya(wino);
-    const dataPopOver = getAyatBySuraAya(wino);
+    //const dataPopOver = getAyatBySuraAya(wino);
     this.setState({
-      dataPopOver,
+      dataPopOver:[],
       //showPopover: true
     });
-    this.toglModalPopOver("open");
-    return;
+   
     const handle = findNodeHandle(this.pages[index].t);
     if (handle) {
       NativeModules.UIManager.measure(
@@ -979,7 +979,7 @@ class Wino extends Component {
       velocity: 3,
       tension: 2,
       friction: 8,
-      useNativeDriver: true
+      useNativeDriver: true,
     }).start();
 
     this.isHiddenSearch = !this.isHiddenSearch;
@@ -1005,7 +1005,7 @@ class Wino extends Component {
       velocity: 3,
       tension: 2,
       friction: 8,
-      useNativeDriver: true
+      useNativeDriver: true,
     }).start();
     this.setState({ menuSercl: !this.isHidden });
     this.setState({ visibleModalTarjama: this.isHidden });
@@ -1077,7 +1077,7 @@ class Wino extends Component {
         //   disbledSwip={true}
         noSwipe={true}
         // backDrop={true}
-        
+
         style={{
           padding: 10,
           height: 320,
@@ -1164,7 +1164,13 @@ class Wino extends Component {
     const modalPopOver = (
       <Modalino
         togl={this.toglModalPopOver}
-        style={{ paddingLeft: 10, paddingRight: 10, height:300,    justifyContent: 'center',   backgroundColor: "transparent"}}
+        style={{
+          paddingLeft: 10,
+          paddingRight: 10,
+          height: 300,
+          justifyContent: "center",
+          backgroundColor: "transparent",
+        }}
         data={
           <ButtonPopOverCard
             lang={this.lang}
@@ -1177,7 +1183,7 @@ class Wino extends Component {
             note={(_) => this.setState({ visibleAddNote: true })}
             toasti={Toasti}
             tarajem={(_) => this.toglTray("open")}
-            theme={color,backgroundColor}
+            theme={(color, backgroundColor)}
           />
         }
         visible={visibleModalPopOver}
@@ -1422,50 +1428,50 @@ class Wino extends Component {
                 */}
               </Item>
             </View>
-<SafeAreaView style={{flex: 1}}>
-            <ScrollView
-            keyboardShouldPersistTaps='handled'
-              style={{
-                top: MARGIN_PAGE,
-                //height,//:height+32,
-                position: "absolute",
-                right: 0,
-                bottom: visibleModalTarjama ? 250 : 0,
-                left: 0,
-              }}
-            >
-              <Swiper
-                ref="swiper"
-                loadMinimal={true}
-                loadMinimalSize={MINIMAL_PAGE_RENDER}
-                autoplay={false}
-                horizontal={SWIPE_horizontal}
-                bounces={true}
-                showsPagination={false}
-                loop={false}
-                loadMinimalLoader={
-                  <ActivityIndicator size="large" color="#555" />
-                }
-                // onMomentumScrollEnd={this._onMomentumScrollEnd}
-                automaticallyAdjustContentInsets={true}
-                onIndexChanged={this._onIndexChanged}
-                index={this.index}
+            <SafeAreaView style={{ flex: 1 }}>
+              <ScrollView
+                keyboardShouldPersistTaps="handled"
                 style={{
-                  top: 0,
-                  position: "relative",
+                  top: MARGIN_PAGE,
+                  //height,//:height+32,
+                  position: "absolute",
                   right: 0,
-                  bottom: 0,
+                  bottom: visibleModalTarjama ? 250 : 0,
                   left: 0,
-                  height: heightScala + MARGIN_PAGE + 24,
-                  // backgroundColor:"red",
                 }}
-                showsHorizontalScrollIndicator={true}
               >
-                {this.listScrollPage.map(({ id }, index) =>
-                  this.renderItemPage({ id, index })
-                )}
-              </Swiper>
-            </ScrollView>
+                <Swiper
+                  ref="swiper"
+                  loadMinimal={true}
+                  loadMinimalSize={MINIMAL_PAGE_RENDER}
+                  autoplay={false}
+                  horizontal={SWIPE_horizontal}
+                  bounces={true}
+                  showsPagination={false}
+                  loop={false}
+                  loadMinimalLoader={
+                    <ActivityIndicator size="large" color="#555" />
+                  }
+                  // onMomentumScrollEnd={this._onMomentumScrollEnd}
+                  automaticallyAdjustContentInsets={true}
+                  onIndexChanged={this._onIndexChanged}
+                  index={this.index}
+                  style={{
+                    top: 0,
+                    position: "relative",
+                    right: 0,
+                    bottom: 0,
+                    left: 0,
+                    height: heightScala + MARGIN_PAGE + 24,
+                    // backgroundColor:"red",
+                  }}
+                  showsHorizontalScrollIndicator={true}
+                >
+                  {this.listScrollPage.map(({ id }, index) =>
+                    this.renderItemPage({ id, index })
+                  )}
+                </Swiper>
+              </ScrollView>
             </SafeAreaView>
           </View>
 
