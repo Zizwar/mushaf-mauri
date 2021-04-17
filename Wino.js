@@ -573,6 +573,8 @@ class Wino extends Component {
     const hizb = getJuzBySuraAya({ sura: suraF, aya: ayaF });
 
     let nameSuwarPage = positions.map(({ wino }) => wino.sura);
+    if (nameSuwarPage[0] === 1) nameSuwarPage = [1];
+    
     nameSuwarPage = [...new Set(nameSuwarPage)].map((sura) =>
       getNameBySura({ sura, lang })
     );
@@ -856,15 +858,15 @@ class Wino extends Component {
   //
 
   showPopover(index, wino) {
-     this.toglModalPopOver("open");
+    this.toglModalPopOver("open");
     return;
     //this.selectFullAya(wino);
     //const dataPopOver = getAyatBySuraAya(wino);
     this.setState({
-      dataPopOver:[],
+      dataPopOver: [],
       //showPopover: true
     });
-   
+
     const handle = findNodeHandle(this.pages[index].t);
     if (handle) {
       NativeModules.UIManager.measure(
