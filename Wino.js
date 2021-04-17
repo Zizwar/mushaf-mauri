@@ -73,7 +73,7 @@ import {
 } from "./reducer";
 //
 
-import { ButtonPopOverCard, Icon } from "./src/component";
+import { ButtonPopOver, Icon } from "./src/component";
 import Modalino from "./src/component/modalino";
 import AddNote from "./src/component/addNote";
 import Tarajem from "./src/screens/Tarajem";
@@ -858,15 +858,15 @@ class Wino extends Component {
   //
 
   showPopover(index, wino) {
-    this.toglModalPopOver("open");
-    return;
+    //this.toglModalPopOver("open");
+    //return;
     //this.selectFullAya(wino);
-    //const dataPopOver = getAyatBySuraAya(wino);
-    this.setState({
+    const dataPopOver = getAyatBySuraAya(wino);
+    /*this.setState({
       dataPopOver: [],
       //showPopover: true
     });
-
+*/
     const handle = findNodeHandle(this.pages[index].t);
     if (handle) {
       NativeModules.UIManager.measure(
@@ -875,7 +875,7 @@ class Wino extends Component {
           this.setState({
             popoverAnchor: { x, y, width, height },
             dataPopOver,
-            //  showPopover: true,
+          showPopover: true,
           });
         }
       );
@@ -1163,6 +1163,7 @@ class Wino extends Component {
         visible={visibleModalAuthor}
       />
     );
+    /*
     const modalPopOver = (
       <Modalino
         togl={this.toglModalPopOver}
@@ -1191,6 +1192,7 @@ class Wino extends Component {
         visible={visibleModalPopOver}
       />
     );
+    */
     const trayFirst = (
       <View style={styles.subViewFirst}>
         <First />
@@ -1304,7 +1306,7 @@ class Wino extends Component {
           borderColor: color,
           borderWidth: 2,
         }}
-        //	backgroundStyle={backgroundColor}
+    	backgroundStyle={backgroundColor}
         arrowStyle={{
           borderTopColor: backgroundColor,
           borderColor: color,
@@ -1317,7 +1319,7 @@ class Wino extends Component {
         // placement="bottom"
         duration={100}
       >
-        <ButtonPopOverCard
+        <ButtonPopOver
           lang={this.lang}
           close={this.closePopover}
           wino={dataPopOver}
@@ -1483,7 +1485,7 @@ class Wino extends Component {
           {addNote}
           {tray}
           {modalTafsir}
-          {modalPopOver}
+          {/*modalPopOver*/}
           {modalAuthor}
           {popOver}
         </Content>

@@ -428,4 +428,5 @@ play: "Play",
   arabic: "عربي",
   english: "English",
   french: "Français",
+  tamazight:"ⵜⴰⵎⴰⵣⵉⵖⵜ",
 };

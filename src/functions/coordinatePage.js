@@ -10,8 +10,6 @@ const NEXT_PAGE_LEFT = 0;
 const MARGIN_LEFT_AYA = 15;
 const MARGIN_PAGE_TOP = 4.2;
 const MARGIN_HEIGHT_AYA = 0.3;
-const MARGIN_PAGE_top = 0;
-const MARGIN_HEIGHT_SCALA = 0;
 const MARGIN_WIDTH = 25;
 const ORIGIN_PAGE_TOP = 985.8;
 const ORIGINAL_WIDTH_HEIGHT = {
@@ -27,7 +25,7 @@ const DEVICE_WIDTH_HEIGHT = { width: WIDTH, height: HEIGHT_SCALA };
 const NUMBER_LINE = 15;
 const HEIGHT_LINE = HEIGHT_SCALA / NUMBER_LINE + MARGIN_HEIGHT_AYA;
 
-export const coordinatePage = (page, mosshaf) => {
+export const coordinatePage = (page) => {
   let oldLine = 0;
   let oldLeft = DEVICE_WIDTH_HEIGHT.width;
 

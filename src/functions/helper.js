@@ -21,7 +21,8 @@ export const paddingAya = (aya) => {
 };
 export const getNameBySura = ({ sura, lang = "ar" }) => {
   const allSuwar_ = allSuwar(lang);
-  return allSuwar_.find((dt) => dt.id === parseInt(sura)).name || "";
+  const suwar = allSuwar_.find((dt) => dt.id === parseInt(sura));
+  return suwar ? suwar.name : "";
 };
 export const aya2id = ({ sura, aya }, full) => {
   const [id = 1, page = 1] =
@@ -197,7 +198,7 @@ export const allSuwar = (a) => {
   let i = 1; // a ? 3 : 1;
   const min = 114; //a ? a : 114;
   let surLoop = [];
-  
+
   for (i; i <= min; i++) {
     //	if(!a)
     surLoop.push({
