@@ -9,7 +9,7 @@ const NEXT_PAGE_LEFT = 0;
 
 const MARGIN_LEFT_AYA = 15;
 const MARGIN_PAGE_TOP = 4.2;
-const MARGIN_HEIGHT_AYA = 0;
+const MARGIN_HEIGHT_AYA = 0.3;
 const MARGIN_PAGE_top = 0;
 const MARGIN_HEIGHT_SCALA = 0;
 const MARGIN_WIDTH = 25;
