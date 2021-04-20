@@ -206,7 +206,8 @@ play: "Play",
   close_app_downs:
     " Souhaitez-vousquitteroumasquer l'application? Veuillez noter que quitter l'application interrompra les téléchargements en coursalors que la masquer permettra aux téléchargement en cours de terminer en arrière-plan",
   sd_nf: "Désolé, l’application nécéssite unecarte SD",
-  page_num1604: "Saisissez un nombre entre 1 et 604",
+  page_num1604: "Saisissez un nombre entre 1 et 604", 
+  page_num638: "Saisissez un nombre entre 1 et 638",
   repeat_notifyAway:
     "Ceci est en dehors de la zone de répétition, souhaitez-vous arrêter la répétition?",
   repeat_notifyStop:

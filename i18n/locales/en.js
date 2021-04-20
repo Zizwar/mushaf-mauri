@@ -216,6 +216,7 @@ export default {
     "Exit or Hide Application?, please note exiting App will stop active downloads while hiding will keep it working in the background",
   sd_nf: "Sorry the Application requires SD card",
   page_num1604: "Please enter number between 1 and 604",
+  page_num638: "Please enter number between 1 and 638",
   repeat_notifyAway:
     "Sorry, you are trying to browse Aya out of the repeating boundry, would you like to stop repeating",
   repeat_notifyStop:
