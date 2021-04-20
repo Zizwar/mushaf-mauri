@@ -1,12 +1,11 @@
 //console.ignoredYellowBox = ['Warning: Each', 'Warning: Failed'];
 
-
 //
 import React, { Component } from "react";
 console.disableYellowBox = true;
 //import { LogBox } from "react-native";
 //LogBox.ignoreAllLogs(true)
-import { AppLoading } from "expo";
+import { AppLoading, registerRootComponent } from "expo";
 import * as Font from "expo-font";
 //import { Ionicons } from '@expo/vector-icons';
 //import Ionicons from "react-native-vector-icons/Ionicons";
@@ -32,7 +31,7 @@ export default class App extends Component {
   }
 
   componentDidMount() {
-   this.loadDadaApp();
+    this.loadDadaApp();
   }
   async loadDadaApp() {
     try {
@@ -43,14 +42,13 @@ export default class App extends Component {
         // Ionicons,
         // Roboto: require("native-base/Fonts/Roboto.ttf"),
         // Roboto_medium: require("native-base/Fonts/Roboto_medium.ttf"),
-       Roboto: require("./assets/fonts/pnu.ttf"),
-       Roboto_medium: require("./assets/fonts/pnu-med.ttf"),
-      //  Ionicons: require("native-base/Fonts/Ionicons.ttf")
+        Roboto: require("./assets/fonts/pnu.ttf"),
+        Roboto_medium: require("./assets/fonts/pnu-med.ttf"),
+        //  Ionicons: require("native-base/Fonts/Ionicons.ttf")
         //Ionicons: require("./assets/fonts/Ionicons.ttf"),
         //FontAwesome: require("./assets/fonts/FontAwesome.ttf"),
         //Ionicons: require('@expo/vector-icons'),
-      //  Ionicons: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf"),
-   
+        //  Ionicons: require("@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/Ionicons.ttf"),
       });
 
       this.setState({ isReady: true });
@@ -61,9 +59,8 @@ export default class App extends Component {
   }
 
   render() {
-    if (!this.state.isReady) 
-      return <AppLoading />;
-    
+    if (!this.state.isReady) return <AppLoading />;
+
     // if (!this.state.storeCreated) return null;
     //  return (
     //
@@ -78,4 +75,5 @@ export default class App extends Component {
     );
   }
 }
+registerRootComponent(Root);
 ///
