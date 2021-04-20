@@ -10,7 +10,11 @@ import { en } from "../../i18n";
 import { getTarjama, getTafsirUri } from "../api";
 //
 const lngS = (lang) => (lang === "ar" ? 0 : lang === "amz" ? 1 : 2);
-export const paddingAya = (aya) => {
+export const paddingSuraAya = ({ sura, aya }) => {
+  if (sura === 2) aya++;
+  return padding(sura) + padding(aya);
+};
+export const padding = (aya) => {
   aya = aya + "";
   if (aya.length < 2) {
     return "00" + aya;
