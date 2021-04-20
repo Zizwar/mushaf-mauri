@@ -136,7 +136,7 @@ export const Itemino = ({
         onPress={onPress}
       >
         {lang === "ar" ? (
-          <Left style={{ color, marginLeft: -15 }}>
+          <Left style={{ color, marginLeft: -5 }}>
             <Button transparent>
               {icon && (
                 <Icon

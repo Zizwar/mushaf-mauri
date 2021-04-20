@@ -24,15 +24,19 @@ class SearchPage extends Component {
     };
   }
   search = () => {
-    const number = this.state.searchText;
-    if (!number) return;
-    const { sura, aya } = pageToSuraAya(+number + 2);
+    const number = +this.state.searchText;
+    if (!number || number > 638) {
+      alert(this.props.page_num);
+      return;
+    }
 
-    console.log("#go pag", { sura, aya });
+    const { sura, aya } = pageToSuraAya(number + 2);
+
+    // console.log("#go pag", { sura, aya });
     if (sura) {
       this.goBack(true);
       this.props.setExactAya({ aya, sura });
-    } else alert("no check page");
+    } else alert(this.props.page_num);
   };
   goBack = () => this.props.goBack();
   render() {

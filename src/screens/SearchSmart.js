@@ -77,6 +77,7 @@ class SearchSmart extends Component {
             <SearchPage
               go={this.lang["go"]}
               pageNumber={this.lang["enterPageNum"]}
+              page_num={this.lang["page_num638"]}
               goBack={navigation.goBack}
               //handleMenu={this.props.navigation.state.params.handleMenu}
             />
