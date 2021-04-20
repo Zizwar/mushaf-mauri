@@ -42,7 +42,7 @@ import Swiper from "react-native-swiper";
 import * as langs from "./i18n";
 import {
   coordinatePage,
-  paddingAya,
+  paddingSuraAya,
   nextAya,
   prevAya,
   getAyatBySuraAya,
@@ -380,23 +380,14 @@ class Wino extends Component {
       this.setState({
         openTool: true,
       });
-    let sura, aya;
-    if (wino) {
-      sura = wino.sura;
-      aya = wino.aya;
-      page = wino.page;
-    } else {
-      // if()
-      sura = this.wino.sura;
-      aya = this.wino.aya;
-      page = this.wino.page;
-    }
+    const { sura, aya, page } = wino || this.wino;
 
-    const _id = paddingAya(sura) + paddingAya(aya);
+    const id = paddingSuraAya({ sura, aya });
     // const id = aya2id({ sura, aya });
+    const { moqri } = this.props;
     const path = getAudioMoqriUri({
-      moqri: this.props.moqri,
-      id: _id,
+      moqri,
+      id,
     });
     if (page) this.scrollTo(page);
 
@@ -574,7 +565,7 @@ class Wino extends Component {
 
     let nameSuwarPage = positions.map(({ wino }) => wino.sura);
     if (nameSuwarPage[0] === 1) nameSuwarPage = [1];
-    
+
     nameSuwarPage = [...new Set(nameSuwarPage)].map((sura) =>
       getNameBySura({ sura, lang })
     );
@@ -875,7 +866,7 @@ class Wino extends Component {
           this.setState({
             popoverAnchor: { x, y, width, height },
             dataPopOver,
-          showPopover: true,
+            showPopover: true,
           });
         }
       );
@@ -1306,7 +1297,7 @@ class Wino extends Component {
           borderColor: color,
           borderWidth: 2,
         }}
-    	backgroundStyle={backgroundColor}
+        backgroundStyle={backgroundColor}
         arrowStyle={{
           borderTopColor: backgroundColor,
           borderColor: color,
