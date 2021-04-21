@@ -15,7 +15,7 @@ import {
   ImageBackground,
 } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; //wino permission
+import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; 
 
 import { Audio } from "expo-av";
 import { isRTL } from "expo-localization";
@@ -558,10 +558,10 @@ class Wino extends Component {
     this.id2index[id] = index;
     const positions = coordinatePage(id, quira);
 
-    const { aya: ayaF, sura: suraF } = positions[0]
+    const { aya, sura } = positions[0]
       ? positions[0].wino
       : { aya: 1, sura: 1 }; //first aya
-    const hizb = getJuzBySuraAya({ sura: suraF, aya: ayaF });
+    const hizb = getJuzBySuraAya({ sura, aya });
 
     let nameSuwarPage = positions.map(({ wino }) => wino.sura);
     if (nameSuwarPage[0] === 1) nameSuwarPage = [1];

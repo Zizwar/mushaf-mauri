@@ -139,8 +139,8 @@ export const getMm = (millis) => {
 };
 ///
 export const searchAyatByText = (txt) =>
-  ayatJson
-    .filter((itm) => (itm[4].indexOf(txt) > -1 ? true : false))
+  textwarsh[1][id - 1]
+    .filter((itm) => (itm.include(txt) ))
     .map((el) => ({
       id: el[0],
       sura: el[1],
@@ -153,7 +153,7 @@ export const searchAyatByText = (txt) =>
 
 export const getAyatBySuraAya = ({ aya, sura }) => {
   const { id, page } = aya2id({ aya, sura }, true);
-  const text = textwarsh[id - 1];
+  const text = textwarsh[0][id - 1];
   return { id, sura, aya, text, textNoT: text, page };
   //
   /*
