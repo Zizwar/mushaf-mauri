@@ -138,19 +138,25 @@ export const getMm = (millis) => {
   return padWithZero(minutes) + ":" + padWithZero(seconds);
 };
 ///
-export const searchAyatByText = (txt) =>
-  textwarsh[1][id - 1]
-    .filter((itm) => (itm.include(txt) ))
-    .map((el) => ({
-      id: el[0],
-      sura: el[1],
-      aya: el[2],
-      text: el[3],
-      textNoT: el[4],
-      //  page: el[5],
-      page: 0, //getPageBySuraAya({ sura: el[1], aya: el[2] }),
-    }));
+export const searchAyatByText = (txt) => {
+  const resPush = [];
 
+  textwarsh.forEach(
+    ([text, textNotTashkil], id) =>
+      textNotTashkil.include(txt) && resPush.push({ text, id })
+  );
+
+  return resPush.map(({ text, id }) => {
+    const { page, sura, aya } = id2aya(id, true);
+    return {
+      id,
+      sura,
+      aya,
+      text,
+      page,
+    };
+  });
+};
 export const getAyatBySuraAya = ({ aya, sura }) => {
   const { id, page } = aya2id({ aya, sura }, true);
   const text = textwarsh[0][id - 1];
