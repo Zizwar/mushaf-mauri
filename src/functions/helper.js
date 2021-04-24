@@ -16,16 +16,15 @@ export const paddingSuraAya = ({ sura, aya }) => {
 };
 export const padding = (aya) => {
   aya = aya + "";
-  if (aya.length < 2) {
-    return "00" + aya;
-  } else if (aya.length < 3) {
+  if (aya.length < 2) return "00" + aya;
+  else if (aya.length < 3) {
     return "0" + aya;
   }
   return aya;
 };
 export const getNameBySura = ({ sura, lang = "ar" }) => {
   const allSuwar_ = allSuwar(lang);
-  const suwar = allSuwar_.find((dt) => dt.id === parseInt(sura));
+  const suwar = allSuwar_.find((dt = []) => dt.id === parseInt(sura));
   return suwar ? suwar.name : "";
 };
 export const aya2id = ({ sura, aya }, full) => {
@@ -39,7 +38,7 @@ export const id2aya = (id_, numeric) => {
   const [id, page, sura, aya] =
     indexMuhammadi.filter(([i, p, s, a]) => i === id_)[0] || [];
   return numeric
-    ? paddingAya(sura) + "" + paddingAya(aya)
+    ? padding(sura) + "" + padding(aya)
     : { id, page: page - 1, sura, aya }; //sura + "_" + aya;
 };
 export const nextAya = ({ sura, aya }) => {
@@ -139,23 +138,24 @@ export const getMm = (millis) => {
 };
 ///
 export const searchAyatByText = (txt) => {
-  const resPush = [];
+  const resaults = [];
 
-  textwarsh.forEach(
-    ([text, textNotTashkil], id) =>
-      textNotTashkil.include(txt) && resPush.push({ text, id })
-  );
+  textwarsh.forEach(([text, textNotTashkil = ""], id = 0) => {
+   //   console.log({text, textNotTashkil})
+    if (textNotTashkil.includes(txt)) {
+      const { page = 1, sura = 1, aya = 1 } = id2aya(id+1);
 
-  return resPush.map(({ text, id }) => {
-    const { page, sura, aya } = id2aya(id, true);
-    return {
-      id,
-      sura,
-      aya,
-      text,
-      page,
-    };
+      resaults.push({
+        id,
+        sura,
+        aya,
+        text,
+        page,
+      });
+    }
   });
+ // console.log({resaults})
+ return resaults;
 };
 export const getAyatBySuraAya = ({ aya, sura }) => {
   const { id, page } = aya2id({ aya, sura }, true);

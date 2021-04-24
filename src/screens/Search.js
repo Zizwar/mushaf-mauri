@@ -13,7 +13,7 @@ import {
 
 import { Icon } from "../component";
 //tajwed
-import { searchAyatByText, allSuwar } from "../functions";
+import { searchAyatByText, getNameBySura } from "../functions";
 import { connect } from "react-redux";
 import { setExactAya } from "../../reducer";
 import * as lang from "../../i18n";
@@ -26,7 +26,6 @@ class Search extends Component {
   constructor(props) {
     super(props);
     this.lang = lang[this.props.lang];
-    this.allSuwar = allSuwar(this.props.lang);
     this.state = {
       searchText: this.props.searchText,
       resault: null,
@@ -62,7 +61,7 @@ class Search extends Component {
     if (togl) togl("close");
     else navigation.goBack();
   };
-  getNameBySura = (id) => this.allSuwar.find((dt) => dt.id === id).name;
+ 
   render() {
     const { backgroundColor,fontSize,setExactAya } = this.props;
       const { searchText,resault } = this.state;
@@ -110,7 +109,7 @@ class Search extends Component {
                   }}
                   aya={data.aya}
                   text={data.text}
-                  sura={this.getNameBySura(data.sura)}
+                  sura={getNameBySura({sura:data.sura,lang:this.lang})}
                   fontSize={fontSize}
                 />
               )}
