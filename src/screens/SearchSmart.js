@@ -3,7 +3,7 @@ import { Container, Tabs, Tab, Text, TabHeading } from "native-base";
 
 import { Icon } from "../component";
 import Search from "./Search";
-import SearchSura from "./SearchSura";
+import SearchSura from "./Suras";
 import SearchPage from "./SearchPage";
 import * as lang from "../../i18n";
 //

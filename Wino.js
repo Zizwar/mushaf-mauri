@@ -15,7 +15,7 @@ import {
   ImageBackground,
 } from "react-native";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake"; 
+import { activateKeepAwake, deactivateKeepAwake } from "expo-keep-awake";
 
 import { Audio } from "expo-av";
 import { isRTL } from "expo-localization";
@@ -52,6 +52,7 @@ import {
   getNameBySura,
   getJuzBySuraAya,
   dbs,
+  wait,
 } from "./src/functions";
 import { getAudioMoqriUri } from "./src/api";
 //import { Asset } from "expo-asset";
@@ -224,10 +225,11 @@ class Wino extends Component {
     const wino = winos.sura ? winos : this.wino;
 
     this.existPage = this.isExistPage(quira);
-    console.log(
+    /*console.log(
       "++++this is exist page =>" + this.existPage,
       "quira=>" + quira
     );
+    */
     //this.scrollTo(1);
     //setTimeout(_ => this.selectFullAya(wino), 1);
     const page = wino.page || getPageBySuraAya(wino);
@@ -235,8 +237,8 @@ class Wino extends Component {
     this.setState({ positionPage });
     //this.selectFullAya({aya:1,sura:1})
     await this.intialDBTarajem();
-    //await wait();
-    this.selectFullAya(wino);
+    await wait();
+    this.selectFullAya(wino,true);
     //setExactAya(wino);
   }
   //

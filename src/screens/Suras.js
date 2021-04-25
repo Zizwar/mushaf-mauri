@@ -24,8 +24,11 @@ class Suras extends Component {
   UNSAFE_componentWillMount() {
     this.allSuwar = allSuwar(this.props.lang);
   }
-  goBack = () => this.props.navigation.goBack();
 
+  goBack = () => {
+    if (this.props.goBack) this.props.goBack();
+    else this.props.navigation.goBack();
+  };
   onPressSura = (id) => {
     this.props.setExactAya({ aya: 1, sura: id });
     this.goBack(true);
@@ -35,17 +38,20 @@ class Suras extends Component {
     const {
       theme: { backgroundColor, color },
       lang,
+      goBack,
     } = this.props;
     return (
       <Container style={{ backgroundColor }}>
-        <Headerino
-          onPress={this.goBack}
-          lang={lang}
-          text={this.lang["sowar"]}
-          color={color}
-          //icon={"ios-menu"}
-          backgroundColor={backgroundColor}
-        />
+        {!goBack && (
+          <Headerino
+            onPress={this.goBack}
+            lang={lang}
+            text={this.lang["sowar"]}
+            color={color}
+            //icon={"ios-menu"}
+            backgroundColor={backgroundColor}
+          />
+        )}
         <Content style={{ backgroundColor }}>
           <List
             dataArray={this.allSuwar}
@@ -85,7 +91,7 @@ class Suras extends Component {
                           aya: 1,
                         }) / 4
                       ) || 1
-                    }, ${this.lang["page"]} ${getPageBySuraAya({
+                    }\n ${this.lang["page"]} ${getPageBySuraAya({
                       sura: data.id,
                       aya: 1,
                     })}`}

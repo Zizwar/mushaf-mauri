@@ -41,12 +41,8 @@ class Search extends Component {
     const { searchText } = this.state;
     if (text === "wino") alert(test); //remove
     if (searchText)
-      if (searchText.length <= 2) {
-        this.setState({
-          searchError: true,
-          searchText: this.lang["search_err_length"],
-        });
-      } else {
+      if (searchText.length <= 2) alert(this.lang["search_err_length"]);
+      else {
         const resault =
           searchAyatByText(searchText) || this.lang["search_nores"];
         this.setState({ resault });
@@ -61,10 +57,10 @@ class Search extends Component {
     if (togl) togl("close");
     else navigation.goBack();
   };
- 
+
   render() {
-    const { backgroundColor,fontSize,setExactAya } = this.props;
-      const { searchText,resault } = this.state;
+    const { backgroundColor, fontSize, setExactAya, color } = this.props;
+    const { searchText, resault } = this.state;
     return (
       <Container style={{ backgroundColor }}>
         <Header searchBar rounded style={{ backgroundColor }}>
@@ -84,15 +80,8 @@ class Search extends Component {
               onSubmitEditing={() => this.search(searchText)}
               style={{ margin: 9, textAlign: "center" }}
             />
-            <Button
-              transparent
-              onPress={() => this.search(searchText)}
-            >
-              <Thumbnail
-                small
-                square
-                source={require("../../assets/search.png")}
-              />
+            <Button transparent onPress={() => this.search(searchText)}>
+              <Icon style={{ color }} name="ios-search" />
             </Button>
           </Item>
         </Header>
@@ -109,7 +98,7 @@ class Search extends Component {
                   }}
                   aya={data.aya}
                   text={data.text}
-                  sura={getNameBySura({sura:data.sura,lang:this.lang})}
+                  sura={getNameBySura({ sura: data.sura, lang: this.lang })}
                   fontSize={fontSize}
                 />
               )}
@@ -120,11 +109,17 @@ class Search extends Component {
     );
   }
 }
-const mapStateToProps = ({ wino, lang, fontSize, theme }) => ({
+const mapStateToProps = ({
   wino,
   lang,
   fontSize,
-  theme,
+  theme: { backgroundColor, color },
+}) => ({
+  wino,
+  lang,
+  fontSize,
+  backgroundColor,
+  color,
 });
 
 const test = `
