@@ -54,7 +54,7 @@ export const ButtonPopOver = ({
             transparent
             onPress={(_) => {
               close();
-              setTimeout((_) => play(wino, true), 100);
+              setTimeout((_) => play(null, true), 100);
             }}
             style={styles.iconButton}
           >
