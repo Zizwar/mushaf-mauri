@@ -29,7 +29,7 @@
     "android": {
       "package": "wino.ma.mushaf.mauri",
       "permissions": ["VIBRATE"],
-      "versionCode":9
+      "versionCode":10
     }
   }
 }
