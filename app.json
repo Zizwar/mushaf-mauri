@@ -7,7 +7,7 @@
     "sdkVersion": "38.0.0",
     "platforms": ["android"],
     "scheme": "mushafmauri",
-    "version": "0.7.4",
+    "version": "0.7.5",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
