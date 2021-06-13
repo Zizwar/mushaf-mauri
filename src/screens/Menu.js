@@ -66,12 +66,14 @@ class Menu extends Component {
         icon: "md-flag",
         bg: "#477EEA",
       },
+      /*
       {
         name: "bu_download_cnt",
         route: "Store",
         icon: "md-cloud-download",
         bg: "#477EEA",
       },
+      */
     ];
     this.dataMushaf = ["warsh"];
     this.themes = [

@@ -18,7 +18,8 @@ import {
 import { Icon } from "../component";
 import { getAyatBySuraAya, calcKhitma, getNameBySura } from "../functions";
 import { ScreenAya, Headerino } from "../component";
-import ModalSelector from "react-native-modal-selector";
+//import ModalSelector from "react-native-modal-selector";
+import ModalSelector from "../node/modal-selector"
 import { connect } from "react-redux";
 import { setExactAya, setKhitma } from "../../reducer";
 import * as lang from "../../i18n";
