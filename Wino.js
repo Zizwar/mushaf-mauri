@@ -238,7 +238,7 @@ class Wino extends Component {
     //this.selectFullAya({aya:1,sura:1})
     await this.intialDBTarajem();
     await wait();
-    this.selectFullAya(wino,true);
+    this.selectFullAya(wino, true);
     //setExactAya(wino);
   }
   //
@@ -1377,7 +1377,8 @@ class Wino extends Component {
                 >
                   <Icon style={{ color }} size={30} name="md-search" />
                 </Button>
-                <Button
+
+                {/* <Button
                   transparent
                   style={[
                     wino.page % 2 !== 0
@@ -1388,6 +1389,7 @@ class Wino extends Component {
                 >
                   <Icon style={{ color }} size={30} name="ios-hand" />
                 </Button>
+                */}
                 <Button
                   transparent
                   style={styles.buttonHeader}

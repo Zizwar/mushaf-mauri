@@ -81,23 +81,22 @@ changeTarjama,
        
             </Button>
           </Body>
-          <Right>
+        
             <Button transparent onPress={prevAya}>
               <Icon size={24}
                 style={{ color: backgroundColor }}
-                name="md-skip-backward"
+                name="play-back-circle-sharp"
               />
             </Button>
             <Button transparent onPress={toglPlayer}>
               <Icon size={24}
                 style={{ color: backgroundColor }}
-                name={isPlaying ? "ios-square" : "md-play"}
+                name={isPlaying ? "ios-square" : "ios-play"}
               />
             </Button>
             <Button transparent onPress={nextAya}>
-              <Icon size={24} style={{ color: backgroundColor }} name="md-skip-forward" />
+              <Icon size={24} style={{ color: backgroundColor }} name="play-skip-forward-circle-sharp" />
             </Button>
-          </Right>
         </Header>
         <Content padder>
           <Card style={{ backgroundColor }}>
