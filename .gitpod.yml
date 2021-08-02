@@ -7,4 +7,4 @@ tasks:
     command: yarn t
 vscode:
   extensions:
-    - esbenp.prettier-vscode@5.1.3:t532ajsImUSrA9N8Bd7jQw==
+    - esbenp.prettier-vscode

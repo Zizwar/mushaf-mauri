@@ -4,8 +4,9 @@
     "description": "Mushaf Mauri.",
     "slug": "MushafMauri",
     "privacy": "public",
-    "sdkVersion": "38.0.0",
-    "platforms": ["android"],
+    "platforms": [
+      "android"
+    ],
     "scheme": "mushafmauri",
     "version": "0.8.1",
     "orientation": "portrait",
@@ -18,19 +19,19 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
- "assetBundlePatterns": [
+    "assetBundlePatterns": [
       "assets/**/*"
     ],
-  
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "wino.ma.mushaf.mauri"
     },
     "android": {
       "package": "wino.ma.mushaf.mauri",
-      "permissions": ["VIBRATE"],
-      "versionCode":11
+      "permissions": [
+        "VIBRATE"
+      ],
+      "versionCode": 12
     }
   }
 }
-
