@@ -188,6 +188,7 @@ class Reciting extends Component {
                   data={listAllSura}
                   initValue={firstSura}
                   onChange={this.onChangeSuraStart}
+                  initValueTextStyle={{color}}
                 />
               </Col>
             </Grid>
@@ -203,6 +204,7 @@ class Reciting extends Component {
                   selectTextStyle={{ color }}
                   initValue="1"
                   onChange={({ label }) => this.setState({ ayaStart: label })}
+                  initValueTextStyle={{color}}
                 />
               </Col>
             </Grid>
@@ -229,6 +231,7 @@ class Reciting extends Component {
                   data={listAllSura}
                   initValue={firstSura}
                   onChange={this.onChangeSuraEnd}
+                  initValueTextStyle={{color}}
                 />
               </Col>
             </Grid>
@@ -240,6 +243,7 @@ class Reciting extends Component {
                   data={listAllAyaEnd}
                   initValue="7"
                   onChange={({ label }) => this.setState({ ayaEnd: label })}
+                  initValueTextStyle={{color}}
                 />
               </Col>
             </Grid>
@@ -253,6 +257,7 @@ class Reciting extends Component {
                     data={maplistTekrar}
                     initValue={this.lang["repeat_forAya_null"]}
                     onChange={({ label }) => this.setState({ repeat: label })}
+                    initValueTextStyle={{color}}
                   />
                 </Col>
               </Grid>

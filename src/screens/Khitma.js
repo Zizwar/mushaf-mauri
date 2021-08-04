@@ -169,6 +169,7 @@ class Khitma extends Component {
                       this.setState({ day: option.label });
                       // this.onChangeModal();
                     }}
+                    initValueTextStyle={{color}}
                   />
                 </Col>
               </Grid>
@@ -184,6 +185,8 @@ class Khitma extends Component {
                       this.setState({ juz: option.label });
                       // this.onChangeModal();
                     }}
+                    initValueTextStyle={{color}}
+                    
                     // supportedOrientations={["landscape"]}
                     // accessible={true}
                     // scrollViewAccessibilityLabel={"Scrollable options"}
@@ -238,20 +241,8 @@ class Khitma extends Component {
                   " " +
                   getNameBySura({ sura: resault.starSura, lang })
                 }
-                page={
-                  getAyatBySuraAya({
-                    sura: resault.starSura,
-                    aya: resault.starAya,
-                  }).page
-                }
-                page={
-                  this.lang["enterPageNum"] +
-                  " " +
-                  getAyatBySuraAya({
-                    sura: resault.starSura,
-                    aya: resault.starAya,
-                  }).page
-                }
+              
+            
                 fontSize={fontSize}
               />
               <CardItem>
@@ -277,14 +268,7 @@ class Khitma extends Component {
                   " " +
                   getNameBySura({ sura: resault.endSura, lang })
                 }
-                page={
-                  this.lang["enterPageNum"] +
-                  " " +
-                  getAyatBySuraAya({
-                    sura: resault.endSura,
-                    aya: resault.endAya,
-                  }).page
-                }
+          
                 fontSize={fontSize}
               />
 
