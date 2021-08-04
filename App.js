@@ -5,7 +5,8 @@ import React, { Component } from "react";
 //console.disableYellowBox = true;
 import { LogBox ,AppRegistry} from "react-native";
 LogBox.ignoreAllLogs(true)
-import { ppLoading, registerRootComponent } from "expo";
+import { registerRootComponent } from "expo";
+import AppLoading from 'expo-app-loading';
 import * as Font from "expo-font";
 //import { Ionicons } from '@expo/vector-icons';
 //import Ionicons from "react-native-vector-icons/Ionicons";
@@ -59,7 +60,7 @@ export default class App extends Component {
   }
 
   render() {
-  //  if (!this.state.isReady) return <AppLoading />;
+    if (!this.state.isReady) return <AppLoading />;
 
     // if (!this.state.storeCreated) return null;
     //  return (

@@ -74,7 +74,7 @@ export const ButtonPopOver = ({
         </Col>
 
         <Col style={styles.col}>
-          <Button transparent onPress={addBookmarks} style={styles.iconButton}>
+          <Button transparent onPress={(_) => addBookmarks()} style={styles.iconButton}>
             <Icon name="md-bookmark" style={{ color }} />
           </Button>
           <Text numberOfLines={1} style={styles.iconText}>

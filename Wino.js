@@ -96,9 +96,9 @@ const { width, height } = Dimensions.get("window");
 
 const MARGIN_PAGE = 55;
 const MARGIN_PAGE_WIDTH = 5;
-
+const NISBA = 1.471676300578035;
 //const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
-const heightScala = width * 1.471676300578035 - MARGIN_PAGE_WIDTH;
+const heightScala = width * NISBA - MARGIN_PAGE_WIDTH;
 //
 
 const NUMBER_PAGE = 638;
@@ -243,15 +243,8 @@ class Wino extends Component {
   }
   //
   componentDidUpdate() {
-    const {
-      rerender,
-      player,
-      setPlayer,
-      wino,
-      reRender,
-      bookmarks,
-      lang,
-    } = this.props;
+    const { rerender, player, setPlayer, wino, reRender, bookmarks, lang } =
+      this.props;
     if (!rerender) return;
     if (rerender === "switchLang") this.lang = langs[lang];
     if (rerender === "bookmarks") {
@@ -1198,6 +1191,7 @@ class Wino extends Component {
           style={[styles.subView, { transform: [{ translateY: bounceValue }] }]}
         >
           <Tarajem
+            loadingSound={loadingSound}
             changeTarjama={this.changeTarjama}
             lang={this.lang}
             prevAya={this.prevAya}

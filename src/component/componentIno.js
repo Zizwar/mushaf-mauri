@@ -38,7 +38,7 @@ export const ScreenAya = ({
       <Col style={{ alignItems: "center", margin: 3 }}>
         <View style={{ alignSelf: "center" }}>
           <Text style={{ color, textAlign: "center" }}>
-            {sura} {aya}
+            {sura} 
           </Text>
           <Text style={{ textAlign: "center", color: "#555", fontSize }}>
             {text}
