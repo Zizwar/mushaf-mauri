@@ -1,5 +1,6 @@
 //import Expo, { FileSystem as FS, Asset, SQLite } from "expo";
 import React, { Component } from "react";
+import { ActivityIndicator } from "react-native";
 import {
   Container,
   Header,
@@ -53,9 +54,10 @@ class Tarajem extends Component {
       toglPlayer,
       text,
       togl,
-changeTarjama,
+      changeTarjama,
       theme: { color, backgroundColor },
       tarjama,
+      loadingSound,
     } = this.props;
 
     return (
@@ -63,40 +65,57 @@ changeTarjama,
         <Header style={{ backgroundColor: color }}>
           <Left>
             <Button transparent onPress={() => togl("close")}>
-              <Icon size={24} style={{ color: backgroundColor }} name="ios-arrow-down" />
+              <Icon
+                size={24}
+                style={{ color: backgroundColor }}
+                name="ios-arrow-down"
+              />
             </Button>
           </Left>
           <Body>
-          <Button
+            <Button
               transparent
               iconLeft
               onPress={() => {
                 this.refs.picker.show();
               }}
             >
-            <Text style={{ color: backgroundColor ,fontSize:11}} note>
-              {listAuthorTarajem.filter((itm) => itm.id === tarjama)[0].name}
-            </Text>
-            <Icon size={24} style={{ color:backgroundColor }} name="md-create" />
-       
+              <Icon
+                size={24}
+                style={{ color: backgroundColor }}
+                name="md-create"
+              />
+              <Text style={{ color: backgroundColor, fontSize: 11 }} note>
+                {listAuthorTarajem.filter((itm) => itm.id === tarjama)[0].name}
+              </Text>
             </Button>
           </Body>
-        
-            <Button transparent onPress={prevAya}>
-              <Icon size={24}
-                style={{ color: backgroundColor }}
-                name="play-back-circle-sharp"
-              />
-            </Button>
-            <Button transparent onPress={toglPlayer}>
-              <Icon size={24}
+
+          <Button transparent onPress={prevAya}>
+            <Icon
+              size={24}
+              style={{ color: backgroundColor }}
+              name="play-skip-back-circle-sharp"
+            />
+          </Button>
+          <Button transparent onPress={toglPlayer}>
+            {loadingSound ? (
+              <ActivityIndicator color={backgroundColor} animating={true} size={16} />
+            ) : (
+              <Icon
+                size={24}
                 style={{ color: backgroundColor }}
                 name={isPlaying ? "ios-square" : "ios-play"}
               />
-            </Button>
-            <Button transparent onPress={nextAya}>
-              <Icon size={24} style={{ color: backgroundColor }} name="play-skip-forward-circle-sharp" />
-            </Button>
+            )}
+          </Button>
+          <Button transparent onPress={nextAya}>
+            <Icon
+              size={24}
+              style={{ color: backgroundColor }}
+              name="play-skip-forward-circle-sharp"
+            />
+          </Button>
         </Header>
         <Content padder>
           <Card style={{ backgroundColor }}>
