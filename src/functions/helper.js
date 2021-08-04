@@ -159,7 +159,8 @@ export const searchAyatByText = (txt) => {
 };
 export const getAyatBySuraAya = ({ aya, sura }) => {
   const { id, page } = aya2id({ aya, sura }, true);
-  const text = textwarsh[0][id - 1];
+  const text = textwarsh[id-1][0];
+  console.log({id, page,text})
   return { id, sura, aya, text, textNoT: text, page };
   //
   /*
