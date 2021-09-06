@@ -224,6 +224,7 @@ export const Headerino = ({
   onPress,
   lang,
   text,
+  switchz
 }) => {
   if (isRTL)
     return (
@@ -250,16 +251,21 @@ export const Headerino = ({
         <Button transparent onPress={onPress}>
           <Icon style={{ color: backgroundColor }} name={icon || "md-close-circle"} />
         </Button>
+        
       </Left>
       {lang !== "ar" ? (
         <Body>
+          
           <Text style={{ color: backgroundColor, fontSize: 20 }}>{text}</Text>
+         
         </Body>
       ) : (
         <Right>
           <Text style={{ color: backgroundColor, fontSize: 20 }}>{text}</Text>
+      
         </Right>
       )}
+       {switchz && switchz}
     </Header>
   );
 };
