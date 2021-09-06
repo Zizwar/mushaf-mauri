@@ -32,15 +32,16 @@ export const ScreenAya = ({
   page,
   fontSize = 14,
   color,
+  backgroundColor
 }) => (
-  <Card>
-    <CardItem button onPress={onpress}>
+  <Card> 
+    <CardItem button onPress={onpress} style={{backgroundColor}}>
       <Col style={{ alignItems: "center", margin: 3 }}>
-        <View style={{ alignSelf: "center" }}>
+        <View style={{ alignSelf: "center"}}>
           <Text style={{ color, textAlign: "center" }}>
             {sura} 
           </Text>
-          <Text style={{ textAlign: "center", color: "#555", fontSize }}>
+          <Text style={{ textAlign: "center", color, fontSize }}>
             {text}
           </Text>
         </View>

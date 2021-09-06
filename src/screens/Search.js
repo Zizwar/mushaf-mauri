@@ -59,7 +59,7 @@ class Search extends Component {
   };
 
   render() {
-    const { backgroundColor, fontSize, setExactAya, color } = this.props;
+    const { backgroundColor, fontSize, setExactAya, color,lang:_lang } = this.props;
     const { searchText, resault } = this.state;
     return (
       <Container style={{ backgroundColor }}>
@@ -93,13 +93,18 @@ class Search extends Component {
               renderRow={(data) => (
                 <ScreenAya
                   onpress={() => {
+                  //  console.log({data})
                     setExactAya(data);
                     this.goBack(true);
                   }}
                   aya={data.aya}
                   text={data.text}
-                  sura={getNameBySura({ sura: data.sura, lang: this.lang })}
+                //  sura={data.sura}
+                  sura={getNameBySura({ sura: data.sura, lang: _lang })}
                   fontSize={fontSize}
+                  backgroundColor={backgroundColor}
+                  color={color}
+                  //page={data.page}
                 />
               )}
             />
