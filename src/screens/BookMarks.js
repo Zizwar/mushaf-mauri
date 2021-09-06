@@ -184,7 +184,7 @@ class BookMarks extends Component {
             style={isActive ? { backgroundColor: color } : { backgroundColor }}
           >
             <Text style={!isActive ? { color } : { color: backgroundColor }}>
-              {this.lang["addFav"]}
+              {this.lang["fav"]}
             </Text>
           </Button>
           <Button
