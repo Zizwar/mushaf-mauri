@@ -1,7 +1,7 @@
 import React, { Component } from "react";
 
 import { Dimensions, StyleSheet } from "react-native";
-
+ 
 import {
   CardItem,
   Card,
@@ -22,7 +22,7 @@ import {
 import ModalSelector from "react-native-modal-selector";
 import { connect } from "react-redux";
 import { allSuwar, getAllAyaSuraBySura } from "../functions";
-import { Icon } from "../component";
+import { Icon,Headerino } from "../component";
 
 import { setExactAya, setRepeat, setTekrar, setPlayer } from "../../reducer";
 import * as lang from "../../i18n";
@@ -42,7 +42,9 @@ class Reciting extends Component {
     this.lang = lang[this.props.lang];
     this.listSura = allSuwar(this.props.lang);
   }
-  UNSAFE_componentWillMount() {}
+  UNSAFE_componentWillMount() {
+    this.lang = lang[this.props.lang];
+  }
 
   //
   onChangeSuraStart = (option) => {
@@ -143,23 +145,21 @@ class Reciting extends Component {
 
     return (
       <Container style={{ backgroundColor }}>
-        <Header style={{ backgroundColor }}>
-          <Left>
-            <Button transparent onPress={this.goBack}>
-              <Icon name="md-close" style={{ color }} />
-            </Button>
-          </Left>
-          <Body>
-            <Title style={{ color }}>{this.lang["bu_telawa"]}</Title>
-          </Body>
-          <Right>
+        <Headerino
+          onPress={() => this.goBack()}
+          lang={lang}
+          text={this.lang["bu_telawa"]}
+          color={color}
+          backgroundColor={backgroundColor}
+          switchz={  
             <Switch
               trackColor={color}
               onValueChange={this.disabledz}
               value={isRepeat}
             />
-          </Right>
-        </Header>
+          }
+        />
+      
         <Content>
           <Card style={{ backgroundColor }}>
             <CardItem style={{ backgroundColor }}>

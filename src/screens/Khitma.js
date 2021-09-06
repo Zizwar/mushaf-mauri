@@ -38,6 +38,7 @@ class Khitma extends Component {
     this.listJuz = [];
   }
   UNSAFE_componentWillMount() {
+    this.lang = lang[this.props.lang];
     const { khitma } = this.props;
     if (khitma && khitma.ok) this.setState({ resault: khitma, ok: true });
 
