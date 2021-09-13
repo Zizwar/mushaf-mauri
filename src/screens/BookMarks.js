@@ -39,7 +39,7 @@ class BookMarks extends Component {
   //
   captureThis = () => {
     this.refs.viewShot.capture().then((uri) => {
-      console.log("do something with ", uri);
+    //  console.log("do something with ", uri);
     });
   };
   //
@@ -49,26 +49,26 @@ class BookMarks extends Component {
   deleteRow(secId, rowId, rowMap) {
     const { bookmarks, setBookmarks } = this.props;
 
-    rowMap[`${secId}${rowId}`].props.closeRow();
-    const listViewData = bookmarks.filter(
-      ({ id = [] }) => id.sura !== sura && id.aya !== sura
-    );
+console.log({secId, rowId, rowMap})
     // newData.splice(rowId, 1);
-
-    this.setState({ listViewData });
-    setBookmarks(listViewData);
+    const newData = [...bookmarks];
+    newData.splice(rowId, 1);
+    this.setState({ listViewData:newData });
+    setBookmarks(newData);
   }
 
   delId = (id, { sura, aya }) => {
     const { bookmarks=[], setBookmarks, reRender } = this.props;
 
     // const newData = [...bookmarks];
+   // console.log({sura,aya})
     const listViewData = bookmarks.filter(
-      ({ id = [] }) => id.sura !== sura && id.aya !== aya
+      ({ id = [] }) => id.sura === sura && id.aya === aya
     );
+   // console.log({listViewData})
     // newData.splice(rowId, 1);
 
-    this.setState({ listViewData });
+   // this.setState({ listViewData });
     setBookmarks(listViewData);
     //newData.splice(id, 1);
     //setBookmarks(newData);
@@ -95,7 +95,7 @@ class BookMarks extends Component {
   goBack = () => this.props.navigation.goBack();
 
   togl = (isActive) => this.setState({ isActive });
-  renderItem = (data, id) => {
+  renderItem = (data,rowId) => {
     const {
       setExactAya,
       lang,
@@ -148,8 +148,12 @@ class BookMarks extends Component {
         </Body>
         <Right>
           <Button
+          
             transparent
-            onPress={() => this.confirm(() => this.delId(id, data.id), data.id)}
+            onPress={() => this.confirm(() => 
+             // this.delId(id, data.id), data.id);
+              this.deleteRow(rowId), data.id)
+            }
           >
             <Icon style={{ color, fontSize: 20 }} name="md-close" />
           </Button>
@@ -201,10 +205,10 @@ class BookMarks extends Component {
         <Content style={{ backgroundColor }}>
           <List
             dataArray={bookmarks}
-            renderRow={(data) => {
-              console.log({ bookmark: data });
-              if (data.page && isActive) return this.renderItem(data);
-              else if (!isActive && !data.page) return this.renderItem(data);
+            renderRow={(data, secId, rowId, rowMap) => {
+            //  console.log("====",{ secId, rowId, rowMap });
+              if (data.page && isActive) return this.renderItem(data,rowId);
+              else if (!isActive && !data.page) return this.renderItem(data,rowId);
             }}
             renderRightHiddenRow={(data, secId, rowId, rowMap) => (
               <Button
