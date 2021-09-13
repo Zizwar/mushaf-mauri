@@ -79,7 +79,7 @@ class Suras extends Component {
                     }}
                     note
                   >
-                    {`${getAllAyaSuraBySura(data.id).length} ${
+                    {`${getAllAyaSuraBySura(+data.id).length} ${
                       this.lang["aya_s"]
                     }, ${this.lang["juz"]} ${getJuzBySuraAya({
                       sura: data.id,

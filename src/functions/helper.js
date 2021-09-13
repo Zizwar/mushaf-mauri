@@ -224,13 +224,20 @@ export const allSuwar = (a) => {
   return surLoop;
 };
 export const getAllAyaSuraBySura = (sura) => {
+
+  const ayat = indexMuhammadi.filter(
+    ([i, p, s, a]) => s === sura
+  ).map(([i],index) => index+1) || [];
+  //console.log({ayat})
+  return ayat || [];
+  ///
   const numberAllAya = QuranData.Sura[sura][1];
   let id = 1;
   let ayaLoop = [];
   for (id; id <= numberAllAya; id++) {
     ayaLoop.push(id);
   }
-  return ayaLoop;
+  return ayaLoop; 
 };
 
 export const pageToSuraAya = (page) => {

@@ -48,7 +48,7 @@ class Reciting extends Component {
 
   //
   onChangeSuraStart = (option) => {
-    console.log("change aya start to ", { option });
+   // console.log("change aya start to ", { option });
     const suraStart = option.id;
     const listAllAyaStart = getAllAyaSuraBySura(suraStart);
 
