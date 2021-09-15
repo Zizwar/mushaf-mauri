@@ -1604,7 +1604,7 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     // backgroundColor: "#FFFFFF01",
-    height: 32,
+    height: 50,
     zIndex: 999,
     // opacity:0.0
   },

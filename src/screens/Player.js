@@ -19,7 +19,7 @@ import SimplePicker from "react-native-simple-picker";
  
 import { Icon } from "../component";
 
-import {  setAuthorMoqri, setPlayer  } from "../../reducer";
+import {  setAuthorMoqri, setPlayer,reRender  } from "../../reducer";
 import * as lang from "../../i18n";
 import { listVoiceMoqri } from "../data";
 class Player extends Component {
@@ -34,7 +34,19 @@ class Player extends Component {
   }
 
   goBack = () => this.props.togl && togl("close");
-  
+  /*
+  componentDidUpdate() {
+    const { rerender,  lang:_lang } =
+      this.props;
+   
+    if (rerender !== "switchLang") return
+     this.lang = lang[_lang];
+     this.listAutor = listVoiceMoqri(this.lang);
+     this.options = this.listAutor.map((t) => t.id);
+     this.labels = this.listAutor.map((t) => t.voice);
+     
+  }
+  */
   /*
   changeTarjama = (id) => {
     const { setTarjama,nextAya,prevAya} = this.props;
@@ -66,8 +78,12 @@ class Player extends Component {
       theme: { color, backgroundColor },
       moqri,
       loadingSound,
+      lang:_lang
     } = this.props;
-
+    this.lang = lang[_lang];
+    this.listAutor = listVoiceMoqri(this.lang);
+    this.options = this.listAutor.map((t) => t.id);
+    this.labels = this.listAutor.map((t) => t.voice);
     return (
          <Header style={{ backgroundColor: color }}>
           <Left>
@@ -93,7 +109,7 @@ class Player extends Component {
                 name="md-create"
               />
               <Text style={{ color: backgroundColor, fontSize: 11 }} note>
-                {moqri}
+                {this.listAutor.filter((itm) => itm.id === moqri)[0].voice}
               </Text>
             </Button>
           </Body>
@@ -136,7 +152,7 @@ class Player extends Component {
             textAlign: "center",
             fontWeight: "bold",
           }}
-          onSubmit={onPressAuthor}
+          onSubmit={this.onPressAuthor}
         />
         </Header>
     
@@ -154,7 +170,7 @@ const mapStateToProps = ({ wino,  lang,fontSize, theme,moqri }) => ({
 
 const mapDispatchToProps = {
   
-  
+  reRender,
   setPlayer,
   setAuthorMoqri,
 };
