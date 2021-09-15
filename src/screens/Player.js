@@ -19,23 +19,22 @@ import SimplePicker from "react-native-simple-picker";
  
 import { Icon } from "../component";
 
-import { setTarjama, reRender } from "../../reducer";
+import {  setAuthorMoqri, setPlayer  } from "../../reducer";
 import * as lang from "../../i18n";
-import { listAuthorTarajem } from "../data";
-class Tarajem extends Component {
+import { listVoiceMoqri } from "../data";
+class Player extends Component {
   /**wino**/
   constructor(props) {
     super(props);
     this.lang = lang[this.props.lang];
-
-    this.options = listAuthorTarajem.map((t) => t.id);
-    this.labels = listAuthorTarajem.map((t) => t.name);
+    this.listAutor = listVoiceMoqri(this.lang);
+    this.options = this.listAutor.map((t) => t.id);
+    this.labels = this.listAutor.map((t) => t.voice);
+   
   }
 
-  goBack = () => {
-    const { togl } = this.props;
-    if (togl) togl("close");
-  };
+  goBack = () => this.props.togl && togl("close");
+  
   /*
   changeTarjama = (id) => {
     const { setTarjama,nextAya,prevAya} = this.props;
@@ -45,6 +44,15 @@ class Tarajem extends Component {
    
   };
   */
+  onPressAuthor = (id) => {
+    const { setAuthorMoqri, setPlayer, moqri } = this.props;
+    if (id === moqri) return;
+    setAuthorMoqri(id);
+    setPlayer("play");
+    // close();
+    //this.goBack();
+  };
+  //
   render() {
     const {
       nextAya,
@@ -54,9 +62,9 @@ class Tarajem extends Component {
       toglPlayer,
       text,
       togl,
-      changeTarjama,
+      
       theme: { color, backgroundColor },
-      tarjama,
+      moqri,
       loadingSound,
     } = this.props;
 
@@ -86,7 +94,7 @@ class Tarajem extends Component {
                 name="md-create"
               />
               <Text style={{ color: backgroundColor, fontSize: 11 }} note>
-                {listAuthorTarajem.filter((itm) => itm.id === tarjama)[0].name}
+                {moqri}
               </Text>
             </Button>
           </Body>
@@ -140,22 +148,25 @@ class Tarajem extends Component {
             textAlign: "center",
             fontWeight: "bold",
           }}
-          onSubmit={changeTarjama}
+          onSubmit={onPressAuthor}
         />
       </Container>
     );
   }
 }
-const mapStateToProps = ({ wino, tarjama, lang, fontSize, theme }) => ({
+const mapStateToProps = ({ wino,  lang,fontSize, theme,moqri }) => ({
   wino,
-  tarjama,
+  
   lang,
   fontSize,
   theme,
+  moqri,
 });
 
 const mapDispatchToProps = {
-  setTarjama,
-  reRender,
+  
+  
+  setPlayer,
+  setAuthorMoqri,
 };
-export default connect(mapStateToProps, mapDispatchToProps)(Tarajem);
+export default connect(mapStateToProps, mapDispatchToProps)(Player);
