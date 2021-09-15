@@ -69,8 +69,7 @@ class Player extends Component {
     } = this.props;
 
     return (
-      <Container style={{ backgroundColor }}>
-        <Header style={{ backgroundColor: color }}>
+         <Header style={{ backgroundColor: color }}>
           <Left>
             <Button transparent onPress={() => togl("close")}>
               <Icon
@@ -124,18 +123,7 @@ class Player extends Component {
               name="play-skip-forward-circle-sharp"
             />
           </Button>
-        </Header>
-        <Content padder>
-          <Card style={{ backgroundColor }}>
-            <List style={{ backgroundColor }}>
-              <ListItem>
-                <Text style={{ margin: 10, color }}>
-                  {aya + ")"} {text}
-                </Text>
-              </ListItem>
-            </List>
-          </Card>
-        </Content>
+          
         <SimplePicker
           ref={"picker"}
           options={this.options}
@@ -150,7 +138,8 @@ class Player extends Component {
           }}
           onSubmit={onPressAuthor}
         />
-      </Container>
+        </Header>
+    
     );
   }
 }

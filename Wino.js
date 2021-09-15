@@ -78,6 +78,7 @@ import { ButtonPopOver, Icon } from "./src/component";
 import Modalino from "./src/component/modalino";
 import AddNote from "./src/component/addNote";
 import Tarajem from "./src/screens/Tarajem";
+import Player from "./src/screens/Player";
 import Tafsir from "./src/screens/Tafsir";
 import Author from "./src/screens/Author";
 import First from "./src/screens/First";
@@ -1210,7 +1211,22 @@ class Wino extends Component {
 
     const footerMenu = (
       <View style={styles.footerMenu}>
-        {openTool && (
+       {openTool &&  (
+          <Player
+          loadingSound={loadingSound}
+          lang={this.lang}
+          prevAya={this.prevAya}
+          nextAya={this.playNextAya}
+          toglPlayer={this.toglPlayer}
+          isPlaying={isPlaying}
+          wino={wino}
+          togl={this.toglTray}
+          color={color}
+          backgroundColor={backgroundColor}
+        />
+       
+       )}
+        {false &&  (
           <Item
             style={{
               position: "absolute",
@@ -1282,7 +1298,8 @@ class Wino extends Component {
               <Icon style={{ color }} size={20} name="ios-close" />
             </Button>
           </Item>
-        )}
+        )
+        }
       </View>
     );
     const popOver = (
