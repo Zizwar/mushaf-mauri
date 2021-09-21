@@ -102,10 +102,9 @@ const NISBA = 1.471676300578035;
 const heightScala = width * NISBA - MARGIN_PAGE_WIDTH;
 //
 
-const NUMBER_PAGE = 638;
 const MINIMAL_PAGE_RENDER = 25; //8;
 const SWIPE_horizontal = true;
-const currentPage = (p) => NUMBER_PAGE - p || 0;
+
 const suraAya2id = ({ sura, aya }) => `s${sura}a${aya}z`;
 //
 const THEMES = [
@@ -121,10 +120,6 @@ class Wino extends Component {
   constructor(props) {
     super(props);
     //tray
-    this.isHidden = true;
-    this.isHiddenSearch = true;
-    this.toValue = 250;
-    this.bookmarksPage = [];
     this.state = {
       openTool: false,
       repeat: 1,
@@ -134,10 +129,10 @@ class Wino extends Component {
       visibleAddNote: false,
       isFaves: false,
       menuSercl: true,
-      vi: [], //[...Array(NUMBER_PAGE).keys()]
+      vi: [], //[...Array(this.numberPage).keys()]
       searchText: "",
       searchTextOk: false,
-      // index: SWIPE_horizontal ? NUMBER_PAGE - 1 : 0,
+      // index: SWIPE_horizontal ? this.numberPage - 1 : 0,
       visibleModalTafsir: false,
       visibleModalTarjama: false,
       visibleModalMenu: false,
@@ -156,13 +151,19 @@ class Wino extends Component {
       positionPage: [],
     };
 
+    this.numberPage = 638;
+    this.isHidden = true;
+    this.isHiddenSearch = true;
+    this.toValue = 250;
+    this.bookmarksPage = [];
+
     this.theme = 0;
 
     this.audioPlayer = new Audio.Sound();
 
-    this.lastIndex = 1; //NUMBER_PAGE-1;
+    this.lastIndex = 1; //this.numberPage-1;
     this.prevIndex = 0;
-    this.index = NUMBER_PAGE - 1;
+    this.index = this.numberPage - 1;
     this.pages = [];
     this.swipTo = 0;
     this.id2index = [];
@@ -184,7 +185,7 @@ class Wino extends Component {
       let vi = [];
       let i = 1;
       for (;;) {
-        if (i > NUMBER_PAGE) break;
+        if (i > this.numberPage) break;
         vi.push({
           id: i,
         });
@@ -200,7 +201,9 @@ class Wino extends Component {
       // this.scrollTo(1)
     }
     */
+  //function quira
 
+  //
   async UNSAFE_componentWillMount() {
     const { quira, awk, wino: winos, prorate, bookmarks } = this.props;
     this.bookmarksPage = bookmarks.map((d) => d && d.page);
@@ -208,7 +211,7 @@ class Wino extends Component {
     //if (prorate) await this.prorate();
     console.log("WORKING...");
     let vi = [];
-    let id = NUMBER_PAGE;
+    let id = this.numberPage;
     for (;;) {
       if (1 > id) break;
       this.listScrollPage.push({ id });
@@ -296,6 +299,7 @@ class Wino extends Component {
     this.selectFullAya(wino);
     // this.setExactAya(this.props.wino);
   }
+
   async intialDBTarajem() {
     const { tarjama } = this.props;
     this.dbs = new dbs(tarjama);
@@ -321,6 +325,7 @@ class Wino extends Component {
 
     this.setState({ repeat, isRepeat });
   };
+  currentPage = (numberPage, p) => numberPage - p || 0;
   isExistPage = (quira) => {
     const { downloadsWarsh } = this.props;
 
@@ -478,8 +483,8 @@ class Wino extends Component {
       this.refs.swiper.scrollBy(this.index++, false);
       return;
     }
-    if (num > NUMBER_PAGE) num = 1;
-    if (num < 1) num = NUMBER_PAGE;
+    if (num > this.numberPage) num = 1;
+    if (num < 1) num = this.numberPage;
     let index = this.id2index[Number(num)];
 
     if (index === this.index) return;
@@ -536,7 +541,7 @@ class Wino extends Component {
     });
   };
   _onIndexChanged = (index) => {
-    const page = currentPage(index);
+    const page = this.currentPage(this.numberPage, index);
     const isFaves = this.bookmarksPage.includes(page);
     this.index = index;
 
@@ -885,7 +890,7 @@ class Wino extends Component {
     */
   addBookmarks = (rem) => {
     //const wino = this.wino;
-    const page = currentPage(this.index);
+    const page = this.currentPage(this.numberPage, this.index);
     const { setBookmarks, bookmarks } = this.props;
     if (rem) {
       const remBookmarks = bookmarks.filter((d) => d.page !== page);
@@ -1211,22 +1216,21 @@ class Wino extends Component {
 
     const footerMenu = (
       <View style={styles.footerMenu}>
-       {openTool &&  (
+        {openTool && (
           <Player
-          loadingSound={loadingSound}
-          lang={this.lang}
-          prevAya={this.prevAya}
-          nextAya={this.playNextAya}
-          toglPlayer={this.toglPlayer}
-          isPlaying={isPlaying}
-          wino={wino}
-          togl={this.toglTray}
-          color={color}
-          backgroundColor={backgroundColor}
-        />
-       
-       )}
-        {false &&  (
+            loadingSound={loadingSound}
+            lang={this.lang}
+            prevAya={this.prevAya}
+            nextAya={this.playNextAya}
+            toglPlayer={this.toglPlayer}
+            isPlaying={isPlaying}
+            wino={wino}
+            togl={this.toglTray}
+            color={color}
+            backgroundColor={backgroundColor}
+          />
+        )}
+        {false && (
           <Item
             style={{
               position: "absolute",
@@ -1298,8 +1302,7 @@ class Wino extends Component {
               <Icon style={{ color }} size={20} name="ios-close" />
             </Button>
           </Item>
-        )
-        }
+        )}
       </View>
     );
     const popOver = (
