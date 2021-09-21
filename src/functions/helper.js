@@ -3,7 +3,7 @@ import {
   ayatJson,
   textwarsh,
   tarajemMuyassar,
-  indexMuhammadi,
+  indexMuhammadi, 
 } from "../data";
 import { en } from "../../i18n";
 
@@ -74,6 +74,8 @@ export const nextAya = ({ sura, aya }) => {
 };
 
 export const prevAya = ({ sura, aya }) => {
+  const quira = global.quira
+  console.log({quira})
   let [id] =
     indexMuhammadi.filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
   id--;

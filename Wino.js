@@ -120,6 +120,32 @@ class Wino extends Component {
   constructor(props) {
     super(props);
     //tray
+  
+    this.numberPage = 638;
+    this.isHidden = true;
+    this.isHiddenSearch = true;
+    this.toValue = 250;
+    this.bookmarksPage = [];
+
+    this.theme = 0;
+
+    this.audioPlayer = new Audio.Sound();
+
+    this.lastIndex = 1; //this.numberPage-1;
+    this.prevIndex = 0;
+    this.index = this.numberPage - 1;
+    this.pages = [];
+    this.swipTo = 0;
+    this.id2index = [];
+    this.refs.swiper = null;
+    // this.scrollTo = this.scrollTo.bind(this);
+    this.wino = { sura: 1, aya: 1, page: 1 };
+    this.lang = langs[this.props.lang];
+    this.repeat = 1;
+    this.currentId = 1;
+    this.existPage = 0;
+    this.listScrollPage = [];
+    //state
     this.state = {
       openTool: false,
       repeat: 1,
@@ -151,30 +177,6 @@ class Wino extends Component {
       positionPage: [],
     };
 
-    this.numberPage = 638;
-    this.isHidden = true;
-    this.isHiddenSearch = true;
-    this.toValue = 250;
-    this.bookmarksPage = [];
-
-    this.theme = 0;
-
-    this.audioPlayer = new Audio.Sound();
-
-    this.lastIndex = 1; //this.numberPage-1;
-    this.prevIndex = 0;
-    this.index = this.numberPage - 1;
-    this.pages = [];
-    this.swipTo = 0;
-    this.id2index = [];
-    this.refs.swiper = null;
-    // this.scrollTo = this.scrollTo.bind(this);
-    this.wino = { sura: 1, aya: 1, page: 1 };
-    this.lang = langs[this.props.lang];
-    this.repeat = 1;
-    this.currentId = 1;
-    this.existPage = 0;
-    this.listScrollPage = [];
     //this.prorate = this.props.prorate?0.7:1;
   }
   /*
@@ -206,6 +208,7 @@ class Wino extends Component {
   //
   async UNSAFE_componentWillMount() {
     const { quira, awk, wino: winos, prorate, bookmarks } = this.props;
+    global.quira = quira;
     this.bookmarksPage = bookmarks.map((d) => d && d.page);
     this.setAwk(awk);
     //if (prorate) await this.prorate();
