@@ -3,6 +3,9 @@
 # mushaf-mauri مصحف-موري
 مصحف موري - القران الكريم - ورش
 
+# outils
+
+https://github.com/Zizwar/outils-mushaf-mauri
+
 https://www.mushaf.ma
 
-mail@ibrahim.contact
