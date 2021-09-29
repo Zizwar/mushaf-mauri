@@ -341,7 +341,7 @@ class Wino extends Component {
   };
   //MEdia
   playSound = async (uri) => {
-    console.log({ uri });
+   // console.log({ uri });
     this.setState({ loadingSound: uri });
     //setTimeout(_=>((this.state.loadingSound === uri )&& this.playSound(loadingSound),9000));
     try {
@@ -423,19 +423,19 @@ class Wino extends Component {
     //
     if (this.repeat >= repeat) {
       this.repeat = 1;
-      console.log("yes next repeat =", this.repeat);
+     // console.log("yes next repeat =", this.repeat);
       const nextAya_ = nextAya({ sura, aya });
       this.props.setExactAya(nextAya_);
       if (isPlaying) this.buildPlayAudio(nextAya_);
     } else {
       this.repeat = this.repeat + 1;
-      console.log("yes repeat =", this.repeat);
+     // console.log("yes repeat =", this.repeat);
       if (isPlaying) this.buildPlayAudio({ sura, aya });
     }
   };
   ///
   itRepeatz = () => {
-    console.log("yes repeat");
+  //  console.log("yes repeat");
 
     const { isPlaying, repeat } = this.state;
 
