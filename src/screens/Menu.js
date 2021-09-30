@@ -75,7 +75,7 @@ class Menu extends Component {
       },
       */
     ];
-    this.dataMushaf = ["warsh"];
+    this.dataMushaf = ["warsh","madina"];
     this.themes = [
       { backgroundColor: "#ccc", color: "#000", night: true }, //night
       { backgroundColor: "#fff", color: "#000" }, //sandart
@@ -184,6 +184,7 @@ class Menu extends Component {
               <Itemino
                 onPress={() => {
                   // setTheme({ backgroundColor: "#fff", color: "#000" });
+                  global.quira = data;
                   setQuira(data);
                   this.backHome();
                   // close();

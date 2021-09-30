@@ -3,15 +3,27 @@ import {
   ayatJson,
   textwarsh,
   tarajemMuyassar,
-  indexMuhammadi, 
+  // indexMuhammadi,
+  // indexMadina,
+  currentIndex,
 } from "../data";
+//const { madina, warsh } = currentIndex;
 import { en } from "../../i18n";
 
 import { getTarjama, getTafsirUri } from "../api";
 //
 const lngS = (lang) => (lang === "ar" ? 0 : lang === "amz" ? 1 : 2);
-const quira =()=> global.quira
-
+const quira = (arg) => (arg ? global.quira === arg : global.quira);
+//
+const qurrentIndex = () =>
+  global.quira === "madina" ? indexMuhammadi : indexMadina;
+//
+class CurrentIndex {
+  get arrayIndex() {
+    return global.quira === "madina" ? warsh : madina;
+  }
+}
+const CurrentIndexArray = new CurrentIndex();
 export const paddingSuraAya = ({ sura, aya }) => {
   if (sura === 2) aya++;
   return padding(sura) + padding(aya);
@@ -31,26 +43,24 @@ export const getNameBySura = ({ sura, lang = "ar" }) => {
 };
 export const aya2id = ({ sura, aya }, full) => {
   const [id = 1, page = 1] =
-    indexMuhammadi.filter(([, , s, a]) => s === sura && a === aya)[0] || [];
+    currentIndex["madina"].filter(([, , s, a]) => s === sura && a === aya)[0] || [];
 
   return full ? { id, page, sura, aya } : id;
 };
 
 export const id2aya = (id_, numeric) => {
   const [id, page, sura, aya] =
-    indexMuhammadi.filter(([i, p, s, a]) => i === id_)[0] || [];
+    currentIndex["madina"].filter(([i, p, s, a]) => i === id_)[0] || [];
   return numeric
     ? padding(sura) + "" + padding(aya)
     : { id, page: page - 1, sura, aya }; //sura + "_" + aya;
 };
 export const nextAya = ({ sura, aya }) => {
-  let [id] =
-    indexMuhammadi.filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
+  let [id] = currentIndex["madina"].filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
   id++;
   if (id > 6214) id = 1;
   let page;
-  [id, page, sura, aya] =
-    indexMuhammadi.filter(([i, p, s, a]) => i === id)[0] || [];
+  [id, page, sura, aya] = currentIndex["madina"].filter(([i, p, s, a]) => i === id)[0] || [];
   console.log("next Aya", { id, sura, aya, page: page - 1 });
   return {
     id,
@@ -76,14 +86,11 @@ export const nextAya = ({ sura, aya }) => {
 };
 
 export const prevAya = ({ sura, aya }) => {
-
-  let [id] =
-    indexMuhammadi.filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
+  let [id] = currentIndex["madina"].filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
   id--;
   if (id < 1) id = 6214;
   let page;
-  [id, page, sura, aya] =
-    indexMuhammadi.filter(([i, p, s, a]) => i === id)[0] || [];
+  [id, page, sura, aya] = currentIndex["madina"].filter(([i, p, s, a]) => i === id)[0] || [];
   console.log("next prev", { id, sura, aya, page });
   return {
     id,
@@ -143,10 +150,10 @@ export const getMm = (millis) => {
 export const searchAyatByText = (txt) => {
   const resaults = [];
 
-  textwarsh.forEach(([text, textNotTashkil = ""], id = 0) => {
-   //   console.log({text, textNotTashkil})
+  textmadina.forEach(([text, textNotTashkil = ""], id = 0) => {
+    //   console.log({text, textNotTashkil})
     if (textNotTashkil.includes(txt)) {
-      const { page = 1, sura = 1, aya = 1 } = id2aya(id+1);
+      const { page = 1, sura = 1, aya = 1 } = id2aya(id + 1);
 
       resaults.push({
         id,
@@ -157,13 +164,13 @@ export const searchAyatByText = (txt) => {
       });
     }
   });
- // console.log({resaults})
- return resaults;
+  // console.log({resaults})
+  return resaults;
 };
 export const getAyatBySuraAya = ({ aya, sura }) => {
   const { id, page } = aya2id({ aya, sura }, true);
-  const text = textwarsh[id-1][0];
-  console.log({id, page,text})
+  const text = textwarsh[id - 1][0];
+  console.log({ id, page, text });
   return { id, sura, aya, text, textNoT: text, page };
   //
   /*
@@ -184,9 +191,9 @@ export const getAyatBySuraAya = ({ aya, sura }) => {
 //
 const page_key = "Page_warsh"; //"Page";
 export const getPageBySuraAya = ({ sura, aya }) => {
-  const page = indexMuhammadi.filter(
-    ([i, p, s, a]) => s === sura && a === aya
-  )[0][1];
+
+
+  const page = currentIndex["madina"].filter(([i, p, s, a]) => s === sura && a === aya)[0][1];
   return page - 1;
   //this page
   /*
@@ -227,10 +234,11 @@ export const allSuwar = (a) => {
   return surLoop;
 };
 export const getAllAyaSuraBySura = (sura) => {
+  //console.log("==============>",currentIndex["madina"])
 
-  const ayat = indexMuhammadi.filter(
-    ([i, p, s, a]) => s === sura
-  ).map(([i],index) => index+1) || [];
+  const ayat =
+  currentIndex["madina"].filter(([i, p, s, a]) => s === sura).map(([i], index) => index + 1) ||
+    [];
   //console.log({ayat})
   return ayat || [];
   ///
@@ -240,12 +248,12 @@ export const getAllAyaSuraBySura = (sura) => {
   for (id; id <= numberAllAya; id++) {
     ayaLoop.push(id);
   }
-  return ayaLoop; 
+  return ayaLoop;
 };
 
 export const pageToSuraAya = (page) => {
   const [, , sura, aya] =
-    indexMuhammadi.filter(([i, p, s, a]) => p === page - 1)[0] || [];
+    currentIndex["madina"].filter(([i, p, s, a]) => p === page - 1)[0] || [];
   /*
   const sa = QuranData.Page[page];
   if (!sa) return { sura: 1, aya: 1 };
