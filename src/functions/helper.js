@@ -1,11 +1,11 @@
 import {
   QuranData,
- // ayatJson,
+  // ayatJson,
   textwarsh,
- // tarajemMuyassar,
+  // tarajemMuyassar,
   // indexMuhammadi,
   // indexMadina,
-  currentIndex, 
+  currentIndex,
 } from "../data";
 
 //import { en } from "../../i18n";
@@ -15,8 +15,7 @@ import { getTarjama, getTafsirUri } from "../api";
 const lngS = (lang) => (lang === "ar" ? 0 : lang === "amz" ? 1 : 2);
 const quira = (arg) => (arg ? global.quira === arg : global.quira);
 //
-const currentPage = (page) =>
-  global.quira === "warsh" ? page - 1 : page;
+const currentPage = (page) => (global.quira === "warsh" ? page - 1 : page);
 //
 class CurrentIndex {
   get arrayIndex() {
@@ -44,7 +43,9 @@ export const getNameBySura = ({ sura, lang = "ar" }) => {
 };
 export const aya2id = ({ sura, aya }, full) => {
   const [id = 1, page = 1] =
-    CurrentIndexArray.arrayIndex.filter(([, , s, a]) => s === sura && a === aya)[0] || [];
+    CurrentIndexArray.arrayIndex.filter(
+      ([, , s, a]) => s === sura && a === aya
+    )[0] || [];
 
   return full ? { id, page, sura, aya } : id;
 };
@@ -57,11 +58,15 @@ export const id2aya = (id_, numeric) => {
     : { id, page: currentPage(page), sura, aya }; //sura + "_" + aya;
 };
 export const nextAya = ({ sura, aya }) => {
-  let [id] = CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
+  let [id] =
+    CurrentIndexArray.arrayIndex.filter(
+      ([i, p, s, a]) => s === sura && a === aya
+    )[0] || [];
   id++;
   if (id > 6214) id = 1;
   let page;
-  [id, page, sura, aya] = CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => i === id)[0] || [];
+  [id, page, sura, aya] =
+    CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => i === id)[0] || [];
   console.log("next Aya", { id, sura, aya, page: currentPage(page) });
   return {
     id,
@@ -87,11 +92,15 @@ export const nextAya = ({ sura, aya }) => {
 };
 
 export const prevAya = ({ sura, aya }) => {
-  let [id] = CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => s === sura && a === aya)[0] || [];
+  let [id] =
+    CurrentIndexArray.arrayIndex.filter(
+      ([i, p, s, a]) => s === sura && a === aya
+    )[0] || [];
   id--;
   if (id < 1) id = 6214;
   let page;
-  [id, page, sura, aya] = CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => i === id)[0] || [];
+  [id, page, sura, aya] =
+    CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => i === id)[0] || [];
   console.log("next prev", { id, sura, aya, page });
   return {
     id,
@@ -151,7 +160,7 @@ export const getMm = (millis) => {
 export const searchAyatByText = (txt) => {
   const resaults = [];
 
-  textmadina.forEach(([text, textNotTashkil = ""], id = 0) => {
+  textwarsh.forEach(([text, textNotTashkil = ""], id = 0) => {
     //   console.log({text, textNotTashkil})
     if (textNotTashkil.includes(txt)) {
       const { page = 1, sura = 1, aya = 1 } = id2aya(id + 1);
@@ -192,9 +201,9 @@ export const getAyatBySuraAya = ({ aya, sura }) => {
 //
 const page_key = "Page_warsh"; //"Page";
 export const getPageBySuraAya = ({ sura, aya }) => {
-
-
-  const page = CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => s === sura && a === aya)[0][1];
+  const page = CurrentIndexArray.arrayIndex.filter(
+    ([i, p, s, a]) => s === sura && a === aya
+  )[0][1];
   return currentPage(page);
   //this page
   /*
@@ -238,8 +247,9 @@ export const getAllAyaSuraBySura = (sura) => {
   //console.log("==============>",CurrentIndexArray.arrayIndex)
 
   const ayat =
-  CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => s === sura).map(([i], index) => index + 1) ||
-    [];
+    CurrentIndexArray.arrayIndex
+      .filter(([i, p, s, a]) => s === sura)
+      .map(([i], index) => index + 1) || [];
   //console.log({ayat})
   return ayat || [];
   ///
@@ -254,7 +264,9 @@ export const getAllAyaSuraBySura = (sura) => {
 
 export const pageToSuraAya = (page) => {
   const [, , sura, aya] =
-    CurrentIndexArray.arrayIndex.filter(([i, p, s, a]) => p === currentPage(page))[0] || [];
+    CurrentIndexArray.arrayIndex.filter(
+      ([i, p, s, a]) => p === currentPage(page)
+    )[0] || [];
   /*
   const sa = QuranData.Page[page];
   if (!sa) return { sura: 1, aya: 1 };
