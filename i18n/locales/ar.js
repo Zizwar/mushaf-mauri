@@ -178,7 +178,8 @@ export default {
 
   mosshaf_type: "المصحف",
   mosshaf_hafsMadina: "حفص عن عاصم-مصحف المدينة",
-  mosshaf_warsh: " ورش عن نافع",
+  mosshaf_warsh: " ورش - محمدي",
+  mosshaf_madina: " ورش - مدينة",
   view_type: "واجهة الاستخدام",
   choose_lang: "اللغة",
   l_arabic: "عربي",

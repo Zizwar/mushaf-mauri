@@ -177,7 +177,8 @@ export default {
 
   mosshaf_type: "ⴰⵎⵓⵚⵃⴰⴼ",
   mosshaf_hafsMadina: "ⵃⴰⴼⵚ ⵏ ⵄⴰⵚⵉⵎ - ⴰⵎⵓⵚⵃⴰⴼ ⵏ ⵜⴰⵎⴷⵉⵏⵜ",
-  mosshaf_warsh: "ⵡⴰⵕⵛ ⵏ ⵏⴰⴼⵉⵄ",
+  mosshaf_warsh: "ⵡⴰⵕⵛ - ⵎⵓⵃⴰⵎⵎⴰⴷⵉ",
+  mosshaf_madina: "ⵡⴰⵕⵛ - ⵎⴰⴷⵉⵏⴰ",
   view_type: "ⴰⴳⵔⵓⴷⵎ ⵏ ⵓⵙⵙⵎⵔⵙ",
   choose_lang: "ⵜⵓⵜⵍⴰⵢⵜ",
   l_arabic: "ⵜⴰⵄⵔⴰⴱⵜ",
