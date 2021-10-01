@@ -689,10 +689,11 @@ class Wino extends Component {
 	
 		 
   */}
-          {positionPage === index &&
+          {//positionPage === index && 
+
             positions.map(({ left, top, height, width, id, wino }, index) => (
               <TouchableNativeFeedback
-                style={{backgroundColor:'#f61',opacity:0.3}}
+               // style={{backgroundColor:'#f61',opacity:0.3}}
                 //delayLongPress={5}
                 //onPress={this.toglMenuDownUp}
                 onPress={(_) => this.onLongPressAya({ id, wino })}
@@ -706,8 +707,10 @@ class Wino extends Component {
                   style={[
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
-                      ? styles.onPressAya //{ backgroundColor, opacity: 0.1 } //
-                      : { opacity: 0.0 }, //styles.onUnPressAya,//
+                      ?// styles.onPressAya 
+                      { backgroundColor, opacity: 0.1 } 
+                      :// { opacity: 0.0 }, //
+                      styles.onUnPressAya,//
                     !isRTL
                       ? {
                           height,

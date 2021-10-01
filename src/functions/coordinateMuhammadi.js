@@ -123,6 +123,7 @@ export const coordinatePageMuhammadi = (page) => {
   ////===>
 };
 //
+let test=0
 const renderLineFahres = ({ left, line, width, wino }) => {
   //===>
   let top = +(HEIGHT_LINE * line).toFixed(2) + MARGIN_PAGE_TOP; //+200;
@@ -130,7 +131,8 @@ const renderLineFahres = ({ left, line, width, wino }) => {
   left = +left.toFixed(2);
   width = +width.toFixed(2);
   //recalc
-
+  test++
+  if(5>test)console.log({ width, height, left, top, wino, id: wino.id })
   //  console.log("original", { left, line, width, top, height, id: wino.id });
   return { left, width, top, height, id: wino.id, wino };
 };
