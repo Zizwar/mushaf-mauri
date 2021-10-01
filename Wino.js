@@ -121,7 +121,7 @@ class Wino extends Component {
     super(props);
     //tray
   
-    this.numberPage = 638;
+    this.numberPage = 603;
     this.isHidden = true;
     this.isHiddenSearch = true;
     this.toValue = 250;
@@ -692,7 +692,7 @@ class Wino extends Component {
           {positionPage === index &&
             positions.map(({ left, top, height, width, id, wino }, index) => (
               <TouchableNativeFeedback
-                //style={{backgroundColor:'#f61',opacity:0.3}}
+                style={{backgroundColor:'#f61',opacity:0.3}}
                 //delayLongPress={5}
                 //onPress={this.toglMenuDownUp}
                 onPress={(_) => this.onLongPressAya({ id, wino })}

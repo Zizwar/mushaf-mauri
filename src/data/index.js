@@ -3,7 +3,7 @@
 export * from "./muhammadi/coordinateMuhammadi";
 //export * from "./muhammadi/indexMuhammadi";
 
-export * from "./madina/cordinateMadina";
+export * from "./madina/coordinateMadina";
 //export * from "./madina/indexMadina";
 
 import madina from "./madina/indexMadina";

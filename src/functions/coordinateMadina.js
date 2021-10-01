@@ -4,8 +4,8 @@ const { width: WIDTH } = Dimensions.get("window");
 let scrW_mosshaf = WIDTH + 20;
 
 export const coordinatePageMadina = (page) => {
-
   const coordinatePage = coordinateMadina[page];
+
   let sura,
     aya,
     top,
@@ -44,9 +44,15 @@ export const coordinatePageMadina = (page) => {
   prev_left = null;
   let count = 1;
   let allPosition = [];
-  for (let [sura, aya, left, top] of coordinatePage) {
-    top = top - ofheight;
-    left = left - ofwidth;
+  // for ( [sura, aya, left, top] of coordinatePage) {
+  for (let item in coordinatePage) {
+    sura = item.split("_")[0];
+    aya = item.split("_")[1];
+    top = coordinatePage[sura + "_" + aya][1];
+    left = coordinatePage[sura + "_" + aya][0];
+    //console.log("====", { sura, aya, left, top });
+    //  top = top - ofheight;
+    // left = left - ofwidth;
     let wino_ = {
       aya: aya,
       sura: sura,
@@ -147,7 +153,6 @@ export const coordinatePageMadina = (page) => {
     prev_left = left;
   }
   return allPosition;
-
 };
 //
 
@@ -163,7 +168,6 @@ function hl_draw(id, top, left, width, height, b_top = 0, b_left = 0, wino) {
   left = (scrW_mosshaf / 456) * left; //+ 2;
   top = (scrW_mosshaf / 456) * top; //+ 7;
 
-  return { width, height, left, top, wino, id };
-
+  return { width, height, left, top, wino, id: wino.id };
 }
 //

@@ -1,4 +1,4 @@
-export  const WARSH = {
+export  const coordinateMadina = {
   "0": {},
   "1": {
     "1_1": [181, 301],
