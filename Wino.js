@@ -54,7 +54,7 @@ import {
   dbs,
   wait,
 } from "./src/functions";
-import { getAudioMoqriUri } from "./src/api";
+import { getAudioMoqriUri,getImagePageUri } from "./src/api";
 //import { Asset } from "expo-asset";
 
 //const SOURCE_ASSETS_IMAGE = Asset.fromModule(require("./assets/wino23.png")).uri;
@@ -574,7 +574,13 @@ class Wino extends Component {
       getNameBySura({ sura, lang })
     );
 
-    const source = requirePages[id - 1];
+    //const source = requirePages[id - 1];
+    const source = {
+      uri: getImagePageUri({
+        quira, //this.quraa,
+        id,
+      }),
+    };
     /* {
       uri: getImagePageUri({
         quira, //this.quraa,

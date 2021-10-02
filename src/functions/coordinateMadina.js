@@ -1,7 +1,12 @@
 import { Dimensions } from "react-native";
 import { coordinateMadina } from "../data";
 const { width: WIDTH } = Dimensions.get("window");
-let scrW_mosshaf = WIDTH + 20;
+
+const MARGIN_PAGE = 54;
+const SCREEN_DEFAULT_WIDTH = 456;
+const WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 5.0; //+ 0.6 / MARGIN_PAGE_RENDER;// - 22;
+const LEFT = -22//(MARGIN_PAGE / 2) + 16; // -22//+(MARGIN_PAGE * 0.6);
+const TOP = -46; //-44;
 
 export const coordinatePageMadina = (page) => {
   const coordinatePage = coordinateMadina[page];
@@ -47,8 +52,8 @@ export const coordinatePageMadina = (page) => {
     //  top = coordinatePage[sura + "_" + aya][1];
     //  left = coordinatePage[sura + "_" + aya][0];
     //console.log("====", { sura, aya, left, top });
-    //  top = top - ofheight;
-    // left = left - ofwidth;
+    top = top - ofheight;
+    left = left - ofwidth;
     let wino_ = {
       aya,
       sura,
@@ -153,17 +158,10 @@ export const coordinatePageMadina = (page) => {
 //
 
 function hl_draw(id, top, left, width, height, b_top = 0, b_left = 0, wino) {
-  //  "agr b_top =",b_top,"_______________________");
-  //let b_top = 0;
-  //let b_left = 0;
-  //top = b_top + top;
-  //left = b_left + left;
-  //crW_mosshaf = scrW_mosshaf + 300;
-  width = (scrW_mosshaf / 456) * width;
-  height =  (scrW_mosshaf / 456) * height;
-  left = (scrW_mosshaf / 456) * left; //+ 2;
-  top = (scrW_mosshaf / 456) * top; //+ 7;
-
+  width = (WIDTH / WIDTH_SCREEN_RENDER) * width;
+  height = (WIDTH / WIDTH_SCREEN_RENDER) * height;
+  left = (WIDTH / WIDTH_SCREEN_RENDER) * left + LEFT;
+  top = (WIDTH / WIDTH_SCREEN_RENDER) * top + TOP;
   return { width, height, left, top, wino, id: wino.id };
 }
 //
