@@ -54,7 +54,7 @@ import {
   dbs,
   wait,
 } from "./src/functions";
-import { getAudioMoqriUri,getImagePageUri } from "./src/api";
+import { getAudioMoqriUri, getImagePageUri } from "./src/api";
 //import { Asset } from "expo-asset";
 
 //const SOURCE_ASSETS_IMAGE = Asset.fromModule(require("./assets/wino23.png")).uri;
@@ -120,7 +120,7 @@ class Wino extends Component {
   constructor(props) {
     super(props);
     //tray
-  
+
     this.numberPage = 603;
     this.isHidden = true;
     this.isHiddenSearch = true;
@@ -341,7 +341,7 @@ class Wino extends Component {
   };
   //MEdia
   playSound = async (uri) => {
-   // console.log({ uri });
+    // console.log({ uri });
     this.setState({ loadingSound: uri });
     //setTimeout(_=>((this.state.loadingSound === uri )&& this.playSound(loadingSound),9000));
     try {
@@ -423,19 +423,19 @@ class Wino extends Component {
     //
     if (this.repeat >= repeat) {
       this.repeat = 1;
-     // console.log("yes next repeat =", this.repeat);
+      // console.log("yes next repeat =", this.repeat);
       const nextAya_ = nextAya({ sura, aya });
       this.props.setExactAya(nextAya_);
       if (isPlaying) this.buildPlayAudio(nextAya_);
     } else {
       this.repeat = this.repeat + 1;
-     // console.log("yes repeat =", this.repeat);
+      // console.log("yes repeat =", this.repeat);
       if (isPlaying) this.buildPlayAudio({ sura, aya });
     }
   };
   ///
   itRepeatz = () => {
-  //  console.log("yes repeat");
+    //  console.log("yes repeat");
 
     const { isPlaying, repeat } = this.state;
 
@@ -695,11 +695,12 @@ class Wino extends Component {
 	
 		 
   */}
-          {//positionPage === index && 
-
+          {(positionPage === index - 1 ||
+            positionPage === index ||
+            positionPage === index + 1) &&
             positions.map(({ left, top, height, width, id, wino }, index) => (
               <TouchableNativeFeedback
-               // style={{backgroundColor:'#f61',opacity:0.3}}
+                // style={{backgroundColor:'#f61',opacity:0.3}}
                 //delayLongPress={5}
                 //onPress={this.toglMenuDownUp}
                 onPress={(_) => this.onLongPressAya({ id, wino })}
@@ -713,10 +714,10 @@ class Wino extends Component {
                   style={[
                     styles.touchAya,
                     this.prevId === `s${wino.sura}a${wino.aya}`
-                      ?// styles.onPressAya 
-                      { backgroundColor, opacity: 0.1 } 
-                      :// { opacity: 0.0 }, //
-                      styles.onUnPressAya,//
+                      ? // styles.onPressAya
+                        { backgroundColor, opacity: 0.1 }
+                      : // { opacity: 0.0 }, //
+                        styles.onUnPressAya, //
                     !isRTL
                       ? {
                           height,

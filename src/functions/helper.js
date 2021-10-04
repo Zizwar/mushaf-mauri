@@ -13,19 +13,29 @@ import {
 import { getTarjama, getTafsirUri } from "../api";
 //
 const lngS = (lang) => (lang === "ar" ? 0 : lang === "amz" ? 1 : 2);
-const quira = (arg) => (arg ? global.quira === arg : global.quira);
+const isQuira = (arg) => (arg ? global.quira === arg : global.quira);
 //
-const currentPage = (page) => (global.quira === "warsh" ? page - 1 : page);
+const currentPage = (page) => (isQuira("warsh") ? page - 1 : page);
 //
 class CurrentIndex {
   get arrayIndex() {
     const { madina, warsh } = currentIndex;
-    return global.quira === "warsh" ? warsh : madina;
+    return isQuira("warsh") ? warsh : madina;
   }
 }
 const CurrentIndexArray = new CurrentIndex();
 export const paddingSuraAya = ({ sura, aya }) => {
-  if (sura === 2) aya++;
+  if (isQuira("warsh")) {
+    switch (sura) {
+      case 2:
+        aya++;
+        break;
+
+      default:
+        break;
+    }
+  }
+
   return padding(sura) + padding(aya);
 };
 export const padding = (aya) => {

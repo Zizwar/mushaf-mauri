@@ -16,12 +16,14 @@ const BASE_URL2 = "http://quran.ksu.edu.sa/";//ayat/mp3/Hudhaify_64kbps/001001.m
 export const getImagePageUri = ({ quira, id }) => {
   switch (quira) {
     case "warsh":
-      correntImg = `http://quran.ksu.edu.sa/warsh/${id+1}.png`; break;  
-    //correntImg = `https://mushaf.me/fahres/page/images/muhammadi/page${id+2}.png`; break;
+      correntImg = `${BASE_URL2}safahat/warsh2/${id}.jpg`; break;
+    //correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id+2}.png`; break;
       case "madina":
-        correntImg = `http://quran.ksu.edu.sa/warsh/${id+1}.png`; break;
-    default:
-   correntImg = `https://mushaf.me/fahres/page/images/muhammadi/page${id+2}.png`; break;
+      //  correntImg = `${BASE_URL2}safahat/warsh2/${id}.jpg`; break;
+      correntImg = `${BASE_URL2}safahat/hafs/${id}.png`; break;
+      correntImg = `${BASE_URL2}tajweed_png/${id}.png`; break;
+      default:
+   correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id+2}.png`; break;
    }
 
   return correntImg;

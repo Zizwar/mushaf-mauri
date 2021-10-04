@@ -4,11 +4,12 @@ const { width: WIDTH } = Dimensions.get("window");
 
 const MARGIN_PAGE = 54;
 const SCREEN_DEFAULT_WIDTH = 456;
-const WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 5.0; //+ 0.6 / MARGIN_PAGE_RENDER;// - 22;
+const WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 2.1 ;
 const LEFT = -22//(MARGIN_PAGE / 2) + 16; // -22//+(MARGIN_PAGE * 0.6);
 const TOP = -46; //-44;
 
 export const coordinatePageMadina = (page) => {
+
   const coordinatePage = coordinateMadina[page];
 
   let prev_top,
@@ -45,7 +46,7 @@ export const coordinatePageMadina = (page) => {
   prev_left = null;
   let count = 1;
   let allPosition = [];
-  for (let [sura, aya, left, top] of coordinatePage) {
+  for (let [sura, aya,  top,left] of coordinatePage) {
     // for (let item in coordinatePage) {
     //  sura = item.split("_")[0];
     //  aya = item.split("_")[1];

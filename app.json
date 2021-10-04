@@ -8,7 +8,7 @@
       "android"
     ],
     "scheme": "mushafmauri",
-    "version": "0.8.1",
+    "version": "0.8.3",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -31,7 +31,7 @@
       "permissions": [
         "VIBRATE"
       ],
-      "versionCode": 12
+      "versionCode": 13
     }
   }
 }

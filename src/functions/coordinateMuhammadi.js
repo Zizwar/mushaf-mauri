@@ -1,30 +1,26 @@
-import { coordinateMadina as coordinateMuhammadi } from "../data";
+import { coordinateMuhammadi } from "../data";
 import { Dimensions } from "react-native";
 
-const { width: WIDTH,height:HEIGH } = Dimensions.get("window");
+const { width: WIDTH } = Dimensions.get("window");
 //Create layer  quran mauri
 //change to dynamic dimension
  
 const NEXT_PAGE_LEFT = 0;
 
-const MARGIN_LEFT_AYA = -15;
-const MARGIN_PAGE_TOP = -4.2;
+const MARGIN_LEFT_AYA = 15;
+const MARGIN_PAGE_TOP = 4.2;
 const MARGIN_HEIGHT_AYA = 0.3;
 const MARGIN_WIDTH = 25;
-const ORIGIN_PAGE_TOP = 485.8;
-
-
-//const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (width / WIDTH_PAGE);
-const HEIGHT_SCALA = WIDTH * 1.471676300578035 - MARGIN_WIDTH;
+const ORIGIN_PAGE_TOP = 985.8;
 const ORIGINAL_WIDTH_HEIGHT = {
   width: 456,
-  height:   (WIDTH / 456) * WIDTH,
+  height: ORIGIN_PAGE_TOP + MARGIN_PAGE_TOP,
 };
 /*
   ((ORIGIN_PAGE_TOP - MARGIN_PAGE) *
   (WIDTH / ORIGINAL_WIDTH_HEIGHT.width))+ MARGIN_HEIGHT_SCALA;
   */
-
+const HEIGHT_SCALA = WIDTH * 1.471676300578035 - MARGIN_WIDTH;
 const DEVICE_WIDTH_HEIGHT = { width: WIDTH, height: HEIGHT_SCALA };
 const NUMBER_LINE = 15;
 const HEIGHT_LINE = HEIGHT_SCALA / NUMBER_LINE + MARGIN_HEIGHT_AYA;
@@ -35,7 +31,6 @@ export const coordinatePageMuhammadi = (page) => {
 
   const allPosition = [];
   //===>
-  /*
   const [nextPageSura = null, nextAya] = coordinateMuhammadi[page + 1]
     ? coordinateMuhammadi[page + 1][0]
     : [];
@@ -46,8 +41,8 @@ export const coordinatePageMuhammadi = (page) => {
         [nextPageSura, nextAya, NEXT_PAGE_LEFT, ORIGIN_PAGE_TOP],
       ]
     : coordinateMuhammadi[page];
-*/
-  for (let [sura, aya, left, top] of coordinateMuhammadi[page]) {
+
+  for (let [sura, aya, left, top] of coordinatePage) {
     left =
       (left / ORIGINAL_WIDTH_HEIGHT.width) * DEVICE_WIDTH_HEIGHT.width -
       MARGIN_LEFT_AYA;
@@ -128,15 +123,16 @@ export const coordinatePageMuhammadi = (page) => {
   ////===>
 };
 //
-
+let test=0
 const renderLineFahres = ({ left, line, width, wino }) => {
   //===>
-  let top = +(HEIGHT_LINE * line).toFixed(2) + MARGIN_PAGE_TOP+50;
+  let top = +(HEIGHT_LINE * line).toFixed(2) + MARGIN_PAGE_TOP; //+200;
   let height = +HEIGHT_LINE.toFixed(2);
   left = +left.toFixed(2);
   width = +width.toFixed(2);
   //recalc
-
+  test++
+  if(5>test)console.log({ width, height, left, top, wino, id: wino.id })
   //  console.log("original", { left, line, width, top, height, id: wino.id });
   return { left, width, top, height, id: wino.id, wino };
 };
