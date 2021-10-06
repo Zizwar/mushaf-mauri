@@ -16,15 +16,16 @@ const BASE_URL2 = "http://quran.ksu.edu.sa/";//ayat/mp3/Hudhaify_64kbps/001001.m
 export const getImagePageUri = ({ quira, id }) => {
   switch (quira) {
     case "warsh":
-      correntImg = `${BASE_URL2}safahat/warsh2/${id}.jpg`; break;
-    //correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id+2}.png`; break;
-      case "madina":
+      // correntImg = `${BASE_URL2}safahat/warsh2/${id}.jpg`; break;
+      correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id + 2}.png`; break;
+    case "madina":
       //  correntImg = `${BASE_URL2}safahat/warsh2/${id}.jpg`; break;
-     // correntImg = `${BASE_URL2}safahat/hafs/${id}.png`; break;
-      correntImg = `${BASE_URL2}tajweed_png/${id}.png`; break;
-      default:
-   correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id+2}.png`; break;
-   }
+      // correntImg = `${BASE_URL2}safahat/hafs/${id}.png`; break;
+      // correntImg = `${BASE_URL2}tajweed_png/${id}.png`; break;   
+      correntImg = `https://www.mushaf.ma/fahres/page/images/hafsTajweed/page${id}.png`; break;
+    default:
+      correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id + 2}.png`; break;
+  }
 
   return correntImg;
 };
@@ -32,13 +33,11 @@ export const getAudioMoqriUri = ({ moqri = "Hudhaify_64kbps", id }) =>
   `${BASE_URL2}ayat/mp3/${moqri}/${id}.mp3`;
 //
 export const getTafsirUri = ({ author, sura, aya }) =>
-  `${BASE_URL2}interface.php?ui=mobile&do=tafsir&author=${
-    author ? author : "sa3dy"
+  `${BASE_URL2}interface.php?ui=mobile&do=tafsir&author=${author ? author : "sa3dy"
   }&sura=${sura}&aya=${aya}`;
 
 export const getTarjama = ({ tarjama, b_sura, b_aya, e_sura, e_aya }) =>
-  `${BASE_URL2}interface.php?ui=mobile&do=tarjama&tafsir=${
-    tarjama ? tarjama : "ar_muyassar"
+  `${BASE_URL2}interface.php?ui=mobile&do=tarjama&tafsir=${tarjama ? tarjama : "ar_muyassar"
   }&b_sura=${b_sura}&b_aya=${b_aya}&e_sura=${e_sura}&e_aya=${e_aya}`;
 export const loadDBTarajem = (db) =>
   `${BASE_URL2}ayat/resources/tarajem/${db}.ayt`;
