@@ -2,11 +2,11 @@ import { Dimensions } from "react-native";
 import { coordinateMadina } from "../data";
 const { width: WIDTH } = Dimensions.get("window");
 
-const MARGIN_PAGE = 54;
+const MARGIN_PAGE = 48;
 const SCREEN_DEFAULT_WIDTH = 456;
-const WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 2.1 ;
-const LEFT = -22//(MARGIN_PAGE / 2) + 16; // -22//+(MARGIN_PAGE * 0.6);
-const TOP = -46; //-44;
+const WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 2.15 ;
+const LEFT = -10//(MARGIN_PAGE / 2) + 16; // -22//+(MARGIN_PAGE * 0.6);
+const TOP = -20; //-44;
 
 export const coordinatePageMadina = (page) => {
 
@@ -31,8 +31,8 @@ export const coordinatePageMadina = (page) => {
     fp_height = 20,
     fp_mgwidth = 80,
     fp_twidth = 376,
-    fp_ofwidth = 5,
-    fp_ofheight = 10;
+    fp_ofwidth = 15,
+    fp_ofheight = 20;
   //
 
   if (page === 1 || page === 2) {
