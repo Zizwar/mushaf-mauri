@@ -20,7 +20,7 @@ export const getImagePageUri = ({ quira, id }) => {
     //correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id+2}.png`; break;
       case "madina":
       //  correntImg = `${BASE_URL2}safahat/warsh2/${id}.jpg`; break;
-      correntImg = `${BASE_URL2}safahat/hafs/${id}.png`; break;
+     // correntImg = `${BASE_URL2}safahat/hafs/${id}.png`; break;
       correntImg = `${BASE_URL2}tajweed_png/${id}.png`; break;
       default:
    correntImg = `https://mushaf.ma/fahres/page/images/muhammadi/page${id+2}.png`; break;
