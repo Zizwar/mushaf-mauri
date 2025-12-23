@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "مصحف موري - القرآن الكريم",
+    "slug": "MushafMauri",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "wino.ma.mushaf.mauri"
+    },
+    "android": {
+      "package": "wino.ma.mushaf.mauri",
+      "versionCode": 20,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": ["VIBRATE"]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-font",
+      "expo-localization"
+    ],
+    "extra": {
+      "supportsRTL": true
+    }
+  }
+}
