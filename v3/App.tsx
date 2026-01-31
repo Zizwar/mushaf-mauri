@@ -11,7 +11,7 @@ export default function App() {
       {screen === "home" ? (
         <HomeScreen onOpenMushaf={() => setScreen("mushaf")} />
       ) : (
-        <MushafViewer />
+        <MushafViewer onGoBack={() => setScreen("home")} />
       )}
     </SafeAreaProvider>
   );

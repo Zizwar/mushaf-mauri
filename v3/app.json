@@ -17,6 +17,9 @@
         "backgroundColor": "#046f98"
       },
       "package": "com.mushaf.mauri.v3"
-    }
+    },
+    "plugins": [
+      "expo-sqlite"
+    ]
   }
 }

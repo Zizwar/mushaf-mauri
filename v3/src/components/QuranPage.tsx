@@ -19,10 +19,19 @@ const IMAGE_HEIGHT = SCREEN_WIDTH * NISBA - MARGIN_PAGE_WIDTH;
 interface QuranPageProps {
   pageId: number;
   isVisible: boolean;
+  onLongPressAya?: (sura: number, aya: number, page: number) => void;
 }
 
 const AyahOverlay = React.memo(
-  ({ position, isSelected }: { position: AyahPosition; isSelected: boolean }) => {
+  ({
+    position,
+    isSelected,
+    onLongPress,
+  }: {
+    position: AyahPosition;
+    isSelected: boolean;
+    onLongPress?: () => void;
+  }) => {
     const setSelectedAya = useAppStore((s) => s.setSelectedAya);
 
     const onPress = () => {
@@ -37,6 +46,8 @@ const AyahOverlay = React.memo(
     return (
       <Pressable
         onPress={onPress}
+        onLongPress={onLongPress}
+        delayLongPress={400}
         style={[
           styles.ayahButton,
           {
@@ -52,7 +63,7 @@ const AyahOverlay = React.memo(
   }
 );
 
-function QuranPage({ pageId, isVisible }: QuranPageProps) {
+function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
   const quira = useAppStore((s) => s.quira);
   const selectedAya = useAppStore((s) => s.selectedAya);
   const theme = useAppStore((s) => s.theme);
@@ -78,6 +89,11 @@ function QuranPage({ pageId, isVisible }: QuranPageProps) {
             key={`${pos.id}_${index}`}
             position={pos}
             isSelected={selectedId === pos.wino.id}
+            onLongPress={
+              onLongPressAya
+                ? () => onLongPressAya(pos.wino.sura, pos.wino.aya, pos.wino.page)
+                : undefined
+            }
           />
         ))}
     </View>

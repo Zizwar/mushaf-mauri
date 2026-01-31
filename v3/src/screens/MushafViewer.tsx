@@ -1,29 +1,51 @@
-import React, { useRef, useCallback, useMemo } from "react";
+import React, { useRef, useCallback, useMemo, useState } from "react";
 import {
   View,
   FlatList,
   Text,
+  Pressable,
   StyleSheet,
   Dimensions,
   StatusBar,
+  Alert,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import QuranPage from "../components/QuranPage";
 import AudioPlayer from "../components/AudioPlayer";
+import DrawerMenu from "../components/DrawerMenu";
+import AyahActionModal from "../components/AyahActionModal";
+import TafsirModal from "../components/TafsirModal";
 import { useAppStore } from "../store/useAppStore";
 import { getTotalPages } from "../utils/coordinates";
-// @ts-ignore
-import { QuranData } from "../data/quranData";
+import { t } from "../i18n";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-export default function MushafViewer() {
+interface MushafViewerProps {
+  onGoBack?: () => void;
+}
+
+export default function MushafViewer({ onGoBack }: MushafViewerProps) {
   const flatListRef = useRef<FlatList>(null);
 
+  const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
   const currentPage = useAppStore((s) => s.currentPage);
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
+  const selectedAya = useAppStore((s) => s.selectedAya);
+  const setSelectedAya = useAppStore((s) => s.setSelectedAya);
+
+  // Modal states
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [actionModalVisible, setActionModalVisible] = useState(false);
+  const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
+  const [longPressInfo, setLongPressInfo] = useState<{
+    sura: number;
+    aya: number;
+    page: number;
+  } | null>(null);
 
   const totalPages = useMemo(() => getTotalPages(quira), [quira]);
 
@@ -63,39 +85,96 @@ export default function MushafViewer() {
     }
   }, [pages]);
 
+  // Long press handler from QuranPage
+  const handleLongPressAya = useCallback((sura: number, aya: number, page: number) => {
+    setLongPressInfo({ sura, aya, page });
+    setActionModalVisible(true);
+  }, []);
+
+  // Action modal callbacks
+  const handlePlay = useCallback(() => {
+    if (longPressInfo) {
+      setSelectedAya({
+        sura: longPressInfo.sura,
+        aya: longPressInfo.aya,
+        page: longPressInfo.page,
+        id: `${longPressInfo.sura}_${longPressInfo.aya}`,
+      });
+    }
+  }, [longPressInfo, setSelectedAya]);
+
+  const handleBookmark = useCallback(() => {
+    Alert.alert(t("alert_ok", lang), `${t("bookmark", lang)}: ${t("sura_s", lang)} ${longPressInfo?.sura} - ${t("aya_s", lang)} ${longPressInfo?.aya}`);
+  }, [longPressInfo, lang]);
+
+  const handleTafsir = useCallback(() => {
+    setTafsirModalVisible(true);
+  }, []);
+
+  // Drawer navigation
+  const handleDrawerNavigate = useCallback((_screen: string) => {
+    // Future navigation - for now drawer actions (theme, lang, mushaf) work inline
+  }, []);
+
   const renderPage = useCallback(
-    ({ item, index }: { item: { id: number }; index: number }) => {
+    ({ item }: { item: { id: number } }) => {
       return (
         <View style={styles.pageWrapper}>
-          <QuranPage pageId={item.id} isVisible />
+          <QuranPage
+            pageId={item.id}
+            isVisible
+            onLongPressAya={handleLongPressAya}
+          />
           <Text style={[styles.pageNumber, { color: theme.color }]}>{item.id}</Text>
         </View>
       );
     },
-    [theme]
+    [theme, handleLongPressAya]
   );
 
   const keyExtractor = useCallback((item: { id: number }) => `page_${item.id}`, []);
 
-  // Get sura name for header
-  const suraInfo = useMemo(() => {
-    // Find first aya on current page from coordinates
-    return null; // We show page number only
-  }, [currentPage]);
+  const isDark = !!theme.night;
+  const headerBg = isDark ? "#111" : "rgba(255,255,255,0.95)";
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
       <StatusBar
-        barStyle={theme.night ? "light-content" : "dark-content"}
+        barStyle={isDark ? "light-content" : "dark-content"}
         backgroundColor={theme.backgroundColor}
       />
 
-      <View style={[styles.header, { backgroundColor: theme.night ? "#111" : "rgba(255,255,255,0.95)" }]}>
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: headerBg }]}>
+        {/* Back / Home button */}
+        {onGoBack ? (
+          <Pressable
+            onPress={onGoBack}
+            hitSlop={10}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="home-outline" size={20} color={theme.color} />
+          </Pressable>
+        ) : (
+          <View style={styles.headerBtn} />
+        )}
+
+        {/* Page number */}
         <Text style={[styles.headerText, { color: theme.color }]}>
           {currentPage}
         </Text>
+
+        {/* Menu button */}
+        <Pressable
+          onPress={() => setDrawerVisible(true)}
+          hitSlop={10}
+          style={styles.headerBtn}
+        >
+          <Ionicons name="menu-outline" size={22} color={theme.color} />
+        </Pressable>
       </View>
 
+      {/* Quran Pages */}
       <FlatList
         ref={flatListRef}
         data={pages}
@@ -115,7 +194,39 @@ export default function MushafViewer() {
         removeClippedSubviews
       />
 
+      {/* Audio Player */}
       <AudioPlayer onScrollToPage={scrollToPage} />
+
+      {/* Drawer Menu */}
+      <DrawerMenu
+        visible={drawerVisible}
+        onClose={() => setDrawerVisible(false)}
+        onNavigate={handleDrawerNavigate}
+      />
+
+      {/* Ayah Action Modal (long press) */}
+      {longPressInfo && (
+        <AyahActionModal
+          visible={actionModalVisible}
+          onClose={() => setActionModalVisible(false)}
+          onPlay={handlePlay}
+          onBookmark={handleBookmark}
+          onTafsir={handleTafsir}
+          sura={longPressInfo.sura}
+          aya={longPressInfo.aya}
+          page={longPressInfo.page}
+        />
+      )}
+
+      {/* Tafsir Modal */}
+      {longPressInfo && (
+        <TafsirModal
+          visible={tafsirModalVisible}
+          onClose={() => setTafsirModalVisible(false)}
+          sura={longPressInfo.sura}
+          aya={longPressInfo.aya}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -135,12 +246,21 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   header: {
-    height: 32,
-    justifyContent: "center",
+    height: 40,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+  },
+  headerBtn: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 18,
   },
   headerText: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: "600",
   },
 });
