@@ -16,9 +16,7 @@ export interface PageData {
   id: number;
 }
 
-export interface SuraInfo {
-  id: number;
-  nameAr: string;
-  nameEn: string;
-  type: string;
+export interface Reciter {
+  id: string;
+  voice: string;
 }

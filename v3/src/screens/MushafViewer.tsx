@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useState, useMemo } from "react";
+import React, { useRef, useCallback, useMemo } from "react";
 import {
   View,
   FlatList,
@@ -6,38 +6,46 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
-  I18nManager,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import QuranPage from "../components/QuranPage";
-import { TOTAL_PAGES } from "../utils/coordinates";
+import AudioPlayer from "../components/AudioPlayer";
+import { useAppStore } from "../store/useAppStore";
+import { getTotalPages } from "../utils/coordinates";
+// @ts-ignore
+import { QuranData } from "../data/quranData";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const NISBA = 1.471676300578035;
-const MARGIN_PAGE_WIDTH = 5;
-const IMAGE_HEIGHT = SCREEN_WIDTH * NISBA - MARGIN_PAGE_WIDTH;
-const PAGE_HEIGHT = IMAGE_HEIGHT + 40; // image + page number area
-
-// Pre-generate page data array (reversed for RTL reading)
-const PAGES = Array.from({ length: TOTAL_PAGES }, (_, i) => ({
-  id: TOTAL_PAGES - i,
-}));
 
 export default function MushafViewer() {
   const flatListRef = useRef<FlatList>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+
+  const quira = useAppStore((s) => s.quira);
+  const theme = useAppStore((s) => s.theme);
+  const currentPage = useAppStore((s) => s.currentPage);
+  const setCurrentPage = useAppStore((s) => s.setCurrentPage);
+
+  const totalPages = useMemo(() => getTotalPages(quira), [quira]);
+
+  const pages = useMemo(
+    () => Array.from({ length: totalPages }, (_, i) => ({ id: totalPages - i })),
+    [totalPages]
+  );
+
+  const initialIndex = useMemo(() => {
+    const idx = pages.findIndex((p) => p.id === currentPage);
+    return idx >= 0 ? idx : 0;
+  }, []);
 
   const onViewableItemsChanged = useRef(
-    ({ viewableItems }: { viewableItems: Array<{ index: number | null }> }) => {
-      if (viewableItems.length > 0 && viewableItems[0].index != null) {
-        setCurrentIndex(viewableItems[0].index);
+    ({ viewableItems }: { viewableItems: Array<{ item: { id: number }; index: number | null }> }) => {
+      if (viewableItems.length > 0 && viewableItems[0].item) {
+        setCurrentPage(viewableItems[0].item.id);
       }
     }
   ).current;
 
-  const viewabilityConfig = useRef({
-    itemVisiblePercentThreshold: 50,
-  }).current;
+  const viewabilityConfig = useRef({ itemVisiblePercentThreshold: 50 }).current;
 
   const getItemLayout = useCallback(
     (_: any, index: number) => ({
@@ -48,50 +56,66 @@ export default function MushafViewer() {
     []
   );
 
+  const scrollToPage = useCallback((targetPage: number) => {
+    const idx = pages.findIndex((p) => p.id === targetPage);
+    if (idx >= 0 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index: idx, animated: true });
+    }
+  }, [pages]);
+
   const renderPage = useCallback(
     ({ item, index }: { item: { id: number }; index: number }) => {
-      const isVisible =
-        index === currentIndex ||
-        index === currentIndex - 1 ||
-        index === currentIndex + 1;
-
       return (
         <View style={styles.pageWrapper}>
-          <QuranPage pageId={item.id} isVisible={isVisible} />
-          <Text style={styles.pageNumber}>{item.id}</Text>
+          <QuranPage pageId={item.id} isVisible />
+          <Text style={[styles.pageNumber, { color: theme.color }]}>{item.id}</Text>
         </View>
       );
     },
-    [currentIndex]
+    [theme]
   );
 
   const keyExtractor = useCallback((item: { id: number }) => `page_${item.id}`, []);
 
-  const currentPage = PAGES[currentIndex]?.id ?? 1;
+  // Get sura name for header
+  const suraInfo = useMemo(() => {
+    // Find first aya on current page from coordinates
+    return null; // We show page number only
+  }, [currentPage]);
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar hidden />
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
+      <StatusBar
+        barStyle={theme.night ? "light-content" : "dark-content"}
+        backgroundColor={theme.backgroundColor}
+      />
+
+      <View style={[styles.header, { backgroundColor: theme.night ? "#111" : "rgba(255,255,255,0.95)" }]}>
+        <Text style={[styles.headerText, { color: theme.color }]}>
+          {currentPage}
+        </Text>
+      </View>
+
       <FlatList
         ref={flatListRef}
-        data={PAGES}
+        data={pages}
         renderItem={renderPage}
         keyExtractor={keyExtractor}
         horizontal
         pagingEnabled
-        inverted={!I18nManager.isRTL}
+        inverted
         showsHorizontalScrollIndicator={false}
         getItemLayout={getItemLayout}
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
+        initialScrollIndex={initialIndex}
         initialNumToRender={1}
         maxToRenderPerBatch={2}
         windowSize={3}
         removeClippedSubviews
       />
-      <View style={styles.header}>
-        <Text style={styles.headerText}>صفحة {currentPage}</Text>
-      </View>
+
+      <AudioPlayer onScrollToPage={scrollToPage} />
     </SafeAreaView>
   );
 }
@@ -99,7 +123,6 @@ export default function MushafViewer() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
   },
   pageWrapper: {
     width: SCREEN_WIDTH,
@@ -109,22 +132,15 @@ const styles = StyleSheet.create({
   pageNumber: {
     textAlign: "center",
     fontSize: 14,
-    color: "#666",
     paddingVertical: 4,
   },
   header: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 36,
+    height: 32,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.9)",
   },
   headerText: {
     fontSize: 14,
-    color: "#333",
     fontWeight: "600",
   },
 });
