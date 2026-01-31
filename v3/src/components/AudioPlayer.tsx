@@ -20,6 +20,7 @@ import { getNextAya, getPrevAya } from "../utils/coordinates";
 import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listVoiceMoqri } from "../data/listAuthor";
+import { getAyahText } from "../utils/ayahText";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -123,6 +124,9 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const suraData = selectedAya ? QuranData.Sura[selectedAya.sura] : null;
   const suraNameAr = suraData?.[0] ?? "";
   const suraNameEn = suraData?.[2] ?? "";
+  const ayahText = selectedAya
+    ? getAyahText(selectedAya.sura, selectedAya.aya, quira)
+    : null;
 
   // -- Progress fraction --
   const progress = durationMillis > 0 ? positionMillis / durationMillis : 0;
@@ -526,6 +530,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
               >
                 {t("page", lang)} {selectedAya.page}
               </Text>
+              {ayahText ? (
+                <Text
+                  style={[styles.fullAyahText, { color: colors.fullText }]}
+                  numberOfLines={4}
+                >
+                  {ayahText}
+                </Text>
+              ) : null}
             </View>
           </View>
 
@@ -881,6 +893,15 @@ const styles = StyleSheet.create({
   fullPageInfo: {
     fontSize: 13,
     fontWeight: "500",
+  },
+  fullAyahText: {
+    fontSize: 18,
+    lineHeight: 32,
+    textAlign: "center",
+    writingDirection: "rtl",
+    marginTop: 12,
+    paddingHorizontal: 12,
+    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
   },
 
   // Reciter row

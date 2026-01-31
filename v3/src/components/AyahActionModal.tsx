@@ -14,6 +14,7 @@ import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
 // @ts-ignore
 import { QuranData } from "../data/quranData";
+import { getAyahText } from "../utils/ayahText";
 
 interface AyahActionModalProps {
   visible: boolean;
@@ -40,9 +41,11 @@ export default function AyahActionModal({
 }: AyahActionModalProps) {
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
+  const quira = useAppStore((s) => s.quira);
 
   const suraData = QuranData.Sura[sura];
   const suraName = suraData?.[0] ?? `${sura}`;
+  const ayahText = getAyahText(sura, aya, quira) ?? "";
 
   const isNight = !!theme.night;
   const cardBg = isNight ? "#262640" : "#ffffff";
@@ -55,13 +58,17 @@ export default function AyahActionModal({
   const dividerColor = isNight ? "#3a3a5c" : "#e8ecf0";
 
   const handleCopy = useCallback(() => {
-    const shareText = `${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}`;
-    Alert.alert(t("alert_ok", lang), shareText);
+    const copyText = ayahText
+      ? `${ayahText}\n\n${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}`
+      : `${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}`;
+    Alert.alert(t("copy", lang), copyText);
     onClose();
-  }, [suraName, aya, lang, onClose]);
+  }, [suraName, aya, ayahText, lang, onClose]);
 
   const handleShare = useCallback(async () => {
-    const shareText = `${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}\nhttps://meshaf.ma/d/a${aya}s${sura}r1z`;
+    const shareText = ayahText
+      ? `${ayahText}\n\n${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}\nhttps://meshaf.ma/d/a${aya}s${sura}r1z`
+      : `${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}\nhttps://meshaf.ma/d/a${aya}s${sura}r1z`;
     try {
       await Share.share({
         message: shareText,
@@ -70,7 +77,7 @@ export default function AyahActionModal({
       // User cancelled or share failed
     }
     onClose();
-  }, [suraName, sura, aya, lang, onClose]);
+  }, [suraName, sura, aya, ayahText, lang, onClose]);
 
   const actions: {
     key: string;
@@ -143,6 +150,11 @@ export default function AyahActionModal({
             <Text style={styles.headerSubtext}>
               {t("page", lang)} {page}
             </Text>
+            {ayahText ? (
+              <Text style={styles.headerAyahText} numberOfLines={3}>
+                {ayahText}
+              </Text>
+            ) : null}
           </View>
 
           {/* Divider */}
@@ -228,6 +240,16 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginTop: 2,
     textAlign: "center",
+  },
+  headerAyahText: {
+    color: "#ffffff",
+    fontSize: 16,
+    lineHeight: 28,
+    textAlign: "center",
+    writingDirection: "rtl",
+    marginTop: 8,
+    paddingHorizontal: 8,
+    opacity: 0.9,
   },
   divider: {
     height: StyleSheet.hairlineWidth,

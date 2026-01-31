@@ -35,7 +35,7 @@ export const useAppStore = create<AppState>((set) => ({
   quira: "madina",
   theme: THEMES[0],
   moqriId: "Husary_64kbps",
-  currentPage: 604,
+  currentPage: 1,
   selectedAya: null,
   isPlaying: false,
 

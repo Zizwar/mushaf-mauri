@@ -19,6 +19,7 @@ import TafsirModal from "../components/TafsirModal";
 import { useAppStore } from "../store/useAppStore";
 import { getTotalPages } from "../utils/coordinates";
 import { t } from "../i18n";
+import { getAyahText } from "../utils/ayahText";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -50,7 +51,7 @@ export default function MushafViewer({ onGoBack }: MushafViewerProps) {
   const totalPages = useMemo(() => getTotalPages(quira), [quira]);
 
   const pages = useMemo(
-    () => Array.from({ length: totalPages }, (_, i) => ({ id: totalPages - i })),
+    () => Array.from({ length: totalPages }, (_, i) => ({ id: i + 1 })),
     [totalPages]
   );
 
@@ -104,8 +105,10 @@ export default function MushafViewer({ onGoBack }: MushafViewerProps) {
   }, [longPressInfo, setSelectedAya]);
 
   const handleBookmark = useCallback(() => {
-    Alert.alert(t("alert_ok", lang), `${t("bookmark", lang)}: ${t("sura_s", lang)} ${longPressInfo?.sura} - ${t("aya_s", lang)} ${longPressInfo?.aya}`);
-  }, [longPressInfo, lang]);
+    const ayaText = longPressInfo ? getAyahText(longPressInfo.sura, longPressInfo.aya, quira) : null;
+    const header = `${t("bookmark", lang)}: ${t("sura_s", lang)} ${longPressInfo?.sura} - ${t("aya_s", lang)} ${longPressInfo?.aya}`;
+    Alert.alert(header, ayaText ?? "");
+  }, [longPressInfo, lang, quira]);
 
   const handleTafsir = useCallback(() => {
     setTafsirModalVisible(true);
