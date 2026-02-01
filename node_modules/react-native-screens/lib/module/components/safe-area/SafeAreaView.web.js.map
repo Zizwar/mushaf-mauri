@@ -1,0 +1,1 @@
+{"version":3,"names":["View","SafeAreaView"],"sourceRoot":"../../../../src","sources":["components/safe-area/SafeAreaView.web.tsx"],"mappings":"AAAA,SAASA,IAAI,QAAQ,cAAc;AAEnC,MAAMC,YAAY,GAAGD,IAAI;AAEzB,eAAeC,YAAY","ignoreList":[]}

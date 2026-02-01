@@ -1,0 +1,1 @@
+{"version":3,"names":["_reactNative","require","SafeAreaView","View","_default","exports","default"],"sourceRoot":"../../../../src","sources":["components/safe-area/SafeAreaView.web.tsx"],"mappings":";;;;;;AAAA,IAAAA,YAAA,GAAAC,OAAA;AAEA,MAAMC,YAAY,GAAGC,iBAAI;AAAC,IAAAC,QAAA,GAAAC,OAAA,CAAAC,OAAA,GAEXJ,YAAY","ignoreList":[]}

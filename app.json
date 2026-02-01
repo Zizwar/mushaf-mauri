@@ -1,41 +1,44 @@
 {
   "expo": {
-    "name": "مصحف موري - القرآن الكريم",
-    "description": "Mushaf Mauri.",
-    "slug": "MushafMauri",
-    "privacy": "public",
-    "platforms": [
-      "android"
-    ],
-    "scheme": "mushafmauri",
-    "version": "0.8.3",
+    "name": "Mushaf Mauri",
+    "slug": "mushaf-mauri-v3",
+    "version": "3.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#046f98"
     },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "assets/**/*"
-    ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "wino.ma.mushaf.mauri"
+      "bundleIdentifier": "com.mushaf.mauri.v3",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
     },
     "android": {
-      "package": "wino.ma.mushaf.mauri",
-      "permissions": [
-        "VIBRATE"
-      ],
-      "versionCode": 13
+      "adaptiveIcon": {
+        "backgroundColor": "#046f98"
+      },
+      "package": "com.mushaf.mauri.v3"
     },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Mushaf Mauri to access your microphone for recording recitation."
+        }
+      ],
+      "expo-sharing",
+      "expo-font",
+      "expo-asset"
+    ],
     "extra": {
       "eas": {
-        "projectId": "2a5f7adc-1fc1-432d-80e5-54ab949fa9af"
+        "projectId": "86d37205-c483-46ec-af9f-a874727f0c87"
       }
     }
   }

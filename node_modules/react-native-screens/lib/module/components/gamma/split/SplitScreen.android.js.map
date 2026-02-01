@@ -1,0 +1,1 @@
+{"version":3,"names":["NOOP","console","warn","Column","Inspector"],"sourceRoot":"../../../../../src","sources":["components/gamma/split/SplitScreen.android.tsx"],"mappings":"AAAA,MAAMA,IAAI,GAAGA,CAAA,KAAM;EACjBC,OAAO,CAACC,IAAI,CACV,0GACF,CAAC;EACD,OAAO,IAAI;AACb,CAAC;AAED,MAAMC,MAAM,GAAGH,IAAI;AACnB,MAAMI,SAAS,GAAGJ,IAAI;AAEtB,eAAe;EAAEG,MAAM;EAAEC;AAAU,CAAC","ignoreList":[]}

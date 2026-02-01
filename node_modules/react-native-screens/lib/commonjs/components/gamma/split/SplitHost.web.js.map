@@ -1,0 +1,1 @@
+{"version":3,"names":["SplitHost","console","warn","_default","exports","default"],"sourceRoot":"../../../../../src","sources":["components/gamma/split/SplitHost.web.tsx"],"mappings":";;;;;;AAAA,MAAMA,SAAS,GAAGA,CAAA,KAAM;EACtBC,OAAO,CAACC,IAAI,CACV,sGACF,CAAC;EACD,OAAO,IAAI;AACb,CAAC;AAAC,IAAAC,QAAA,GAAAC,OAAA,CAAAC,OAAA,GAEaL,SAAS","ignoreList":[]}

@@ -60,6 +60,10 @@ export const listAuthorTarajem = [
 ];
 export const listVoiceMoqri = _lang => [
   {
+    id: "__user_recording__",
+    voice: _lang["recite_user"] || "My Recitation"
+  },
+  {
     id: "Hudhaify_64kbps",
     voice: _lang["recite_hudhaify"]
   },
