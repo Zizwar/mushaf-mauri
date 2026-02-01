@@ -371,3 +371,107 @@ export async function importProfile(
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Notes
+// ---------------------------------------------------------------------------
+
+function getNotesFile(quira: Quira, profileId: string): File {
+  return new File(getProfileDir(quira, profileId), "notes.json");
+}
+
+export function loadNotes(
+  quira: Quira,
+  profileId: string
+): Record<string, string> {
+  const file = getNotesFile(quira, profileId);
+  if (!file.exists) return {};
+  try {
+    return JSON.parse(file.textSync()) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+export function saveNote(
+  quira: Quira,
+  profileId: string,
+  sura: number,
+  aya: number,
+  note: string
+): void {
+  const notes = loadNotes(quira, profileId);
+  const key = buildKey(sura, aya);
+  if (note.trim()) {
+    notes[key] = note.trim();
+  } else {
+    delete notes[key];
+  }
+  ensureDir(quira, profileId);
+  const file = getNotesFile(quira, profileId);
+  if (!file.exists) file.create();
+  file.write(JSON.stringify(notes));
+}
+
+export function deleteNote(
+  quira: Quira,
+  profileId: string,
+  sura: number,
+  aya: number
+): void {
+  const notes = loadNotes(quira, profileId);
+  delete notes[buildKey(sura, aya)];
+  const file = getNotesFile(quira, profileId);
+  if (file.exists) {
+    file.write(JSON.stringify(notes));
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Selective Export
+// ---------------------------------------------------------------------------
+
+export async function exportSelectedRecordings(
+  quira: Quira,
+  profile: RecordingProfile,
+  ayahs: { sura: number; aya: number }[]
+): Promise<void> {
+  const recordingData: { sura: number; aya: number; base64: string }[] = [];
+
+  for (const { sura, aya } of ayahs) {
+    const file = getFile(sura, aya, quira, profile.id);
+    if (file.exists) {
+      const b64 = file.base64Sync();
+      recordingData.push({ sura, aya, base64: b64 });
+    }
+  }
+
+  const backup: RecordingBackup = {
+    format: "mushaf-mauri-recording-backup",
+    version: 1,
+    quira,
+    profile,
+    exportDate: new Date().toISOString(),
+    recordings: recordingData,
+  };
+
+  const tempDir = new Directory(Paths.cache, "exports");
+  if (!tempDir.exists) {
+    tempDir.create({ intermediates: true });
+  }
+
+  const sanitizedName = profile.name.replace(
+    /[^a-zA-Z0-9\u0600-\u06FF\u2D30-\u2D7F]/g,
+    "_"
+  );
+  const tempFile = new File(tempDir, `${sanitizedName}_selected.mrec`);
+  if (tempFile.exists) tempFile.delete();
+  tempFile.create();
+  tempFile.write(JSON.stringify(backup));
+
+  await Sharing.shareAsync(tempFile.uri, {
+    mimeType: "application/json",
+    dialogTitle: profile.name,
+    UTI: "public.json",
+  });
+}
