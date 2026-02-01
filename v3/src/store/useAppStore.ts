@@ -25,6 +25,8 @@ export interface Bookmark {
   aya: number;
   page: number;
   timestamp: number;
+  text?: string;
+  note?: string;
 }
 
 export interface TekrarConfig {
@@ -105,6 +107,7 @@ interface AppState {
   addBookmark: (bookmark: Bookmark) => void;
   removeBookmark: (sura: number, aya: number) => void;
   setBookmarks: (bookmarks: Bookmark[]) => void;
+  updateBookmarkNote: (sura: number, aya: number, note: string) => void;
   setTekrar: (tekrar: TekrarConfig) => void;
   setKhatma: (khatma: KhatmaState) => void;
 }
@@ -117,7 +120,7 @@ const defaultDownloadProgress: ImageDownloadProgress = {
 
 export const useAppStore = create<AppState>((set) => ({
   lang: "ar",
-  quira: "madina",
+  quira: "warsh",
   theme: THEMES[0],
   moqriId: "Husary_64kbps",
   currentPage: 1,
@@ -201,6 +204,12 @@ export const useAppStore = create<AppState>((set) => ({
       ),
     })),
   setBookmarks: (bookmarks) => set({ bookmarks }),
+  updateBookmarkNote: (sura, aya, note) =>
+    set((state) => ({
+      bookmarks: state.bookmarks.map((b) =>
+        b.sura === sura && b.aya === aya ? { ...b, note } : b
+      ),
+    })),
   setTekrar: (tekrar) => set({ tekrar }),
   setKhatma: (khatma) => set({ khatma }),
 }));

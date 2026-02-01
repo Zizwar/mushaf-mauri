@@ -44,6 +44,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
   const setTheme = useAppStore((s) => s.setTheme);
 
   const isNight = !!theme.night;
+  const isRTL = lang === "ar" || lang === "amz";
   const textColor = theme.color;
   const mutedColor = isNight ? "#888" : "#999";
   const bgColor = isNight ? "#111122" : "#fafafa";
@@ -92,14 +93,14 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
               {/* 1. Mushaf Type */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
-                  style={styles.menuItem}
+                  style={[styles.menuItem, isRTL && styles.menuItemRTL]}
                   onPress={() => handleMenuPress("mushaf_type")}
                 >
                   <Ionicons name="book-outline" size={22} color={accentColor} />
-                  <Text style={[styles.menuLabel, { color: textColor }]}>
+                  <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                     {t("mosshaf_type", lang)}
                   </Text>
-                  <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
                 </Pressable>
                 <View style={[styles.inlineRow, { borderTopColor: borderColor }]}>
                   {MUSHAFS.map((m) => (
@@ -145,77 +146,82 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
 
               {/* 2. Bookmarks */}
               <Pressable
-                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
                 onPress={() => handleMenuPress("bookmarks")}
               >
                 <Ionicons name="bookmark-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }]}>
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("favs", lang)}
                 </Text>
-                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
               {/* 3. Tafsir */}
               <Pressable
-                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
                 onPress={() => handleMenuPress("tafsir")}
               >
                 <Ionicons name="document-text-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }]}>
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("tafsir", lang)}
                 </Text>
-                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
               {/* 4. Recitation */}
               <Pressable
-                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
                 onPress={() => handleMenuPress("recitation")}
               >
                 <Ionicons name="headset-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }]}>
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("telawa", lang)}
                 </Text>
-                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
               {/* Recordings */}
               <Pressable
-                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
                 onPress={() => handleMenuPress("recordings")}
               >
                 <Ionicons name="mic-circle-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }]}>
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("my_recordings", lang)}
                 </Text>
-                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
               {/* Khatma */}
               <Pressable
-                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
                 onPress={() => handleMenuPress("khatma")}
               >
                 <Ionicons name="calendar-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }]}>
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("khatma", lang)}
                 </Text>
-                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
               {/* 5. Theme */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
-                  style={styles.menuItem}
+                  style={[styles.menuItem, isRTL && styles.menuItemRTL]}
                   onPress={() => handleMenuPress("theme")}
                 >
                   <Ionicons name="color-palette-outline" size={22} color={accentColor} />
-                  <Text style={[styles.menuLabel, { color: textColor }]}>
+                  <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                     {t("theme", lang)}
                   </Text>
-                  <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
                 </Pressable>
-                <View style={[styles.themeRow, { borderTopColor: borderColor }]}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.themeRow}
+                  style={[styles.themeScrollView, { borderTopColor: borderColor }]}
+                >
                   {THEMES.map((th, idx) => (
                     <Pressable
                       key={idx}
@@ -238,20 +244,20 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                       )}
                     </Pressable>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               {/* 6. Language */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
-                  style={styles.menuItem}
+                  style={[styles.menuItem, isRTL && styles.menuItemRTL]}
                   onPress={() => handleMenuPress("language")}
                 >
                   <Ionicons name="language-outline" size={22} color={accentColor} />
-                  <Text style={[styles.menuLabel, { color: textColor }]}>
+                  <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                     {t("choose_lang", lang)}
                   </Text>
-                  <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
                 </Pressable>
                 <View style={[styles.langRow, { borderTopColor: borderColor }]}>
                   {LANGUAGES.map((l) => (
@@ -295,14 +301,26 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
 
               {/* 7. Settings */}
               <Pressable
-                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
                 onPress={() => handleMenuPress("settings")}
               >
                 <Ionicons name="settings-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }]}>
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("settings", lang)}
                 </Text>
-                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* 8. About */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("about")}
+              >
+                <Ionicons name="information-circle-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("about", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
             </View>
 
@@ -389,6 +407,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "left",
   },
+  menuItemRTL: {
+    flexDirection: "row-reverse",
+  },
+  menuLabelRTL: {
+    textAlign: "right",
+  },
   // Inline Mushaf selection
   inlineRow: {
     flexDirection: "row",
@@ -416,14 +440,15 @@ const styles = StyleSheet.create({
     marginEnd: 2,
   },
   // Theme circles
+  themeScrollView: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   themeRow: {
     flexDirection: "row",
-    justifyContent: "center",
     paddingHorizontal: 14,
     paddingBottom: 14,
     paddingTop: 10,
-    gap: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
+    gap: 10,
   },
   themeCircle: {
     width: 36,

@@ -200,4 +200,11 @@ export default {
   rob3_word: "ربع",
   khatma_complete: "تمت الختمة بحمد الله",
   of_total: "من",
+  // About
+  about: "حول التطبيق",
+  developer: "المطور",
+  links: "الروابط",
+  privacy_policy: "سياسة الخصوصية",
+  open_source: "مشروع مفتوح المصدر",
+  libraries_used: "المكتبات المستخدمة",
 };

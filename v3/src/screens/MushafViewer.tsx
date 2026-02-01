@@ -103,12 +103,28 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
     []
   );
 
+  // Ref to distinguish internal scroll (user swiping) from external page changes
+  const isInternalScrollRef = useRef(false);
+
   const scrollToPage = useCallback((targetPage: number) => {
     const idx = pages.findIndex((p) => p.id === targetPage);
     if (idx >= 0 && flatListRef.current) {
+      isInternalScrollRef.current = true;
       flatListRef.current.scrollToIndex({ index: idx, animated: true });
     }
   }, [pages]);
+
+  // Auto-scroll when currentPage changes from an external source (e.g. returning from another screen)
+  useEffect(() => {
+    if (isInternalScrollRef.current) {
+      isInternalScrollRef.current = false;
+      return;
+    }
+    const idx = pages.findIndex((p) => p.id === currentPage);
+    if (idx >= 0 && flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index: idx, animated: false });
+    }
+  }, [currentPage, pages]);
 
   // Long press handler from QuranPage
   const handleLongPressAya = useCallback((sura: number, aya: number, page: number) => {
@@ -132,14 +148,16 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
 
   const handleBookmark = useCallback(() => {
     if (!longPressInfo) return;
+    const text = getAyahText(longPressInfo.sura, longPressInfo.aya, quira) ?? undefined;
     useAppStore.getState().addBookmark({
       sura: longPressInfo.sura,
       aya: longPressInfo.aya,
       page: longPressInfo.page,
       timestamp: Date.now(),
+      text,
     });
     Alert.alert(t("bookmark_added", lang));
-  }, [longPressInfo, lang]);
+  }, [longPressInfo, lang, quira]);
 
   const handleTafsir = useCallback(() => {
     setTafsirModalVisible(true);
@@ -163,7 +181,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       screen === "search" ||
       screen === "bookmarks" ||
       screen === "recitation" ||
-      screen === "khatma"
+      screen === "khatma" ||
+      screen === "about"
     ) {
       if (onNavigate) onNavigate(screen);
     }

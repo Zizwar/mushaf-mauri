@@ -163,4 +163,11 @@ export default {
   confirm_delete_recording: "Supprimer cet enregistrement ?",
   profile_settings: "Paramètres des Profils",
   select_for_export: "Sélectionner pour Exporter",
+  // About
+  about: "À propos",
+  developer: "Développeur",
+  links: "Liens",
+  privacy_policy: "Politique de confidentialité",
+  open_source: "Projet Open Source",
+  libraries_used: "Bibliothèques utilisées",
 };

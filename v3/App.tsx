@@ -8,6 +8,7 @@ import SearchScreen from "./src/screens/SearchScreen";
 import BookmarksScreen from "./src/screens/BookmarksScreen";
 import RecitingScreen from "./src/screens/RecitingScreen";
 import KhatmaScreen from "./src/screens/KhatmaScreen";
+import AboutScreen from "./src/screens/AboutScreen";
 import { useAppStore } from "./src/store/useAppStore";
 
 type Screen =
@@ -18,7 +19,8 @@ type Screen =
   | "search"
   | "bookmarks"
   | "recitation"
-  | "khatma";
+  | "khatma"
+  | "about";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -52,12 +54,14 @@ export default function App() {
       ) : screen === "bookmarks" ? (
         <BookmarksScreen
           onGoBack={() => setScreen("mushaf")}
-          onNavigateToPage={(page) => handleNavigateToPage(page)}
+          onNavigateToPage={(page, sura, aya) => handleNavigateToPage(page, sura, aya)}
         />
       ) : screen === "recitation" ? (
         <RecitingScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "khatma" ? (
         <KhatmaScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "about" ? (
+        <AboutScreen onGoBack={() => setScreen("mushaf")} />
       ) : (
         <MushafViewer
           onGoBack={() => setScreen("home")}

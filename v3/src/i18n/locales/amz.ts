@@ -163,4 +163,11 @@ export default {
   confirm_delete_recording: "ⴰⴷ ⵜⴽⴽⵙⵜ ⴰⵙⵊⵍ ⴰⴷ?",
   profile_settings: "ⵉⵙⵖⵏⴰⵙ ⵏ ⵉⵙⵖⵏⴰⵙⵏ",
   select_for_export: "ⵙⵜⵉ ⵉ ⵓⵙⵙⵓⴼⵖ",
+  // About
+  about: "ⵅⴼ ⵓⵙⵏⴰⵙ",
+  developer: "ⴰⵎⵙⵏⴼⵍⵓⵍ",
+  links: "ⵉⵙⵖⵏⴰⵏ",
+  privacy_policy: "ⵜⴰⵙⵔⵜⵉⵜ ⵏ ⵜⵉⵏⵏⵓⵜⵍⴰ",
+  open_source: "ⴰⵙⵏⴼⴰⵔ ⴰⵏⵉⵍⵍⵉ",
+  libraries_used: "ⵜⵉⵎⴽⵜⵉⵜⵉⵏ ⵉⵜⵜⵓⵙⵎⵔⵙⵏ",
 };

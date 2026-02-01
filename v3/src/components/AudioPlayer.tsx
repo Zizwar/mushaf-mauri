@@ -25,7 +25,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
 import { getAudioKsuUri } from "../utils/api";
-import { getNextAya, getPrevAya } from "../utils/coordinates";
+import { getNextAya, getPrevAya, getPageBySuraAya } from "../utils/coordinates";
 // @ts-ignore
 import { QuranData } from "../data/quranData";
 // @ts-ignore
@@ -79,6 +79,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const quiraRef = useRef(useAppStore.getState().quira);
   const moqriIdRef = useRef(useAppStore.getState().moqriId);
   const reciterNameRef = useRef("");
+  const tekrarRef = useRef(useAppStore.getState().tekrar);
 
   // -- Local state --
   const [showFullPlayer, setShowFullPlayer] = useState(false);
@@ -98,12 +99,15 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const setIsPlaying = useAppStore((s) => s.setIsPlaying);
   const setRecordingState = useAppStore((s) => s.setRecordingState);
   const markAyahRecorded = useAppStore((s) => s.markAyahRecorded);
+  const tekrar = useAppStore((s) => s.tekrar);
+  const setTekrar = useAppStore((s) => s.setTekrar);
 
   const isUserRecording = moqriId === USER_RECORDING_ID;
 
   // Keep refs in sync for listener access
   quiraRef.current = quira;
   moqriIdRef.current = moqriId;
+  tekrarRef.current = tekrar;
 
   // -- Derived from status (replaces local state) --
   const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
@@ -183,6 +187,39 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     }).catch(() => {});
   }, []);
 
+  // -- Helper: play a given sura/aya using current refs --
+  const playAyaFromRef = useCallback((sura: number, aya: number, page: number) => {
+    useAppStore.getState().setSelectedAya({
+      sura, aya, page,
+      id: `s${sura}a${aya}z`,
+    });
+    onScrollToPage(page);
+    currentAyaRef.current = { sura, aya };
+
+    const mid = moqriIdRef.current;
+    const isUser = mid === USER_RECORDING_ID;
+    const q = quiraRef.current;
+    let uri: string | null;
+    if (isUser) {
+      const profileId = useAppStore.getState().activeProfileId;
+      uri = profileId ? getRecordingUri(sura, aya, q, profileId) : null;
+    } else {
+      uri = getAudioKsuUri(mid, sura, aya);
+    }
+
+    if (uri) {
+      player.replace({ uri });
+      player.play();
+      const sd = QuranData.Sura[sura];
+      try { player.setActiveForLockScreen(true, {
+        title: `${sd?.[0] ?? ""} - ${aya}`,
+        artist: reciterNameRef.current,
+      }, { showSeekForward: true, showSeekBackward: true }); } catch {}
+    } else {
+      useAppStore.getState().setIsPlaying(false);
+    }
+  }, [player, onScrollToPage]);
+
   // -- Auto-next listener: fires when current track finishes --
   useEffect(() => {
     const sub = player.addListener("playbackStatusUpdate", (s: AudioStatus) => {
@@ -195,6 +232,43 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       }
 
       const q = quiraRef.current;
+      const tk = tekrarRef.current;
+
+      // -- Tekrar (repetition) mode --
+      if (tk.active) {
+        const atEnd =
+          current.sura === tk.endSura && current.aya === tk.endAya;
+
+        if (atEnd) {
+          const nextRepeat = tk.currentRepeat + 1;
+          if (nextRepeat < tk.repeatCount) {
+            // More repeats to go - go back to start aya
+            useAppStore.getState().setTekrar({ ...tk, currentRepeat: nextRepeat });
+            const startPage = getPageBySuraAya(tk.startSura, tk.startAya, q);
+            playAyaFromRef(tk.startSura, tk.startAya, startPage);
+            return;
+          } else {
+            // All repeats done - stop
+            useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, active: false });
+            useAppStore.getState().setIsPlaying(false);
+            try { player.clearLockScreenControls(); } catch {}
+            return;
+          }
+        }
+
+        // Not at end aya yet - advance to next aya within range
+        const next = getNextAya(current.sura, current.aya, q);
+        if (next) {
+          playAyaFromRef(next.sura, next.aya, next.page);
+        } else {
+          useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, active: false });
+          useAppStore.getState().setIsPlaying(false);
+          try { player.clearLockScreenControls(); } catch {}
+        }
+        return;
+      }
+
+      // -- Normal mode (no tekrar) --
       const next = getNextAya(current.sura, current.aya, q);
       if (!next) {
         useAppStore.getState().setIsPlaying(false);
@@ -202,42 +276,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         return;
       }
 
-      // Update store
-      useAppStore.getState().setSelectedAya({
-        sura: next.sura,
-        aya: next.aya,
-        page: next.page,
-        id: `s${next.sura}a${next.aya}z`,
-      });
-      onScrollToPage(next.page);
-      currentAyaRef.current = { sura: next.sura, aya: next.aya };
-
-      // Get URI for next ayah
-      const mid = moqriIdRef.current;
-      const isUser = mid === USER_RECORDING_ID;
-      let uri: string | null;
-      if (isUser) {
-        const profileId = useAppStore.getState().activeProfileId;
-        uri = profileId ? getRecordingUri(next.sura, next.aya, q, profileId) : null;
-      } else {
-        uri = getAudioKsuUri(mid, next.sura, next.aya);
-      }
-
-      if (uri) {
-        player.replace({ uri });
-        player.play();
-        // Update lock screen
-        const sd = QuranData.Sura[next.sura];
-        try { player.setActiveForLockScreen(true, {
-          title: `${sd?.[0] ?? ""} - ${next.aya}`,
-          artist: reciterNameRef.current,
-        }, { showSeekForward: true, showSeekBackward: true }); } catch {}
-      } else {
-        useAppStore.getState().setIsPlaying(false);
-      }
+      playAyaFromRef(next.sura, next.aya, next.page);
     });
     return () => sub.remove();
-  }, [player, onScrollToPage]);
+  }, [player, playAyaFromRef]);
 
   // ===========================================================================
   // Play a specific aya
@@ -436,11 +478,33 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     (id: string) => {
       setMoqriId(id);
       setShowReciterModal(false);
-      if (isPlaying && selectedAya) {
-        playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
+      // Always stop current audio and replay with new reciter
+      if (selectedAya) {
+        player.pause();
+        // Use `id` directly instead of `moqriId` from store (stale closure)
+        const isUser = id === USER_RECORDING_ID;
+        let uri: string | null;
+        if (isUser) {
+          const profileId = useAppStore.getState().activeProfileId;
+          if (!profileId) return;
+          uri = getRecordingUri(selectedAya.sura, selectedAya.aya, quira, profileId);
+          if (!uri) return;
+        } else {
+          uri = getAudioKsuUri(id, selectedAya.sura, selectedAya.aya);
+        }
+        currentAyaRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
+        player.replace({ uri });
+        player.play();
+        setIsPlaying(true);
+        const sd = QuranData.Sura[selectedAya.sura];
+        const name = reciters.find((r) => r.id === id)?.voice ?? id;
+        try { player.setActiveForLockScreen(true, {
+          title: `${sd?.[0] ?? ""} - ${selectedAya.aya}`,
+          artist: name,
+        }, { showSeekForward: true, showSeekBackward: true }); } catch {}
       }
     },
-    [isPlaying, selectedAya, setMoqriId, playAya],
+    [selectedAya, quira, player, setMoqriId, setIsPlaying, reciters],
   );
 
   // ===========================================================================

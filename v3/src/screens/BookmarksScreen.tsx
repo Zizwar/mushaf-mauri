@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,8 @@ import {
   FlatList,
   StyleSheet,
   Alert,
+  Modal,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -19,7 +21,7 @@ const ACCENT = "#1a5c2e";
 
 interface BookmarksScreenProps {
   onGoBack: () => void;
-  onNavigateToPage?: (page: number) => void;
+  onNavigateToPage?: (page: number, sura?: number, aya?: number) => void;
 }
 
 function loadBookmarks(): Bookmark[] {
@@ -44,6 +46,7 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
   const bookmarks = useAppStore((s) => s.bookmarks);
   const setBookmarks = useAppStore((s) => s.setBookmarks);
   const removeBookmark = useAppStore((s) => s.removeBookmark);
+  const updateBookmarkNote = useAppStore((s) => s.updateBookmarkNote);
 
   const isDark = !!theme.night;
   const bgColor = isDark ? "#0d0d1a" : "#f5f5f5";
@@ -51,6 +54,11 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";
+
+  // Note editing modal state
+  const [noteModalVisible, setNoteModalVisible] = useState(false);
+  const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+  const [noteText, setNoteText] = useState("");
 
   // Load bookmarks from file on mount
   useEffect(() => {
@@ -76,17 +84,32 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
     ]);
   };
 
-  const handleGoToPage = (page: number) => {
+  const handleGoToPage = (page: number, sura: number, aya: number) => {
     if (onNavigateToPage) {
-      onNavigateToPage(page);
+      onNavigateToPage(page, sura, aya);
     }
     onGoBack();
+  };
+
+  const handleEditNote = (bookmark: Bookmark) => {
+    setEditingBookmark(bookmark);
+    setNoteText(bookmark.note ?? "");
+    setNoteModalVisible(true);
+  };
+
+  const handleSaveNote = () => {
+    if (editingBookmark) {
+      updateBookmarkNote(editingBookmark.sura, editingBookmark.aya, noteText);
+    }
+    setNoteModalVisible(false);
+    setEditingBookmark(null);
+    setNoteText("");
   };
 
   const renderItem = ({ item }: { item: Bookmark }) => (
     <Pressable
       style={[styles.card, { backgroundColor: cardBg, borderColor }]}
-      onPress={() => handleGoToPage(item.page)}
+      onPress={() => handleGoToPage(item.page, item.sura, item.aya)}
     >
       <View style={styles.cardContent}>
         <View style={styles.cardInfo}>
@@ -96,14 +119,35 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
           <Text style={[styles.details, { color: mutedColor }]}>
             {t("aya_s", lang)} {item.aya} • {t("page", lang)} {item.page}
           </Text>
+          {item.text ? (
+            <Text style={[styles.ayahPreview, { color: mutedColor }]} numberOfLines={1}>
+              {item.text}
+            </Text>
+          ) : null}
+          {item.note ? (
+            <Pressable onPress={() => handleEditNote(item)}>
+              <Text style={[styles.noteText, { color: ACCENT }]} numberOfLines={1}>
+                {item.note}
+              </Text>
+            </Pressable>
+          ) : null}
         </View>
-        <Pressable
-          onPress={() => handleRemove(item.sura, item.aya)}
-          hitSlop={10}
-          style={styles.removeBtn}
-        >
-          <Ionicons name="trash-outline" size={20} color="#d32f2f" />
-        </Pressable>
+        <View style={styles.cardActions}>
+          <Pressable
+            onPress={() => handleEditNote(item)}
+            hitSlop={10}
+            style={styles.actionBtn}
+          >
+            <Ionicons name={item.note ? "create-outline" : "chatbubble-outline"} size={18} color={ACCENT} />
+          </Pressable>
+          <Pressable
+            onPress={() => handleRemove(item.sura, item.aya)}
+            hitSlop={10}
+            style={styles.actionBtn}
+          >
+            <Ionicons name="trash-outline" size={20} color="#d32f2f" />
+          </Pressable>
+        </View>
       </View>
     </Pressable>
   );
@@ -137,6 +181,47 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
           showsVerticalScrollIndicator={false}
         />
       )}
+
+      {/* Note Edit Modal */}
+      <Modal
+        visible={noteModalVisible}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+        onRequestClose={() => setNoteModalVisible(false)}
+      >
+        <View style={styles.noteModalOverlay}>
+          <View style={[styles.noteModalContent, { backgroundColor: cardBg }]}>
+            <Text style={[styles.noteModalTitle, { color: textColor }]}>
+              {editingBookmark?.note ? t("edit_note", lang) : t("add_note", lang)}
+            </Text>
+            <TextInput
+              style={[styles.noteInput, { color: textColor, borderColor }]}
+              value={noteText}
+              onChangeText={setNoteText}
+              placeholder={t("note_placeholder", lang)}
+              placeholderTextColor={mutedColor}
+              multiline
+              autoFocus
+              textAlignVertical="top"
+            />
+            <View style={styles.noteModalButtons}>
+              <Pressable
+                onPress={() => setNoteModalVisible(false)}
+                style={[styles.noteModalBtn, { borderColor }]}
+              >
+                <Text style={{ color: mutedColor }}>{t("cancel", lang)}</Text>
+              </Pressable>
+              <Pressable
+                onPress={handleSaveNote}
+                style={[styles.noteModalBtn, { backgroundColor: ACCENT }]}
+              >
+                <Text style={{ color: "#fff", fontWeight: "600" }}>{t("save_note", lang)}</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -189,9 +274,25 @@ const styles = StyleSheet.create({
   details: {
     fontSize: 13,
   },
-  removeBtn: {
-    width: 40,
-    height: 40,
+  ayahPreview: {
+    fontSize: 13,
+    marginTop: 4,
+    writingDirection: "rtl",
+  },
+  noteText: {
+    fontSize: 12,
+    marginTop: 4,
+    fontStyle: "italic",
+  },
+  cardActions: {
+    flexDirection: "column",
+    alignItems: "center",
+    gap: 8,
+    marginLeft: 8,
+  },
+  actionBtn: {
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -203,5 +304,46 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
+  },
+  // Note modal
+  noteModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  noteModalContent: {
+    width: "100%",
+    borderRadius: 16,
+    padding: 20,
+  },
+  noteModalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    minHeight: 100,
+    fontSize: 15,
+    writingDirection: "rtl",
+    textAlign: "right",
+  },
+  noteModalButtons: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 14,
+  },
+  noteModalBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "transparent",
   },
 });
