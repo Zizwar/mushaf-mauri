@@ -47,6 +47,9 @@ interface AppState {
   activeProfileId: string | null;
   showRecordingHighlights: boolean;
 
+  // Pending play request (from action modal etc.)
+  pendingPlayAya: { sura: number; aya: number; page: number } | null;
+
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
   setTheme: (theme: Theme) => void;
@@ -62,6 +65,7 @@ interface AppState {
   setRecordingProfiles: (profiles: RecordingProfile[]) => void;
   setActiveProfileId: (id: string | null) => void;
   setShowRecordingHighlights: (show: boolean) => void;
+  setPendingPlayAya: (aya: { sura: number; aya: number; page: number } | null) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -90,6 +94,7 @@ export const useAppStore = create<AppState>((set) => ({
   recordingProfiles: [],
   activeProfileId: null,
   showRecordingHighlights: true,
+  pendingPlayAya: null,
 
   setLang: (lang) => set({ lang }),
   setQuira: (quira) => set({ quira }),
@@ -119,4 +124,5 @@ export const useAppStore = create<AppState>((set) => ({
   setActiveProfileId: (activeProfileId) => set({ activeProfileId }),
   setShowRecordingHighlights: (showRecordingHighlights) =>
     set({ showRecordingHighlights }),
+  setPendingPlayAya: (pendingPlayAya) => set({ pendingPlayAya }),
 }));

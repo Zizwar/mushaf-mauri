@@ -11,7 +11,15 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import { Audio } from "expo-av";
+import {
+  useAudioPlayer,
+  useAudioPlayerStatus,
+  useAudioRecorder,
+  setAudioModeAsync,
+  requestRecordingPermissionsAsync,
+  RecordingPresets,
+  type AudioStatus,
+} from "expo-audio";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
@@ -58,18 +66,22 @@ interface AudioPlayerProps {
 // Component
 // ---------------------------------------------------------------------------
 export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
+  // -- expo-audio player & recorder (hooks manage lifecycle) --
+  const player = useAudioPlayer(null);
+  const status = useAudioPlayerStatus(player);
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
   // -- Refs --
-  const soundRef = useRef<Audio.Sound | null>(null);
   const isUnmountedRef = useRef(false);
   const currentAyaRef = useRef<{ sura: number; aya: number } | null>(null);
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  // Refs for values needed inside the didJustFinish listener
+  const quiraRef = useRef(useAppStore.getState().quira);
+  const moqriIdRef = useRef(useAppStore.getState().moqriId);
+  const reciterNameRef = useRef("");
 
   // -- Local state --
   const [showFullPlayer, setShowFullPlayer] = useState(false);
   const [showReciterModal, setShowReciterModal] = useState(false);
-  const [positionMillis, setPositionMillis] = useState(0);
-  const [durationMillis, setDurationMillis] = useState(0);
-  const [isBuffering, setIsBuffering] = useState(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   // -- Store --
@@ -87,6 +99,13 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const markAyahRecorded = useAppStore((s) => s.markAyahRecorded);
 
   const isUserRecording = moqriId === USER_RECORDING_ID;
+
+  // Keep refs in sync for listener access
+  quiraRef.current = quira;
+  moqriIdRef.current = moqriId;
+
+  // -- Derived from status (replaces local state) --
+  const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
 
   // -- Derived theme values --
   const isDark = !!theme.night;
@@ -129,6 +148,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     () => reciters.find((r) => r.id === moqriId)?.voice ?? moqriId,
     [reciters, moqriId],
   );
+  reciterNameRef.current = currentReciterName;
 
   // -- Sura metadata --
   const suraData = selectedAya ? QuranData.Sura[selectedAya.sura] : null;
@@ -138,127 +158,126 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     ? getAyahText(selectedAya.sura, selectedAya.aya, quira)
     : null;
 
-  // -- Progress fraction --
-  const progress = durationMillis > 0 ? positionMillis / durationMillis : 0;
-
   // ===========================================================================
-  // Audio helpers
+  // Audio setup
   // ===========================================================================
-  const cleanup = useCallback(async () => {
-    if (soundRef.current) {
-      try {
-        await soundRef.current.unloadAsync();
-      } catch {
-        // ignore
-      }
-      soundRef.current = null;
-    }
-    if (!isUnmountedRef.current) {
-      setPositionMillis(0);
-      setDurationMillis(0);
-      setIsBuffering(false);
-    }
-  }, []);
 
   // Unmount guard
   useEffect(() => {
     isUnmountedRef.current = false;
     return () => {
       isUnmountedRef.current = true;
-      cleanup();
-      // Stop any ongoing recording
-      if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
-        recordingRef.current = null;
-      }
+      // Note: useAudioPlayer hook auto-releases the player on unmount
     };
-  }, [cleanup]);
+  }, []);
 
-  // Configure audio session once
+  // Configure audio session once for background playback
   useEffect(() => {
-    Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      allowsRecordingIOS: true,
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      allowsRecording: true,
+      interruptionMode: "doNotMix",
+      shouldRouteThroughEarpiece: false,
     }).catch(() => {});
   }, []);
 
-  // -- Play a specific aya --
-  const playAya = useCallback(
-    async (sura: number, aya: number, page: number) => {
-      await cleanup();
-      currentAyaRef.current = { sura, aya };
+  // -- Auto-next listener: fires when current track finishes --
+  useEffect(() => {
+    const sub = player.addListener("playbackStatusUpdate", (s: AudioStatus) => {
+      if (!s.didJustFinish || isUnmountedRef.current) return;
 
-      let uri: string;
-
-      if (isUserRecording) {
-        const profileId = useAppStore.getState().activeProfileId;
-        if (!profileId) return;
-        const localUri = getRecordingUri(sura, aya, quira, profileId);
-        if (!localUri) {
-          // No recording for this ayah
-          return;
-        }
-        uri = localUri;
-      } else {
-        uri = getAudioKsuUri(moqriId, sura, aya);
-      }
-
-      try {
-        setIsBuffering(true);
-        const { sound } = await Audio.Sound.createAsync(
-          { uri },
-          { shouldPlay: true },
-        );
-        if (isUnmountedRef.current) {
-          await sound.unloadAsync();
-          return;
-        }
-        soundRef.current = sound;
-        setIsPlaying(true);
-        setIsBuffering(false);
-
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (isUnmountedRef.current) return;
-          if (!status.isLoaded) return;
-
-          setPositionMillis(status.positionMillis ?? 0);
-          setDurationMillis(status.durationMillis ?? 0);
-          setIsBuffering(status.isBuffering ?? false);
-
-          if (status.didJustFinish) {
-            handleAutoNext(sura, aya);
-          }
-        });
-      } catch {
-        if (!isUnmountedRef.current) {
-          setIsPlaying(false);
-          setIsBuffering(false);
-        }
-      }
-    },
-    [moqriId, quira, isUserRecording, cleanup, setIsPlaying],
-  );
-
-  // -- Auto-play next on finish --
-  const handleAutoNext = useCallback(
-    async (currentSura: number, currentAya: number) => {
-      const next = getNextAya(currentSura, currentAya, quira);
-      if (!next) {
-        setIsPlaying(false);
+      const current = currentAyaRef.current;
+      if (!current) {
+        useAppStore.getState().setIsPlaying(false);
         return;
       }
-      setSelectedAya({
+
+      const q = quiraRef.current;
+      const next = getNextAya(current.sura, current.aya, q);
+      if (!next) {
+        useAppStore.getState().setIsPlaying(false);
+        try { player.clearLockScreenControls(); } catch {}
+        return;
+      }
+
+      // Update store
+      useAppStore.getState().setSelectedAya({
         sura: next.sura,
         aya: next.aya,
         page: next.page,
         id: `s${next.sura}a${next.aya}z`,
       });
       onScrollToPage(next.page);
-      await playAya(next.sura, next.aya, next.page);
+      currentAyaRef.current = { sura: next.sura, aya: next.aya };
+
+      // Get URI for next ayah
+      const mid = moqriIdRef.current;
+      const isUser = mid === USER_RECORDING_ID;
+      let uri: string | null;
+      if (isUser) {
+        const profileId = useAppStore.getState().activeProfileId;
+        uri = profileId ? getRecordingUri(next.sura, next.aya, q, profileId) : null;
+      } else {
+        uri = getAudioKsuUri(mid, next.sura, next.aya);
+      }
+
+      if (uri) {
+        player.replace({ uri });
+        player.play();
+        // Update lock screen
+        const sd = QuranData.Sura[next.sura];
+        try { player.setActiveForLockScreen(true, {
+          title: `${sd?.[0] ?? ""} - ${next.aya}`,
+          artist: reciterNameRef.current,
+        }, { showSeekForward: true, showSeekBackward: true }); } catch {}
+      } else {
+        useAppStore.getState().setIsPlaying(false);
+      }
+    });
+    return () => sub.remove();
+  }, [player, onScrollToPage]);
+
+  // ===========================================================================
+  // Play a specific aya
+  // ===========================================================================
+  const playAya = useCallback(
+    (sura: number, aya: number, _page: number) => {
+      currentAyaRef.current = { sura, aya };
+
+      let uri: string | null;
+
+      if (isUserRecording) {
+        const profileId = useAppStore.getState().activeProfileId;
+        if (!profileId) return;
+        uri = getRecordingUri(sura, aya, quira, profileId);
+        if (!uri) return;
+      } else {
+        uri = getAudioKsuUri(moqriId, sura, aya);
+      }
+
+      player.replace({ uri });
+      player.play();
+      setIsPlaying(true);
+
+      // Lock screen controls for background playback
+      const sd = QuranData.Sura[sura];
+      try { player.setActiveForLockScreen(true, {
+        title: `${sd?.[0] ?? ""} - ${aya}`,
+        artist: currentReciterName,
+      }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     },
-    [quira, setSelectedAya, setIsPlaying, onScrollToPage, playAya],
+    [player, moqriId, quira, isUserRecording, setIsPlaying, currentReciterName],
   );
+
+  // -- Handle pending play requests (from action modal, etc.) --
+  const pendingPlayAya = useAppStore((s) => s.pendingPlayAya);
+  useEffect(() => {
+    if (pendingPlayAya) {
+      useAppStore.getState().setPendingPlayAya(null);
+      playAya(pendingPlayAya.sura, pendingPlayAya.aya, pendingPlayAya.page);
+    }
+  }, [pendingPlayAya, playAya]);
 
   // ===========================================================================
   // Recording helpers
@@ -276,42 +295,39 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     }
 
     try {
-      const permission = await Audio.requestPermissionsAsync();
+      const permission = await requestRecordingPermissionsAsync();
       if (!permission.granted) {
         Alert.alert(t("mic_permission", lang), t("mic_permission_msg", lang));
         return;
       }
 
       // Stop playback if any
-      await cleanup();
+      player.pause();
       setIsPlaying(false);
 
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        allowsRecordingIOS: true,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        allowsRecording: true,
+        interruptionMode: "doNotMix",
+        shouldRouteThroughEarpiece: false,
       });
 
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY
-      );
-      await recording.startAsync();
-      recordingRef.current = recording;
+      await recorder.prepareToRecordAsync();
+      recorder.record();
       setRecordingState("recording");
     } catch {
       setRecordingState("idle");
     }
-  }, [selectedAya, lang, cleanup, setIsPlaying, setRecordingState]);
+  }, [selectedAya, lang, quira, player, recorder, setIsPlaying, setRecordingState]);
 
   const stopRecording = useCallback(async () => {
-    if (!recordingRef.current || !selectedAya) return;
+    if (!selectedAya) return;
 
     setRecordingState("saving");
     try {
-      await recordingRef.current.stopAndUnloadAsync();
-      const uri = recordingRef.current.getURI();
-      recordingRef.current = null;
+      await recorder.stop();
+      const uri = recorder.uri;
 
       if (uri) {
         const profileId = useAppStore.getState().activeProfileId;
@@ -335,10 +351,9 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         onScrollToPage(next.page);
       }
     } catch {
-      recordingRef.current = null;
       setRecordingState("idle");
     }
-  }, [selectedAya, quira, setRecordingState, markAyahRecorded, setSelectedAya, onScrollToPage]);
+  }, [selectedAya, quira, recorder, setRecordingState, markAyahRecorded, setSelectedAya, onScrollToPage]);
 
   const handleMicPress = useCallback(() => {
     if (recordingState === "recording") {
@@ -351,38 +366,23 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // ===========================================================================
   // Playback controls
   // ===========================================================================
-  const handlePlayPause = useCallback(async () => {
+  const handlePlayPause = useCallback(() => {
     if (!selectedAya) return;
-    if (isPlaying) {
-      if (soundRef.current) {
-        try {
-          await soundRef.current.pauseAsync();
-        } catch {
-          // ignore
-        }
-      }
+    if (status.playing) {
+      player.pause();
       setIsPlaying(false);
+    } else if (status.isLoaded && status.currentTime > 0) {
+      // Resume existing playback
+      player.play();
+      setIsPlaying(true);
     } else {
-      // Try resuming existing sound first
-      if (soundRef.current) {
-        try {
-          const status = await soundRef.current.getStatusAsync();
-          if (status.isLoaded && status.positionMillis > 0) {
-            await soundRef.current.playAsync();
-            setIsPlaying(true);
-            return;
-          }
-        } catch {
-          // fall through to full reload
-        }
-      }
-      await playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
+      // Start fresh
+      playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
     }
-  }, [selectedAya, isPlaying, setIsPlaying, playAya]);
+  }, [selectedAya, status.playing, status.isLoaded, status.currentTime, player, setIsPlaying, playAya]);
 
-  const handleNext = useCallback(async () => {
+  const handleNext = useCallback(() => {
     if (!selectedAya) return;
-    await cleanup();
     const next = getNextAya(selectedAya.sura, selectedAya.aya, quira);
     if (!next) return;
     setSelectedAya({
@@ -393,13 +393,12 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     });
     onScrollToPage(next.page);
     if (isPlaying) {
-      await playAya(next.sura, next.aya, next.page);
+      playAya(next.sura, next.aya, next.page);
     }
-  }, [selectedAya, quira, isPlaying, cleanup, setSelectedAya, onScrollToPage, playAya]);
+  }, [selectedAya, quira, isPlaying, setSelectedAya, onScrollToPage, playAya]);
 
-  const handlePrev = useCallback(async () => {
+  const handlePrev = useCallback(() => {
     if (!selectedAya) return;
-    await cleanup();
     const prev = getPrevAya(selectedAya.sura, selectedAya.aya, quira);
     if (!prev) return;
     setSelectedAya({
@@ -410,29 +409,25 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     });
     onScrollToPage(prev.page);
     if (isPlaying) {
-      await playAya(prev.sura, prev.aya, prev.page);
+      playAya(prev.sura, prev.aya, prev.page);
     }
-  }, [selectedAya, quira, isPlaying, cleanup, setSelectedAya, onScrollToPage, playAya]);
+  }, [selectedAya, quira, isPlaying, setSelectedAya, onScrollToPage, playAya]);
 
-  const handleStop = useCallback(async () => {
-    await cleanup();
+  const handleStop = useCallback(() => {
+    player.pause();
+    player.replace(null);
+    try { player.clearLockScreenControls(); } catch {}
     setIsPlaying(false);
     setSelectedAya(null);
-  }, [cleanup, setIsPlaying, setSelectedAya]);
+  }, [player, setIsPlaying, setSelectedAya]);
 
   // -- Seek on progress bar tap (full player) --
   const handleSeek = useCallback(
     async (fraction: number) => {
-      if (!soundRef.current || durationMillis <= 0) return;
-      const seekTo = Math.floor(fraction * durationMillis);
-      try {
-        await soundRef.current.setPositionAsync(seekTo);
-        setPositionMillis(seekTo);
-      } catch {
-        // ignore
-      }
+      if (status.duration <= 0) return;
+      await player.seekTo(fraction * status.duration);
     },
-    [durationMillis],
+    [player, status.duration],
   );
 
   // -- Reciter change --
@@ -441,12 +436,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       setMoqriId(id);
       setShowReciterModal(false);
       if (isPlaying && selectedAya) {
-        cleanup().then(() => {
-          playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
-        });
+        playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
       }
     },
-    [isPlaying, selectedAya, setMoqriId, cleanup, playAya],
+    [isPlaying, selectedAya, setMoqriId, playAya],
   );
 
   // ===========================================================================
@@ -473,13 +466,13 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   }, [slideAnim]);
 
   // ===========================================================================
-  // Time formatting
+  // Time formatting (seconds input)
   // ===========================================================================
-  const formatTime = (ms: number): string => {
-    const totalSec = Math.floor(ms / 1000);
+  const formatTime = (sec: number): string => {
+    const totalSec = Math.floor(sec);
     const min = Math.floor(totalSec / 60);
-    const sec = totalSec % 60;
-    return `${min}:${sec < 10 ? "0" : ""}${sec}`;
+    const s = totalSec % 60;
+    return `${min}:${s < 10 ? "0" : ""}${s}`;
   };
 
   // ===========================================================================
@@ -534,7 +527,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             hitSlop={4}
             style={({ pressed }) => [styles.miniPlayBtn, pressed && styles.btnPressed]}
           >
-            {isBuffering ? (
+            {status.isBuffering ? (
               <Ionicons name="hourglass-outline" size={28} color={colors.accent} />
             ) : (
               <Ionicons
@@ -713,10 +706,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             </Pressable>
             <View style={styles.fullTimeRow}>
               <Text style={[styles.fullTimeText, { color: colors.fullSecondary }]}>
-                {formatTime(positionMillis)}
+                {formatTime(status.currentTime)}
               </Text>
               <Text style={[styles.fullTimeText, { color: colors.fullSecondary }]}>
-                {formatTime(durationMillis)}
+                {formatTime(status.duration)}
               </Text>
             </View>
           </View>
@@ -739,7 +732,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                 pressed && { opacity: 0.85 },
               ]}
             >
-              {isBuffering ? (
+              {status.isBuffering ? (
                 <Ionicons name="hourglass-outline" size={38} color="#ffffff" />
               ) : (
                 <Ionicons

@@ -12,7 +12,15 @@ import {
   StatusBar,
   Platform,
 } from "react-native";
-import { Audio } from "expo-av";
+import {
+  createAudioPlayer,
+  useAudioRecorder,
+  setAudioModeAsync,
+  requestRecordingPermissionsAsync,
+  RecordingPresets,
+  type AudioPlayer,
+  type AudioStatus,
+} from "expo-audio";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore, type RecordingProfile } from "../store/useAppStore";
@@ -88,9 +96,11 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   const setShowRecordingHighlights = useAppStore((s) => s.setShowRecordingHighlights);
   const setRecordedAyahs = useAppStore((s) => s.setRecordedAyahs);
 
+  // -- expo-audio recorder hook --
+  const recorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
+
   // -- Refs --
-  const soundRef = useRef<Audio.Sound | null>(null);
-  const recordingRef = useRef<Audio.Recording | null>(null);
+  const playerRef = useRef<AudioPlayer | null>(null);
   const flatListRef = useRef<FlatList>(null);
   const isUnmountedRef = useRef(false);
   const isSequentialRef = useRef(false);
@@ -207,21 +217,18 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   // -- Cleanup on unmount --
   useEffect(() => {
     isUnmountedRef.current = false;
-    Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      allowsRecordingIOS: true,
+    setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      allowsRecording: true,
+      interruptionMode: "doNotMix",
     }).catch(() => {});
     return () => {
       isUnmountedRef.current = true;
       isSequentialRef.current = false;
-      if (soundRef.current) {
-        soundRef.current.unloadAsync().catch(() => {});
-        soundRef.current = null;
-      }
-      if (recordingRef.current) {
-        recordingRef.current.stopAndUnloadAsync().catch(() => {});
-        recordingRef.current = null;
+      if (playerRef.current) {
+        playerRef.current.remove();
+        playerRef.current = null;
       }
     };
   }, []);
@@ -229,16 +236,12 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   // =========================================================================
   // Audio Playback
   // =========================================================================
-  const stopPlayback = useCallback(async () => {
+  const stopPlayback = useCallback(() => {
     isSequentialRef.current = false;
     setIsSequentialPlaying(false);
-    if (soundRef.current) {
-      try {
-        await soundRef.current.unloadAsync();
-      } catch {
-        /* ignore */
-      }
-      soundRef.current = null;
+    if (playerRef.current) {
+      playerRef.current.remove();
+      playerRef.current = null;
     }
     if (!isUnmountedRef.current) {
       setPlayingKey(null);
@@ -246,27 +249,27 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   }, []);
 
   const playSound = useCallback(
-    async (uri: string, key: string, mode: "user" | "compare") => {
-      await stopPlayback();
+    (uri: string, key: string, mode: "user" | "compare") => {
+      stopPlayback();
       try {
-        const { sound } = await Audio.Sound.createAsync(
-          { uri },
-          { shouldPlay: true }
-        );
+        const p = createAudioPlayer({ uri });
         if (isUnmountedRef.current) {
-          await sound.unloadAsync();
+          p.remove();
           return;
         }
-        soundRef.current = sound;
+        playerRef.current = p;
         setPlayingKey(key);
         setPlayMode(mode);
+        p.play();
 
-        sound.setOnPlaybackStatusUpdate((status) => {
+        p.addListener("playbackStatusUpdate", (s: AudioStatus) => {
           if (isUnmountedRef.current) return;
-          if (!status.isLoaded) return;
-          if (status.didJustFinish) {
+          if (s.didJustFinish) {
             setPlayingKey(null);
-            soundRef.current = null;
+            if (playerRef.current === p) {
+              p.remove();
+              playerRef.current = null;
+            }
             // Sequential advance
             if (isSequentialRef.current) {
               sequentialIndexRef.current++;
@@ -339,45 +342,43 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       if (!activeProfileId) return;
       if (recordingKey) return; // already recording
 
-      await stopPlayback();
+      stopPlayback();
 
       try {
-        const perm = await Audio.requestPermissionsAsync();
+        const perm = await requestRecordingPermissionsAsync();
         if (!perm.granted) {
           Alert.alert(t("mic_permission", lang), t("mic_permission_msg", lang));
           return;
         }
 
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: true,
-          allowsRecordingIOS: true,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: true,
+          allowsRecording: true,
+          interruptionMode: "doNotMix",
         });
 
-        const rec = new Audio.Recording();
-        await rec.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-        await rec.startAsync();
-        recordingRef.current = rec;
+        await recorder.prepareToRecordAsync();
+        recorder.record();
         setRecordingKey(item.key);
       } catch {
         setRecordingKey(null);
       }
     },
-    [activeProfileId, recordingKey, lang, stopPlayback]
+    [activeProfileId, recordingKey, lang, recorder, stopPlayback]
   );
 
   const handleStopReRecord = useCallback(
     async (sura: number, aya: number) => {
-      if (!recordingRef.current || !activeProfileId) return;
+      if (!activeProfileId) return;
       try {
-        await recordingRef.current.stopAndUnloadAsync();
-        const uri = recordingRef.current.getURI();
-        recordingRef.current = null;
+        await recorder.stop();
+        const uri = recorder.uri;
         if (uri) {
           saveRecording(uri, sura, aya, quira, activeProfileId);
         }
       } catch {
-        recordingRef.current = null;
+        // ignore
       }
       setRecordingKey(null);
       refreshData();

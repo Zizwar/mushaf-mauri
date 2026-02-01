@@ -122,8 +122,10 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
         sura: longPressInfo.sura,
         aya: longPressInfo.aya,
         page: longPressInfo.page,
-        id: `${longPressInfo.sura}_${longPressInfo.aya}`,
+        id: `s${longPressInfo.sura}a${longPressInfo.aya}z`,
       });
+      setActionModalVisible(false);
+      useAppStore.getState().setPendingPlayAya(longPressInfo);
     }
   }, [longPressInfo, setSelectedAya]);
 

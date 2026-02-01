@@ -10,16 +10,36 @@
       "backgroundColor": "#046f98"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#046f98"
       },
-      "package": "com.mushaf.mauri.v3"
+      "package": "com.mushaf.mauri.v3",
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "plugins": [
-      "expo-sqlite"
-    ]
+      "expo-sqlite",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Mushaf Mauri to access your microphone for recording recitation."
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "86d37205-c483-46ec-af9f-a874727f0c87"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/86d37205-c483-46ec-af9f-a874727f0c87"
+    }
   }
 }
