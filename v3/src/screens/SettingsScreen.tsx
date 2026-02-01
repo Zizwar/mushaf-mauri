@@ -9,7 +9,6 @@ import {
   Alert,
   Dimensions,
   StatusBar,
-  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,7 +21,6 @@ import {
   abortDownload,
 } from "../utils/imageCache";
 import { invalidateImageCacheSet } from "../components/QuranPage";
-import { listRecordings, deleteAllRecordings } from "../utils/recordings";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ACCENT = "#1a5c2e";
@@ -30,9 +28,10 @@ const TOTAL_PAGES = 604;
 
 interface SettingsScreenProps {
   onGoBack: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
-export default function SettingsScreen({ onGoBack }: SettingsScreenProps) {
+export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
@@ -41,12 +40,9 @@ export default function SettingsScreen({ onGoBack }: SettingsScreenProps) {
   const setImageDownloadProgress = useAppStore(
     (s) => s.setImageDownloadProgress
   );
-  const clearRecordedAyahs = useAppStore((s) => s.clearRecordedAyahs);
-
   const [cachedCount, setCachedCount] = useState(0);
   const [fromPage, setFromPage] = useState("1");
   const [toPage, setToPage] = useState(String(TOTAL_PAGES));
-  const [recordingCount, setRecordingCount] = useState(0);
 
   const isDark = !!theme.night;
   const bgColor = isDark ? "#0d0d1a" : "#f5f5f5";
@@ -61,7 +57,6 @@ export default function SettingsScreen({ onGoBack }: SettingsScreenProps) {
   // Load counts on mount and quira change
   useEffect(() => {
     setCachedCount(countDownloadedPages(quira));
-    setRecordingCount(listRecordings(quira).length);
   }, [quira]);
 
   const handleDownload = useCallback(async () => {
@@ -120,25 +115,6 @@ export default function SettingsScreen({ onGoBack }: SettingsScreenProps) {
       ]
     );
   }, [quira, lang]);
-
-  const handleDeleteRecordings = useCallback(() => {
-    Alert.alert(
-      t("delete_all_recordings", lang),
-      t("confirm_delete_recordings", lang),
-      [
-        { text: t("cancel", lang), style: "cancel" },
-        {
-          text: t("yes", lang),
-          style: "destructive",
-          onPress: () => {
-            deleteAllRecordings(quira);
-            clearRecordedAyahs();
-            setRecordingCount(0);
-          },
-        },
-      ]
-    );
-  }, [quira, lang, clearRecordedAyahs]);
 
   const progressFraction =
     progress.isDownloading && progress.total > 0
@@ -352,28 +328,18 @@ export default function SettingsScreen({ onGoBack }: SettingsScreenProps) {
         <Text style={[styles.sectionTitle, { color: mutedColor }]}>
           {t("my_recordings", lang)}
         </Text>
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <View style={styles.statusRow}>
+        <Pressable
+          style={[styles.card, { backgroundColor: cardBg, borderColor }]}
+          onPress={() => onNavigate?.("recordings")}
+        >
+          <View style={[styles.statusRow, { marginBottom: 0 }]}>
             <Ionicons name="mic-outline" size={22} color={ACCENT} />
-            <Text style={[styles.statusText, { color: textColor }]}>
-              {t("recorded_ayahs", lang)}: {recordingCount}
+            <Text style={[styles.statusText, { color: textColor, flex: 1 }]}>
+              {t("manage_recordings", lang)}
             </Text>
+            <Ionicons name="chevron-forward" size={20} color={mutedColor} />
           </View>
-
-          {recordingCount > 0 && (
-            <View style={styles.buttonRow}>
-              <Pressable
-                style={[styles.btn, styles.btnDanger]}
-                onPress={handleDeleteRecordings}
-              >
-                <Ionicons name="trash-outline" size={18} color="#fff" />
-                <Text style={styles.btnText}>
-                  {t("delete_all_recordings", lang)}
-                </Text>
-              </Pressable>
-            </View>
-          )}
-        </View>
+        </Pressable>
       </ScrollView>
     </SafeAreaView>
   );

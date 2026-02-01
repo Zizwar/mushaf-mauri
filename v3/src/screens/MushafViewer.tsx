@@ -20,7 +20,7 @@ import { useAppStore } from "../store/useAppStore";
 import { getTotalPages } from "../utils/coordinates";
 import { t } from "../i18n";
 import { getAyahText } from "../utils/ayahText";
-import { buildRecordedAyahSet } from "../utils/recordings";
+import { buildRecordedAyahSet, loadProfiles } from "../utils/recordings";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -40,11 +40,26 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
   const selectedAya = useAppStore((s) => s.selectedAya);
   const setSelectedAya = useAppStore((s) => s.setSelectedAya);
   const setRecordedAyahs = useAppStore((s) => s.setRecordedAyahs);
+  const activeProfileId = useAppStore((s) => s.activeProfileId);
 
-  // Hydrate recorded ayahs from filesystem on mount / quira change
+  // Load profiles from filesystem on mount / quira change
   useEffect(() => {
-    setRecordedAyahs(buildRecordedAyahSet(quira));
-  }, [quira, setRecordedAyahs]);
+    const profiles = loadProfiles(quira);
+    useAppStore.getState().setRecordingProfiles(profiles);
+    const currentActive = useAppStore.getState().activeProfileId;
+    if (!currentActive && profiles.length > 0) {
+      useAppStore.getState().setActiveProfileId(profiles[0].id);
+    }
+  }, [quira]);
+
+  // Hydrate recorded ayahs when active profile changes
+  useEffect(() => {
+    if (activeProfileId) {
+      setRecordedAyahs(buildRecordedAyahSet(quira, activeProfileId));
+    } else {
+      setRecordedAyahs({});
+    }
+  }, [quira, activeProfileId, setRecordedAyahs]);
 
   // Modal states
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -124,8 +139,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
 
   // Drawer navigation
   const handleDrawerNavigate = useCallback((screen: string) => {
-    if (screen === "settings" && onNavigate) {
-      onNavigate("settings");
+    if ((screen === "settings" || screen === "recordings") && onNavigate) {
+      onNavigate(screen);
     }
   }, [onNavigate]);
 

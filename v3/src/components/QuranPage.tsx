@@ -75,6 +75,7 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
   const selectedAya = useAppStore((s) => s.selectedAya);
   const theme = useAppStore((s) => s.theme);
   const recordedAyahs = useAppStore((s) => s.recordedAyahs);
+  const showRecordingHighlights = useAppStore((s) => s.showRecordingHighlights);
 
   const imageUri = useMemo(() => {
     if (!cachedPageSets[quira] || !cacheInitialized[quira]) {
@@ -107,6 +108,7 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
             position={pos}
             isSelected={selectedId === pos.wino.id}
             isRecorded={
+              showRecordingHighlights &&
               !!recordedAyahs[`s${pos.wino.sura}a${pos.wino.aya}`]
             }
             onLongPress={

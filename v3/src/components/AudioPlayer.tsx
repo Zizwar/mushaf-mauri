@@ -22,7 +22,7 @@ import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listVoiceMoqri } from "../data/listAuthor";
 import { getAyahText } from "../utils/ayahText";
-import { saveRecording, getRecordingUri } from "../utils/recordings";
+import { saveRecording, getRecordingUri, createProfile, loadProfiles } from "../utils/recordings";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -192,7 +192,9 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       let uri: string;
 
       if (isUserRecording) {
-        const localUri = getRecordingUri(sura, aya, quira);
+        const profileId = useAppStore.getState().activeProfileId;
+        if (!profileId) return;
+        const localUri = getRecordingUri(sura, aya, quira, profileId);
         if (!localUri) {
           // No recording for this ayah
           return;
@@ -264,6 +266,15 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const startRecording = useCallback(async () => {
     if (!selectedAya) return;
 
+    // Ensure active profile exists
+    let profileId = useAppStore.getState().activeProfileId;
+    if (!profileId) {
+      const profile = createProfile(quira, t("recite_user", lang));
+      profileId = profile.id;
+      useAppStore.getState().setActiveProfileId(profileId);
+      useAppStore.getState().setRecordingProfiles(loadProfiles(quira));
+    }
+
     try {
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) {
@@ -303,8 +314,11 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       recordingRef.current = null;
 
       if (uri) {
-        saveRecording(uri, selectedAya.sura, selectedAya.aya, quira);
-        markAyahRecorded(selectedAya.sura, selectedAya.aya);
+        const profileId = useAppStore.getState().activeProfileId;
+        if (profileId) {
+          saveRecording(uri, selectedAya.sura, selectedAya.aya, quira, profileId);
+          markAyahRecorded(selectedAya.sura, selectedAya.aya);
+        }
       }
 
       setRecordingState("idle");

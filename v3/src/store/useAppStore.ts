@@ -20,6 +20,12 @@ export interface ImageDownloadProgress {
 
 export type RecordingState = "idle" | "recording" | "saving";
 
+export interface RecordingProfile {
+  id: string;
+  name: string;
+  createdAt: string;
+}
+
 interface AppState {
   lang: LangKey;
   quira: Quira;
@@ -36,6 +42,11 @@ interface AppState {
   recordedAyahs: Record<string, boolean>; // key: "s{sura}a{aya}"
   recordingState: RecordingState;
 
+  // Recording profiles
+  recordingProfiles: RecordingProfile[];
+  activeProfileId: string | null;
+  showRecordingHighlights: boolean;
+
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
   setTheme: (theme: Theme) => void;
@@ -48,6 +59,9 @@ interface AppState {
   markAyahRecorded: (sura: number, aya: number) => void;
   clearRecordedAyahs: () => void;
   setRecordingState: (state: RecordingState) => void;
+  setRecordingProfiles: (profiles: RecordingProfile[]) => void;
+  setActiveProfileId: (id: string | null) => void;
+  setShowRecordingHighlights: (show: boolean) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -73,6 +87,10 @@ export const useAppStore = create<AppState>((set) => ({
   recordedAyahs: {},
   recordingState: "idle",
 
+  recordingProfiles: [],
+  activeProfileId: null,
+  showRecordingHighlights: true,
+
   setLang: (lang) => set({ lang }),
   setQuira: (quira) => set({ quira }),
   setTheme: (theme) => set({ theme }),
@@ -97,4 +115,8 @@ export const useAppStore = create<AppState>((set) => ({
     })),
   clearRecordedAyahs: () => set({ recordedAyahs: {} }),
   setRecordingState: (recordingState) => set({ recordingState }),
+  setRecordingProfiles: (recordingProfiles) => set({ recordingProfiles }),
+  setActiveProfileId: (activeProfileId) => set({ activeProfileId }),
+  setShowRecordingHighlights: (showRecordingHighlights) =>
+    set({ showRecordingHighlights }),
 }));

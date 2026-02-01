@@ -194,6 +194,18 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 <Ionicons name="chevron-back" size={16} color={mutedColor} />
               </Pressable>
 
+              {/* Recordings */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("recordings")}
+              >
+                <Ionicons name="mic-circle-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }]}>
+                  {t("my_recordings", lang)}
+                </Text>
+                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+              </Pressable>
+
               {/* 5. Theme */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
