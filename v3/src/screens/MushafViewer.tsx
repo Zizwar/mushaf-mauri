@@ -1,4 +1,4 @@
-import React, { useRef, useCallback, useMemo, useState } from "react";
+import React, { useRef, useCallback, useMemo, useState, useEffect } from "react";
 import {
   View,
   FlatList,
@@ -20,14 +20,16 @@ import { useAppStore } from "../store/useAppStore";
 import { getTotalPages } from "../utils/coordinates";
 import { t } from "../i18n";
 import { getAyahText } from "../utils/ayahText";
+import { buildRecordedAyahSet } from "../utils/recordings";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface MushafViewerProps {
   onGoBack?: () => void;
+  onNavigate?: (screen: string) => void;
 }
 
-export default function MushafViewer({ onGoBack }: MushafViewerProps) {
+export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps) {
   const flatListRef = useRef<FlatList>(null);
 
   const lang = useAppStore((s) => s.lang);
@@ -37,6 +39,12 @@ export default function MushafViewer({ onGoBack }: MushafViewerProps) {
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
   const selectedAya = useAppStore((s) => s.selectedAya);
   const setSelectedAya = useAppStore((s) => s.setSelectedAya);
+  const setRecordedAyahs = useAppStore((s) => s.setRecordedAyahs);
+
+  // Hydrate recorded ayahs from filesystem on mount / quira change
+  useEffect(() => {
+    setRecordedAyahs(buildRecordedAyahSet(quira));
+  }, [quira, setRecordedAyahs]);
 
   // Modal states
   const [drawerVisible, setDrawerVisible] = useState(false);
@@ -115,9 +123,11 @@ export default function MushafViewer({ onGoBack }: MushafViewerProps) {
   }, []);
 
   // Drawer navigation
-  const handleDrawerNavigate = useCallback((_screen: string) => {
-    // Future navigation - for now drawer actions (theme, lang, mushaf) work inline
-  }, []);
+  const handleDrawerNavigate = useCallback((screen: string) => {
+    if (screen === "settings" && onNavigate) {
+      onNavigate("settings");
+    }
+  }, [onNavigate]);
 
   const renderPage = useCallback(
     ({ item }: { item: { id: number } }) => {

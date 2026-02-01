@@ -7,7 +7,7 @@ import {
   Dimensions,
 } from "react-native";
 import { getPageCoordinates } from "../utils/coordinates";
-import { getImagePageUri } from "../utils/api";
+import { getImageUriSync, getCachedPageSet } from "../utils/imageCache";
 import { useAppStore } from "../store/useAppStore";
 import type { AyahPosition } from "../types";
 
@@ -26,10 +26,12 @@ const AyahOverlay = React.memo(
   ({
     position,
     isSelected,
+    isRecorded,
     onLongPress,
   }: {
     position: AyahPosition;
     isSelected: boolean;
+    isRecorded: boolean;
     onLongPress?: () => void;
   }) => {
     const setSelectedAya = useAppStore((s) => s.setSelectedAya);
@@ -56,6 +58,7 @@ const AyahOverlay = React.memo(
             width: position.width,
             height: position.height,
           },
+          isRecorded && !isSelected && styles.ayahRecorded,
           isSelected && styles.ayahSelected,
         ]}
       />
@@ -63,24 +66,38 @@ const AyahOverlay = React.memo(
   }
 );
 
+// Module-level cache for cached page sets
+let cachedPageSets: Record<string, Set<number>> = {};
+let cacheInitialized: Record<string, boolean> = {};
+
 function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
   const quira = useAppStore((s) => s.quira);
   const selectedAya = useAppStore((s) => s.selectedAya);
   const theme = useAppStore((s) => s.theme);
+  const recordedAyahs = useAppStore((s) => s.recordedAyahs);
 
-  const imageUri = useMemo(() => getImagePageUri(pageId, quira), [pageId, quira]);
-  const positions = useMemo(() => getPageCoordinates(pageId, quira), [pageId, quira]);
+  const imageUri = useMemo(() => {
+    if (!cachedPageSets[quira] || !cacheInitialized[quira]) {
+      cachedPageSets[quira] = getCachedPageSet(quira);
+      cacheInitialized[quira] = true;
+    }
+    return getImageUriSync(pageId, quira, cachedPageSets[quira]);
+  }, [pageId, quira]);
+
+  const positions = useMemo(
+    () => getPageCoordinates(pageId, quira),
+    [pageId, quira]
+  );
 
   const selectedId = selectedAya?.id ?? null;
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.backgroundColor }]}
+    >
       <Image
         source={{ uri: imageUri }}
-        style={[
-          styles.pageImage,
-          theme.night && styles.nightImage,
-        ]}
+        style={[styles.pageImage, theme.night && styles.nightImage]}
         resizeMode="stretch"
       />
       {isVisible &&
@@ -89,15 +106,36 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
             key={`${pos.id}_${index}`}
             position={pos}
             isSelected={selectedId === pos.wino.id}
+            isRecorded={
+              !!recordedAyahs[`s${pos.wino.sura}a${pos.wino.aya}`]
+            }
             onLongPress={
               onLongPressAya
-                ? () => onLongPressAya(pos.wino.sura, pos.wino.aya, pos.wino.page)
+                ? () =>
+                    onLongPressAya(
+                      pos.wino.sura,
+                      pos.wino.aya,
+                      pos.wino.page
+                    )
                 : undefined
             }
           />
         ))}
     </View>
   );
+}
+
+/**
+ * Call this to invalidate the cached page set (e.g., after downloading or deleting).
+ */
+export function invalidateImageCacheSet(quira?: string) {
+  if (quira) {
+    delete cachedPageSets[quira];
+    delete cacheInitialized[quira];
+  } else {
+    cachedPageSets = {};
+    cacheInitialized = {};
+  }
 }
 
 export default React.memo(QuranPage);
@@ -124,5 +162,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(66, 133, 244, 0.2)",
     borderWidth: 1,
     borderColor: "rgba(66, 133, 244, 0.3)",
+  },
+  ayahRecorded: {
+    backgroundColor: "rgba(76, 175, 80, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(76, 175, 80, 0.25)",
   },
 });

@@ -9,6 +9,7 @@ import {
   Animated,
   Dimensions,
   Platform,
+  Alert,
 } from "react-native";
 import { Audio } from "expo-av";
 import { Ionicons } from "@expo/vector-icons";
@@ -21,6 +22,7 @@ import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listVoiceMoqri } from "../data/listAuthor";
 import { getAyahText } from "../utils/ayahText";
+import { saveRecording, getRecordingUri } from "../utils/recordings";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -29,8 +31,10 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 // ---------------------------------------------------------------------------
 const ACCENT = "#4285f4";
 const ACCENT_LIGHT = "#e8f0fe";
+const RECORDING_COLOR = "#d32f2f";
 const MINI_HEIGHT = 64;
 const PROGRESS_HEIGHT = 3;
+const USER_RECORDING_ID = "__user_recording__";
 
 const TRANSLATION_KEYS = [
   "recite_hudhaify", "recite_husary", "recite_basfar", "recite_ayyoub",
@@ -40,7 +44,7 @@ const TRANSLATION_KEYS = [
   "recite_sudais", "recite_shuraym", "recite_maher", "recite_ajamy",
   "recite_juhanee", "recite_muhsin", "recite_abbad", "recite_yaser",
   "recite_rifai", "recite_ayman", "recite_moalim", "recite_mujawwad",
-  "recite_warsh", "recite_ibrahim_dosary", "recite_yassin",
+  "recite_warsh", "recite_ibrahim_dosary", "recite_yassin", "recite_user",
 ] as const;
 
 // ---------------------------------------------------------------------------
@@ -58,6 +62,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const soundRef = useRef<Audio.Sound | null>(null);
   const isUnmountedRef = useRef(false);
   const currentAyaRef = useRef<{ sura: number; aya: number } | null>(null);
+  const recordingRef = useRef<Audio.Recording | null>(null);
 
   // -- Local state --
   const [showFullPlayer, setShowFullPlayer] = useState(false);
@@ -74,9 +79,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const selectedAya = useAppStore((s) => s.selectedAya);
   const isPlaying = useAppStore((s) => s.isPlaying);
   const theme = useAppStore((s) => s.theme);
+  const recordingState = useAppStore((s) => s.recordingState);
   const setMoqriId = useAppStore((s) => s.setMoqriId);
   const setSelectedAya = useAppStore((s) => s.setSelectedAya);
   const setIsPlaying = useAppStore((s) => s.setIsPlaying);
+  const setRecordingState = useAppStore((s) => s.setRecordingState);
+  const markAyahRecorded = useAppStore((s) => s.markAyahRecorded);
+
+  const isUserRecording = moqriId === USER_RECORDING_ID;
 
   // -- Derived theme values --
   const isDark = !!theme.night;
@@ -156,6 +166,11 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     return () => {
       isUnmountedRef.current = true;
       cleanup();
+      // Stop any ongoing recording
+      if (recordingRef.current) {
+        recordingRef.current.stopAndUnloadAsync().catch(() => {});
+        recordingRef.current = null;
+      }
     };
   }, [cleanup]);
 
@@ -164,6 +179,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     Audio.setAudioModeAsync({
       playsInSilentModeIOS: true,
       staysActiveInBackground: true,
+      allowsRecordingIOS: true,
     }).catch(() => {});
   }, []);
 
@@ -173,7 +189,19 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       await cleanup();
       currentAyaRef.current = { sura, aya };
 
-      const uri = getAudioKsuUri(moqriId, sura, aya);
+      let uri: string;
+
+      if (isUserRecording) {
+        const localUri = getRecordingUri(sura, aya, quira);
+        if (!localUri) {
+          // No recording for this ayah
+          return;
+        }
+        uri = localUri;
+      } else {
+        uri = getAudioKsuUri(moqriId, sura, aya);
+      }
+
       try {
         setIsBuffering(true);
         const { sound } = await Audio.Sound.createAsync(
@@ -207,7 +235,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         }
       }
     },
-    [moqriId, cleanup, setIsPlaying],
+    [moqriId, quira, isUserRecording, cleanup, setIsPlaying],
   );
 
   // -- Auto-play next on finish --
@@ -229,6 +257,82 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     },
     [quira, setSelectedAya, setIsPlaying, onScrollToPage, playAya],
   );
+
+  // ===========================================================================
+  // Recording helpers
+  // ===========================================================================
+  const startRecording = useCallback(async () => {
+    if (!selectedAya) return;
+
+    try {
+      const permission = await Audio.requestPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert(t("mic_permission", lang), t("mic_permission_msg", lang));
+        return;
+      }
+
+      // Stop playback if any
+      await cleanup();
+      setIsPlaying(false);
+
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        allowsRecordingIOS: true,
+      });
+
+      const recording = new Audio.Recording();
+      await recording.prepareToRecordAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY
+      );
+      await recording.startAsync();
+      recordingRef.current = recording;
+      setRecordingState("recording");
+    } catch {
+      setRecordingState("idle");
+    }
+  }, [selectedAya, lang, cleanup, setIsPlaying, setRecordingState]);
+
+  const stopRecording = useCallback(async () => {
+    if (!recordingRef.current || !selectedAya) return;
+
+    setRecordingState("saving");
+    try {
+      await recordingRef.current.stopAndUnloadAsync();
+      const uri = recordingRef.current.getURI();
+      recordingRef.current = null;
+
+      if (uri) {
+        saveRecording(uri, selectedAya.sura, selectedAya.aya, quira);
+        markAyahRecorded(selectedAya.sura, selectedAya.aya);
+      }
+
+      setRecordingState("idle");
+
+      // Auto-advance to next ayah
+      const next = getNextAya(selectedAya.sura, selectedAya.aya, quira);
+      if (next) {
+        setSelectedAya({
+          sura: next.sura,
+          aya: next.aya,
+          page: next.page,
+          id: `s${next.sura}a${next.aya}z`,
+        });
+        onScrollToPage(next.page);
+      }
+    } catch {
+      recordingRef.current = null;
+      setRecordingState("idle");
+    }
+  }, [selectedAya, quira, setRecordingState, markAyahRecorded, setSelectedAya, onScrollToPage]);
+
+  const handleMicPress = useCallback(() => {
+    if (recordingState === "recording") {
+      stopRecording();
+    } else if (recordingState === "idle") {
+      startRecording();
+    }
+  }, [recordingState, startRecording, stopRecording]);
 
   // ===========================================================================
   // Playback controls
@@ -380,7 +484,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
           style={[
             styles.miniProgressFill,
             {
-              backgroundColor: colors.accent,
+              backgroundColor: recordingState === "recording" ? RECORDING_COLOR : colors.accent,
               width: `${Math.min(progress * 100, 100)}%` as any,
             },
           ]}
@@ -392,6 +496,9 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         <View style={styles.miniInfo}>
           <Text style={[styles.miniSuraName, { color: colors.miniText }]} numberOfLines={1}>
             {suraNameAr}
+            {recordingState === "recording" && (
+              <Text style={{ color: RECORDING_COLOR }}> ● </Text>
+            )}
           </Text>
           <Text style={[styles.miniAyaNumber, { color: colors.miniSecondary }]} numberOfLines={1}>
             {t("aya_s", lang)} {selectedAya.aya}
@@ -637,6 +744,54 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
               <Ionicons name="play-skip-forward" size={32} color={colors.fullText} />
             </Pressable>
           </View>
+
+          {/* Recording button in full player */}
+          <View style={styles.recordSection}>
+            <Pressable
+              onPress={handleMicPress}
+              style={({ pressed }) => [
+                styles.recordBtn,
+                {
+                  backgroundColor:
+                    recordingState === "recording"
+                      ? RECORDING_COLOR
+                      : isDark
+                      ? "#2a2a3e"
+                      : "#f0f0f0",
+                },
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Ionicons
+                name={
+                  recordingState === "recording"
+                    ? "stop"
+                    : recordingState === "saving"
+                    ? "hourglass-outline"
+                    : "mic"
+                }
+                size={22}
+                color={recordingState === "recording" ? "#fff" : RECORDING_COLOR}
+              />
+              <Text
+                style={[
+                  styles.recordBtnText,
+                  {
+                    color:
+                      recordingState === "recording"
+                        ? "#fff"
+                        : colors.fullText,
+                  },
+                ]}
+              >
+                {recordingState === "recording"
+                  ? t("stop_recording", lang)
+                  : recordingState === "saving"
+                  ? t("recording_saved", lang)
+                  : t("start_recording", lang)}
+              </Text>
+            </Pressable>
+          </View>
         </Animated.View>
       </Modal>
     );
@@ -685,6 +840,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             contentContainerStyle={styles.reciterListContent}
             renderItem={({ item }) => {
               const isActive = moqriId === item.id;
+              const isUser = item.id === USER_RECORDING_ID;
               return (
                 <Pressable
                   style={({ pressed }) => [
@@ -709,6 +865,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                         style={styles.reciterCheckIcon}
                       />
                     )}
+                    {isUser && !isActive && (
+                      <Ionicons
+                        name="mic"
+                        size={18}
+                        color={RECORDING_COLOR}
+                        style={styles.reciterCheckIcon}
+                      />
+                    )}
                     <Text
                       style={[
                         styles.reciterItemText,
@@ -716,6 +880,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                         isActive && {
                           color: colors.accent,
                           fontWeight: "700",
+                        },
+                        isUser && !isActive && {
+                          color: RECORDING_COLOR,
+                          fontWeight: "600",
                         },
                       ]}
                       numberOfLines={1}
@@ -964,7 +1132,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 32,
     paddingVertical: 16,
-    paddingBottom: Platform.OS === "ios" ? 48 : 32,
   },
   fullSideBtn: {
     width: 56,
@@ -984,6 +1151,25 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+  },
+
+  // Record section
+  recordSection: {
+    alignItems: "center",
+    paddingBottom: Platform.OS === "ios" ? 48 : 32,
+  },
+  recordBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 24,
+    gap: 8,
+  },
+  recordBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
 
   // ---------- Reciter Modal ----------
