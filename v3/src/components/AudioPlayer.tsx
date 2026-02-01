@@ -7,6 +7,7 @@ import {
   Modal,
   FlatList,
   Animated,
+  ScrollView,
   Dimensions,
   Platform,
   Alert,
@@ -645,12 +646,13 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                 {t("page", lang)} {selectedAya.page}
               </Text>
               {ayahText ? (
-                <Text
-                  style={[styles.fullAyahText, { color: colors.fullText }]}
-                  numberOfLines={4}
-                >
-                  {ayahText}
-                </Text>
+                <ScrollView style={styles.fullAyahScroll} nestedScrollEnabled>
+                  <Text
+                    style={[styles.fullAyahText, { color: colors.fullText }]}
+                  >
+                    {ayahText}
+                  </Text>
+                </ScrollView>
               ) : null}
             </View>
           </View>
@@ -1069,12 +1071,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "500",
   },
+  fullAyahScroll: {
+    maxHeight: 130,
+    marginTop: 12,
+  },
   fullAyahText: {
     fontSize: 18,
     lineHeight: 32,
     textAlign: "center",
     writingDirection: "rtl",
-    marginTop: 12,
     paddingHorizontal: 12,
     fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
   },

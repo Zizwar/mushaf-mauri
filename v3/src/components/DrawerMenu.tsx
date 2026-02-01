@@ -87,21 +87,6 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
               </Pressable>
             </View>
 
-            {/* App Identity */}
-            <View style={[styles.identitySection, { borderBottomColor: borderColor }]}>
-              <Image
-                source={require("../../assets/mauri.png")}
-                style={styles.appIcon}
-                resizeMode="contain"
-              />
-              <Text style={[styles.appTitle, { color: isNight ? "#ddd" : accentColor }]}>
-                {t("mushaf_mauri", lang)}
-              </Text>
-              <Text style={[styles.appDesc, { color: mutedColor }]}>
-                {t("desc", lang)}
-              </Text>
-            </View>
-
             {/* Menu Items */}
             <View style={styles.menuSection}>
               {/* 1. Mushaf Type */}
@@ -202,6 +187,18 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 <Ionicons name="mic-circle-outline" size={22} color={accentColor} />
                 <Text style={[styles.menuLabel, { color: textColor }]}>
                   {t("my_recordings", lang)}
+                </Text>
+                <Ionicons name="chevron-back" size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* Khatma */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("khatma")}
+              >
+                <Ionicons name="calendar-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }]}>
+                  {t("khatma", lang)}
                 </Text>
                 <Ionicons name="chevron-back" size={16} color={mutedColor} />
               </Pressable>
@@ -367,28 +364,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.4)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  // Identity
-  identitySection: {
-    alignItems: "center",
-    paddingVertical: 18,
-    paddingHorizontal: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  appIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  appTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    marginBottom: 2,
-  },
-  appDesc: {
-    fontSize: 12,
-    textAlign: "center",
   },
   // Menu
   menuSection: {

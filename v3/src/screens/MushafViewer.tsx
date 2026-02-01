@@ -21,6 +21,7 @@ import { getTotalPages } from "../utils/coordinates";
 import { t } from "../i18n";
 import { getAyahText } from "../utils/ayahText";
 import { buildRecordedAyahSet, loadProfiles } from "../utils/recordings";
+import { getFirstAyahOnPage } from "../utils/quranHelpers";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -130,10 +131,15 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
   }, [longPressInfo, setSelectedAya]);
 
   const handleBookmark = useCallback(() => {
-    const ayaText = longPressInfo ? getAyahText(longPressInfo.sura, longPressInfo.aya, quira) : null;
-    const header = `${t("bookmark", lang)}: ${t("sura_s", lang)} ${longPressInfo?.sura} - ${t("aya_s", lang)} ${longPressInfo?.aya}`;
-    Alert.alert(header, ayaText ?? "");
-  }, [longPressInfo, lang, quira]);
+    if (!longPressInfo) return;
+    useAppStore.getState().addBookmark({
+      sura: longPressInfo.sura,
+      aya: longPressInfo.aya,
+      page: longPressInfo.page,
+      timestamp: Date.now(),
+    });
+    Alert.alert(t("bookmark_added", lang));
+  }, [longPressInfo, lang]);
 
   const handleTafsir = useCallback(() => {
     setTafsirModalVisible(true);
@@ -141,10 +147,27 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
 
   // Drawer navigation
   const handleDrawerNavigate = useCallback((screen: string) => {
-    if ((screen === "settings" || screen === "recordings") && onNavigate) {
-      onNavigate(screen);
+    if (screen === "tafsir") {
+      // Open tafsir for the first ayah on the current page
+      const firstAyah = getFirstAyahOnPage(currentPage, quira);
+      if (firstAyah) {
+        setLongPressInfo({ sura: firstAyah.sura, aya: firstAyah.aya, page: currentPage });
+        setDrawerVisible(false);
+        setTimeout(() => setTafsirModalVisible(true), 300);
+      }
+      return;
     }
-  }, [onNavigate]);
+    if (
+      screen === "settings" ||
+      screen === "recordings" ||
+      screen === "search" ||
+      screen === "bookmarks" ||
+      screen === "recitation" ||
+      screen === "khatma"
+    ) {
+      if (onNavigate) onNavigate(screen);
+    }
+  }, [onNavigate, currentPage, quira]);
 
   const renderPage = useCallback(
     ({ item }: { item: { id: number } }) => {
@@ -194,14 +217,25 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           {currentPage}
         </Text>
 
-        {/* Menu button */}
-        <Pressable
-          onPress={() => setDrawerVisible(true)}
-          hitSlop={10}
-          style={styles.headerBtn}
-        >
-          <Ionicons name="menu-outline" size={22} color={theme.color} />
-        </Pressable>
+        <View style={styles.headerRight}>
+          {/* Search button */}
+          <Pressable
+            onPress={() => onNavigate?.("search")}
+            hitSlop={10}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="search-outline" size={20} color={theme.color} />
+          </Pressable>
+
+          {/* Menu button */}
+          <Pressable
+            onPress={() => setDrawerVisible(true)}
+            hitSlop={10}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="menu-outline" size={22} color={theme.color} />
+          </Pressable>
+        </View>
       </View>
 
       {/* Quran Pages */}
@@ -288,6 +322,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 18,
+  },
+  headerRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
   },
   headerText: {
     fontSize: 15,

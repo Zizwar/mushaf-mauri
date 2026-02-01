@@ -5,7 +5,7 @@ import { openDatabaseAsync } from "expo-sqlite";
 // URL Builders
 // ==============================================================
 
-const BASE_URL = "http://quran.ksu.edu.sa/";
+const BASE_URL = "https://quran.ksu.edu.sa/";
 
 export const getTafsirUri = (
   author: string,

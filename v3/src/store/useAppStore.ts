@@ -20,6 +20,33 @@ export interface ImageDownloadProgress {
 
 export type RecordingState = "idle" | "recording" | "saving";
 
+export interface Bookmark {
+  sura: number;
+  aya: number;
+  page: number;
+  timestamp: number;
+}
+
+export interface TekrarConfig {
+  startSura: number;
+  startAya: number;
+  endSura: number;
+  endAya: number;
+  repeatCount: number;
+  currentRepeat: number;
+  active: boolean;
+}
+
+export interface KhatmaState {
+  juz: number;
+  day: number;
+  startRob3: number;
+  endRob3: number;
+  rob3Day: number;
+  selection: number;
+  ok: boolean;
+}
+
 export interface RecordingProfile {
   id: string;
   name: string;
@@ -50,6 +77,15 @@ interface AppState {
   // Pending play request (from action modal etc.)
   pendingPlayAya: { sura: number; aya: number; page: number } | null;
 
+  // Bookmarks
+  bookmarks: Bookmark[];
+
+  // Tekrar (repetition for memorization)
+  tekrar: TekrarConfig;
+
+  // Khatma (Quran completion tracking)
+  khatma: KhatmaState;
+
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
   setTheme: (theme: Theme) => void;
@@ -66,6 +102,11 @@ interface AppState {
   setActiveProfileId: (id: string | null) => void;
   setShowRecordingHighlights: (show: boolean) => void;
   setPendingPlayAya: (aya: { sura: number; aya: number; page: number } | null) => void;
+  addBookmark: (bookmark: Bookmark) => void;
+  removeBookmark: (sura: number, aya: number) => void;
+  setBookmarks: (bookmarks: Bookmark[]) => void;
+  setTekrar: (tekrar: TekrarConfig) => void;
+  setKhatma: (khatma: KhatmaState) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -96,6 +137,26 @@ export const useAppStore = create<AppState>((set) => ({
   showRecordingHighlights: true,
   pendingPlayAya: null,
 
+  bookmarks: [],
+  tekrar: {
+    startSura: 1,
+    startAya: 1,
+    endSura: 1,
+    endAya: 7,
+    repeatCount: 3,
+    currentRepeat: 0,
+    active: false,
+  },
+  khatma: {
+    juz: 1,
+    day: 30,
+    startRob3: 0,
+    endRob3: 8,
+    rob3Day: 8,
+    selection: 0,
+    ok: false,
+  },
+
   setLang: (lang) => set({ lang }),
   setQuira: (quira) => set({ quira }),
   setTheme: (theme) => set({ theme }),
@@ -125,4 +186,21 @@ export const useAppStore = create<AppState>((set) => ({
   setShowRecordingHighlights: (showRecordingHighlights) =>
     set({ showRecordingHighlights }),
   setPendingPlayAya: (pendingPlayAya) => set({ pendingPlayAya }),
+  addBookmark: (bookmark) =>
+    set((state) => {
+      const exists = state.bookmarks.some(
+        (b) => b.sura === bookmark.sura && b.aya === bookmark.aya
+      );
+      if (exists) return state;
+      return { bookmarks: [bookmark, ...state.bookmarks] };
+    }),
+  removeBookmark: (sura, aya) =>
+    set((state) => ({
+      bookmarks: state.bookmarks.filter(
+        (b) => !(b.sura === sura && b.aya === aya)
+      ),
+    })),
+  setBookmarks: (bookmarks) => set({ bookmarks }),
+  setTekrar: (tekrar) => set({ tekrar }),
+  setKhatma: (khatma) => set({ khatma }),
 }));
