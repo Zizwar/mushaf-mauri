@@ -157,6 +157,48 @@ export function getHizbQuarterPosition(
 }
 
 /**
+ * Get the juz number (1-30) for a given sura and aya.
+ */
+export function getJuzBySuraAya(sura: number, aya: number = 1): number {
+  const juz = QuranData.Juz;
+  const n = juz.length;
+  for (let i = 1; i < n; i++) {
+    if (!juz[i] || !juz[i].length) continue;
+    if (
+      juz[i][0] > sura ||
+      (juz[i][0] === sura && juz[i][1] > aya)
+    ) {
+      return i - 1;
+    }
+    if (juz[i][0] === sura && juz[i][1] === aya) {
+      return i;
+    }
+  }
+  return 30;
+}
+
+/**
+ * Get sura name and juz number for a given page using QuranData.Page.
+ */
+export function getPageInfo(
+  page: number,
+  quira: Quira = "madina"
+): { suraName: string; sura: number; juz: number } {
+  const pageData = quira === "warsh" ? QuranData.Page_warsh : QuranData.Page;
+  const entry = pageData?.[page];
+  if (!entry || !entry.length) {
+    return { suraName: "", sura: 1, juz: 1 };
+  }
+  const sura = entry[0];
+  const aya = entry[1];
+  return {
+    suraName: QuranData.Sura[sura]?.[0] ?? "",
+    sura,
+    juz: getJuzBySuraAya(sura, aya),
+  };
+}
+
+/**
  * Get page number by sura and aya.
  */
 export function getPageBySuraAya(

@@ -21,7 +21,7 @@ import { getTotalPages } from "../utils/coordinates";
 import { t } from "../i18n";
 import { getAyahText } from "../utils/ayahText";
 import { buildRecordedAyahSet, loadProfiles } from "../utils/recordings";
-import { getFirstAyahOnPage } from "../utils/quranHelpers";
+import { getFirstAyahOnPage, getPageInfo } from "../utils/quranHelpers";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -188,7 +188,9 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
   const keyExtractor = useCallback((item: { id: number }) => `page_${item.id}`, []);
 
   const isDark = !!theme.night;
-  const headerBg = isDark ? "#111" : "rgba(255,255,255,0.95)";
+  const isRTL = lang === "ar" || lang === "amz";
+
+  const pageInfo = useMemo(() => getPageInfo(currentPage, quira), [currentPage, quira]);
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.backgroundColor }]}>
@@ -198,27 +200,22 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       />
 
       {/* Header */}
-      <View style={[styles.header, { backgroundColor: headerBg }]}>
-        {/* Back / Home button */}
-        {onGoBack ? (
-          <Pressable
-            onPress={onGoBack}
-            hitSlop={10}
-            style={styles.headerBtn}
-          >
-            <Ionicons name="home-outline" size={20} color={theme.color} />
-          </Pressable>
-        ) : (
-          <View style={styles.headerBtn} />
-        )}
-
-        {/* Page number */}
-        <Text style={[styles.headerText, { color: theme.color }]}>
-          {currentPage}
-        </Text>
-
-        <View style={styles.headerRight}>
-          {/* Search button */}
+      <View
+        style={[
+          styles.header,
+          { backgroundColor: theme.backgroundColor },
+          isRTL && styles.headerRTL,
+        ]}
+      >
+        {/* Left side: Home + Search */}
+        <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
+          {onGoBack ? (
+            <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
+              <Ionicons name="home-outline" size={20} color={theme.color} />
+            </Pressable>
+          ) : (
+            <View style={styles.headerBtn} />
+          )}
           <Pressable
             onPress={() => onNavigate?.("search")}
             hitSlop={10}
@@ -226,8 +223,20 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           >
             <Ionicons name="search-outline" size={20} color={theme.color} />
           </Pressable>
+        </View>
 
-          {/* Menu button */}
+        {/* Center: Sura name + Page/Juz */}
+        <View style={styles.headerCenter}>
+          <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
+            {pageInfo.suraName}
+          </Text>
+          <Text style={[styles.headerMeta, { color: isDark ? "#888" : "#999" }]} numberOfLines={1}>
+            {currentPage} • {t("juz", lang)} {pageInfo.juz}
+          </Text>
+        </View>
+
+        {/* Right side: Menu */}
+        <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
           <Pressable
             onPress={() => setDrawerVisible(true)}
             hitSlop={10}
@@ -310,11 +319,37 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
   header: {
-    height: 40,
+    height: 44,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
+  },
+  headerRTL: {
+    flexDirection: "row-reverse",
+  },
+  headerSide: {
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: 72,
+  },
+  headerSideRTL: {
+    flexDirection: "row-reverse",
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerSura: {
+    fontSize: 15,
+    fontWeight: "700",
+    lineHeight: 20,
+  },
+  headerMeta: {
+    fontSize: 11,
+    fontWeight: "500",
+    lineHeight: 14,
   },
   headerBtn: {
     width: 36,
@@ -322,14 +357,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 18,
-  },
-  headerRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 2,
-  },
-  headerText: {
-    fontSize: 15,
-    fontWeight: "600",
   },
 });
