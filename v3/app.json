@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Mushaf Mauri",
+    "slug": "mushaf-mauri-v3",
+    "version": "3.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#046f98"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.mushaf.mauri.v3",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#046f98"
+      },
+      "package": "com.mushaf.mauri.v3"
+    },
+    "plugins": [
+      "expo-sqlite",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Mushaf Mauri to access your microphone for recording recitation."
+        }
+      ],
+      "expo-sharing",
+      "expo-font",
+      "expo-asset"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "86d37205-c483-46ec-af9f-a874727f0c87"
+      }
+    }
+  }
+}

@@ -1,0 +1,73 @@
+import React, { useState, useCallback } from "react";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import HomeScreen from "./src/screens/HomeScreen";
+import MushafViewer from "./src/screens/MushafViewer";
+import SettingsScreen from "./src/screens/SettingsScreen";
+import RecordingsScreen from "./src/screens/RecordingsScreen";
+import SearchScreen from "./src/screens/SearchScreen";
+import BookmarksScreen from "./src/screens/BookmarksScreen";
+import RecitingScreen from "./src/screens/RecitingScreen";
+import KhatmaScreen from "./src/screens/KhatmaScreen";
+import AboutScreen from "./src/screens/AboutScreen";
+import { useAppStore } from "./src/store/useAppStore";
+
+type Screen =
+  | "home"
+  | "mushaf"
+  | "settings"
+  | "recordings"
+  | "search"
+  | "bookmarks"
+  | "recitation"
+  | "khatma"
+  | "about";
+
+export default function App() {
+  const [screen, setScreen] = useState<Screen>("home");
+
+  const handleNavigateToPage = useCallback((page: number, sura?: number, aya?: number) => {
+    useAppStore.getState().setCurrentPage(page);
+    if (sura && aya) {
+      useAppStore.getState().setSelectedAya({
+        sura,
+        aya,
+        page,
+        id: `s${sura}a${aya}z`,
+      });
+    }
+    setScreen("mushaf");
+  }, []);
+
+  return (
+    <SafeAreaProvider>
+      {screen === "home" ? (
+        <HomeScreen onOpenMushaf={() => setScreen("mushaf")} />
+      ) : screen === "settings" ? (
+        <SettingsScreen onGoBack={() => setScreen("mushaf")} onNavigate={(s) => setScreen(s as Screen)} />
+      ) : screen === "recordings" ? (
+        <RecordingsScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "search" ? (
+        <SearchScreen
+          onGoBack={() => setScreen("mushaf")}
+          onNavigateToPage={handleNavigateToPage}
+        />
+      ) : screen === "bookmarks" ? (
+        <BookmarksScreen
+          onGoBack={() => setScreen("mushaf")}
+          onNavigateToPage={(page, sura, aya) => handleNavigateToPage(page, sura, aya)}
+        />
+      ) : screen === "recitation" ? (
+        <RecitingScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "khatma" ? (
+        <KhatmaScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "about" ? (
+        <AboutScreen onGoBack={() => setScreen("mushaf")} />
+      ) : (
+        <MushafViewer
+          onGoBack={() => setScreen("home")}
+          onNavigate={(s) => setScreen(s as Screen)}
+        />
+      )}
+    </SafeAreaProvider>
+  );
+}
