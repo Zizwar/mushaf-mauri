@@ -1,0 +1,81 @@
+'use client';
+
+function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+import React from 'react';
+import { parseBooleanToOptionalBooleanNativeProp, isSearchBarAvailableForCurrentPlatform } from '../utils';
+import { View } from 'react-native';
+
+// Native components
+import SearchBarNativeComponent, { Commands as SearchBarNativeCommands } from '../fabric/SearchBarNativeComponent';
+const NativeSearchBar = SearchBarNativeComponent;
+const NativeSearchBarCommands = SearchBarNativeCommands;
+function SearchBar(props, forwardedRef) {
+  const searchBarRef = React.useRef(null);
+  React.useImperativeHandle(forwardedRef, () => ({
+    blur: () => {
+      _callMethodWithRef(ref => NativeSearchBarCommands.blur(ref));
+    },
+    focus: () => {
+      _callMethodWithRef(ref => NativeSearchBarCommands.focus(ref));
+    },
+    toggleCancelButton: flag => {
+      _callMethodWithRef(ref => NativeSearchBarCommands.toggleCancelButton(ref, flag));
+    },
+    clearText: () => {
+      _callMethodWithRef(ref => NativeSearchBarCommands.clearText(ref));
+    },
+    setText: text => {
+      _callMethodWithRef(ref => NativeSearchBarCommands.setText(ref, text));
+    },
+    cancelSearch: () => {
+      _callMethodWithRef(ref => NativeSearchBarCommands.cancelSearch(ref));
+    }
+  }));
+  const _callMethodWithRef = React.useCallback(method => {
+    const ref = searchBarRef.current;
+    if (ref) {
+      method(ref);
+    } else {
+      console.warn('Reference to native search bar component has not been updated yet');
+    }
+  }, [searchBarRef]);
+  if (!isSearchBarAvailableForCurrentPlatform) {
+    console.warn('Importing SearchBar is only valid on iOS and Android devices.');
+    return View;
+  }
+
+  // This is necessary only for legacy architecture (Paper).
+  const parsedProps = parseUndefinedPropsToSystemDefault(props);
+  const {
+    obscureBackground,
+    hideNavigationBar,
+    onFocus,
+    onBlur,
+    onSearchButtonPress,
+    onCancelButtonPress,
+    onChangeText,
+    ...rest
+  } = parsedProps;
+  return /*#__PURE__*/React.createElement(NativeSearchBar, _extends({
+    ref: searchBarRef
+  }, rest, {
+    obscureBackground: parseBooleanToOptionalBooleanNativeProp(obscureBackground),
+    hideNavigationBar: parseBooleanToOptionalBooleanNativeProp(hideNavigationBar),
+    onSearchFocus: onFocus,
+    onSearchBlur: onBlur,
+    onSearchButtonPress: onSearchButtonPress,
+    onCancelButtonPress: onCancelButtonPress,
+    onChangeText: onChangeText
+  }));
+}
+
+// This function is necessary for legacy architecture (Paper) to ensure
+// consistent behavior for props with `systemDefault` option.
+function parseUndefinedPropsToSystemDefault(props) {
+  return {
+    ...props,
+    autoCapitalize: props.autoCapitalize ?? 'systemDefault'
+  };
+}
+export default /*#__PURE__*/React.forwardRef(SearchBar);
+//# sourceMappingURL=SearchBar.js.map

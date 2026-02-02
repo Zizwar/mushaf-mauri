@@ -1,0 +1,1 @@
+{"version":3,"names":["StackHost","StackScreen","Stack","Host","Screen"],"sourceRoot":"../../../../../src","sources":["components/gamma/stack/index.ts"],"mappings":"AAAA,OAAOA,SAAS,MAAM,aAAa;AACnC,OAAOC,WAAW,MAAM,eAAe;AAEvC,cAAc,mBAAmB;AACjC,cAAc,qBAAqB;;AAEnC;AACA;AACA;AACA,MAAMC,KAAK,GAAG;EACZC,IAAI,EAAEH,SAAS;EACfI,MAAM,EAAEH;AACV,CAAC;AAED,eAAeC,KAAK","ignoreList":[]}

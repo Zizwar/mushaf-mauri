@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "مصحف موري - القرآن الكريم",
+    "description": "Mushaf Mauri.",
+    "slug": "MushafMauri",
+    "privacy": "public",
+    "platforms": [
+      "android"
+    ],
+    "scheme": "mushafmauri",
+    "version": "0.8.3",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "wino.ma.mushaf.mauri"
+    },
+    "android": {
+      "package": "wino.ma.mushaf.mauri",
+      "permissions": [
+        "VIBRATE"
+      ],
+      "versionCode": 13
+    },
+    "extra": {
+      "eas": {
+        "projectId": "2a5f7adc-1fc1-432d-80e5-54ab949fa9af"
+      }
+    }
+  }
+}
