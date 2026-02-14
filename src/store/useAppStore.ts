@@ -2,8 +2,12 @@ import { create } from "zustand";
 import type { LangKey } from "../i18n";
 import type { Theme } from "../theme/themes";
 import { THEMES } from "../theme/themes";
+import { loadSettings, saveSettings, resolveTheme } from "../utils/settings";
 
 export type Quira = "madina" | "warsh";
+
+// Load persisted settings at module init
+const _persisted = loadSettings();
 
 interface SelectedAya {
   sura: number;
@@ -64,6 +68,9 @@ interface AppState {
   selectedAya: SelectedAya | null;
   isPlaying: boolean;
 
+  // First launch / onboarding
+  hasCompletedSetup: boolean;
+
   // Image download progress per quira
   imageDownloadProgress: Record<Quira, ImageDownloadProgress>;
 
@@ -108,6 +115,7 @@ interface AppState {
   removeBookmark: (sura: number, aya: number) => void;
   setBookmarks: (bookmarks: Bookmark[]) => void;
   updateBookmarkNote: (sura: number, aya: number, note: string) => void;
+  setHasCompletedSetup: (done: boolean) => void;
   setTekrar: (tekrar: TekrarConfig) => void;
   setKhatma: (khatma: KhatmaState) => void;
 }
@@ -119,13 +127,14 @@ const defaultDownloadProgress: ImageDownloadProgress = {
 };
 
 export const useAppStore = create<AppState>((set) => ({
-  lang: "ar",
-  quira: "warsh",
-  theme: THEMES[0],
-  moqriId: "Husary_64kbps",
-  currentPage: 1,
+  lang: (_persisted.lang as LangKey) || "ar",
+  quira: (_persisted.quira as Quira) || "warsh",
+  theme: _persisted.themeName ? resolveTheme(_persisted.themeName) : THEMES[0],
+  moqriId: _persisted.moqriId || "Husary_64kbps",
+  currentPage: _persisted.currentPage || 1,
   selectedAya: null,
   isPlaying: false,
+  hasCompletedSetup: _persisted.hasCompletedSetup || false,
 
   imageDownloadProgress: {
     madina: { ...defaultDownloadProgress },
@@ -160,11 +169,11 @@ export const useAppStore = create<AppState>((set) => ({
     ok: false,
   },
 
-  setLang: (lang) => set({ lang }),
-  setQuira: (quira) => set({ quira }),
-  setTheme: (theme) => set({ theme }),
-  setMoqriId: (moqriId) => set({ moqriId }),
-  setCurrentPage: (currentPage) => set({ currentPage }),
+  setLang: (lang) => { set({ lang }); saveSettings({ lang }); },
+  setQuira: (quira) => { set({ quira }); saveSettings({ quira }); },
+  setTheme: (theme) => { set({ theme }); saveSettings({ themeName: theme.name }); },
+  setMoqriId: (moqriId) => { set({ moqriId }); saveSettings({ moqriId }); },
+  setCurrentPage: (currentPage) => { set({ currentPage }); saveSettings({ currentPage }); },
   setSelectedAya: (selectedAya) => set({ selectedAya }),
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setImageDownloadProgress: (quira, progress) =>
@@ -210,6 +219,7 @@ export const useAppStore = create<AppState>((set) => ({
         b.sura === sura && b.aya === aya ? { ...b, note } : b
       ),
     })),
+  setHasCompletedSetup: (hasCompletedSetup) => { set({ hasCompletedSetup }); saveSettings({ hasCompletedSetup }); },
   setTekrar: (tekrar) => set({ tekrar }),
   setKhatma: (khatma) => set({ khatma }),
 }));
