@@ -84,6 +84,8 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // -- Local state --
   const [showFullPlayer, setShowFullPlayer] = useState(false);
   const [showReciterModal, setShowReciterModal] = useState(false);
+  const [listenThenRecord, setListenThenRecord] = useState(false);
+  const listenThenRecordRef = useRef(false);
   const slideAnim = useRef(new Animated.Value(0)).current;
 
   // -- Store --
@@ -108,6 +110,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   quiraRef.current = quira;
   moqriIdRef.current = moqriId;
   tekrarRef.current = tekrar;
+  listenThenRecordRef.current = listenThenRecord;
 
   // -- Derived from status (replaces local state) --
   const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
@@ -228,6 +231,46 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       const current = currentAyaRef.current;
       if (!current) {
         useAppStore.getState().setIsPlaying(false);
+        return;
+      }
+
+      // Listen-then-record: when reciter finishes, auto-start recording
+      if (listenThenRecordRef.current) {
+        useAppStore.getState().setIsPlaying(false);
+        // Small delay to let audio mode switch
+        setTimeout(async () => {
+          if (isUnmountedRef.current) return;
+          try {
+            const sa = useAppStore.getState().selectedAya;
+            if (!sa) return;
+
+            let profileId = useAppStore.getState().activeProfileId;
+            const q = quiraRef.current;
+            if (!profileId) {
+              const profile = createProfile(q, "تسجيلي");
+              profileId = profile.id;
+              useAppStore.getState().setActiveProfileId(profileId);
+              useAppStore.getState().setRecordingProfiles(loadProfiles(q));
+            }
+
+            const perm = await requestRecordingPermissionsAsync();
+            if (!perm.granted) return;
+
+            await setAudioModeAsync({
+              playsInSilentMode: true,
+              shouldPlayInBackground: true,
+              allowsRecording: true,
+              interruptionMode: "doNotMix",
+              shouldRouteThroughEarpiece: false,
+            });
+
+            await recorder.prepareToRecordAsync();
+            recorder.record();
+            useAppStore.getState().setRecordingState("recording");
+          } catch {
+            // ignore
+          }
+        }, 300);
         return;
       }
 
@@ -367,6 +410,8 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const stopRecording = useCallback(async () => {
     if (!selectedAya) return;
 
+    const wasListenThenRecord = listenThenRecord;
+    setListenThenRecord(false);
     setRecordingState("saving");
     try {
       await recorder.stop();
@@ -396,7 +441,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     } catch {
       setRecordingState("idle");
     }
-  }, [selectedAya, quira, recorder, setRecordingState, markAyahRecorded, setSelectedAya, onScrollToPage]);
+  }, [selectedAya, quira, recorder, listenThenRecord, setRecordingState, markAyahRecorded, setSelectedAya, onScrollToPage]);
 
   const handleMicPress = useCallback(() => {
     if (recordingState === "recording") {
@@ -405,6 +450,31 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       startRecording();
     }
   }, [recordingState, startRecording, stopRecording]);
+
+  // Listen-then-record: play the reciter first, then auto-start recording
+  const handleListenThenRecord = useCallback(() => {
+    if (!selectedAya || recordingState === "recording") return;
+
+    // If currently in listen-then-record mode and playing, stop
+    if (listenThenRecord && status.playing) {
+      player.pause();
+      setIsPlaying(false);
+      setListenThenRecord(false);
+      return;
+    }
+
+    // Start by playing the reciter's version
+    setListenThenRecord(true);
+
+    // Use the store's moqriId (or default to Husary if user recording is selected)
+    const reciterId = moqriId === USER_RECORDING_ID ? "Husary_64kbps" : moqriId;
+    const uri = getAudioKsuUri(reciterId, selectedAya.sura, selectedAya.aya);
+
+    currentAyaRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
+    player.replace({ uri });
+    player.play();
+    setIsPlaying(true);
+  }, [selectedAya, recordingState, listenThenRecord, status.playing, moqriId, player, setIsPlaying]);
 
   // ===========================================================================
   // Playback controls
@@ -818,52 +888,88 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             </Pressable>
           </View>
 
-          {/* Recording button in full player */}
+          {/* Recording buttons in full player */}
           <View style={styles.recordSection}>
-            <Pressable
-              onPress={handleMicPress}
-              style={({ pressed }) => [
-                styles.recordBtn,
-                {
-                  backgroundColor:
+            <View style={styles.recordButtonRow}>
+              {/* Standard record button */}
+              <Pressable
+                onPress={handleMicPress}
+                style={({ pressed }) => [
+                  styles.recordBtn,
+                  {
+                    backgroundColor:
+                      recordingState === "recording" && !listenThenRecord
+                        ? RECORDING_COLOR
+                        : isDark
+                        ? "#2a2a3e"
+                        : "#f0f0f0",
+                  },
+                  pressed && { opacity: 0.7 },
+                ]}
+              >
+                <Ionicons
+                  name={
                     recordingState === "recording"
-                      ? RECORDING_COLOR
+                      ? "stop"
+                      : recordingState === "saving"
+                      ? "hourglass-outline"
+                      : "mic"
+                  }
+                  size={22}
+                  color={recordingState === "recording" ? "#fff" : RECORDING_COLOR}
+                />
+                <Text
+                  style={[
+                    styles.recordBtnText,
+                    {
+                      color:
+                        recordingState === "recording"
+                          ? "#fff"
+                          : colors.fullText,
+                    },
+                  ]}
+                >
+                  {recordingState === "recording"
+                    ? t("stop_recording", lang)
+                    : recordingState === "saving"
+                    ? t("recording_saved", lang)
+                    : t("start_recording", lang)}
+                </Text>
+              </Pressable>
+
+              {/* Listen-then-record button */}
+              <Pressable
+                onPress={handleListenThenRecord}
+                style={({ pressed }) => [
+                  styles.recordBtn,
+                  {
+                    backgroundColor: listenThenRecord
+                      ? "#ff9800"
                       : isDark
                       ? "#2a2a3e"
                       : "#f0f0f0",
-                },
-                pressed && { opacity: 0.7 },
-              ]}
-            >
-              <Ionicons
-                name={
-                  recordingState === "recording"
-                    ? "stop"
-                    : recordingState === "saving"
-                    ? "hourglass-outline"
-                    : "mic"
-                }
-                size={22}
-                color={recordingState === "recording" ? "#fff" : RECORDING_COLOR}
-              />
-              <Text
-                style={[
-                  styles.recordBtnText,
-                  {
-                    color:
-                      recordingState === "recording"
-                        ? "#fff"
-                        : colors.fullText,
                   },
+                  pressed && { opacity: 0.7 },
                 ]}
               >
-                {recordingState === "recording"
-                  ? t("stop_recording", lang)
-                  : recordingState === "saving"
-                  ? t("recording_saved", lang)
-                  : t("start_recording", lang)}
-              </Text>
-            </Pressable>
+                <Ionicons
+                  name={listenThenRecord ? "stop" : "ear"}
+                  size={20}
+                  color={listenThenRecord ? "#fff" : "#ff9800"}
+                />
+                <Text
+                  style={[
+                    styles.recordBtnText,
+                    {
+                      color: listenThenRecord ? "#fff" : colors.fullText,
+                      fontSize: 12,
+                    },
+                  ]}
+                >
+                  {t("listen_then_record", lang)}
+                </Text>
+              </Pressable>
+            </View>
           </View>
         </Animated.View>
       </Modal>
@@ -1233,18 +1339,26 @@ const styles = StyleSheet.create({
   recordSection: {
     alignItems: "center",
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
+    paddingHorizontal: 16,
+  },
+  recordButtonRow: {
+    flexDirection: "row",
+    gap: 10,
+    justifyContent: "center",
+    width: "100%",
   },
   recordBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 12,
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     borderRadius: 24,
-    gap: 8,
+    gap: 6,
   },
   recordBtnText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: "600",
   },
 

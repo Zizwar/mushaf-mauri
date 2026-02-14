@@ -23,7 +23,8 @@ type Screen =
   | "about";
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>("home");
+  const hasCompletedSetup = useAppStore((s) => s.hasCompletedSetup);
+  const [screen, setScreen] = useState<Screen>(hasCompletedSetup ? "mushaf" : "home");
 
   const handleNavigateToPage = useCallback((page: number, sura?: number, aya?: number) => {
     useAppStore.getState().setCurrentPage(page);
@@ -64,7 +65,7 @@ export default function App() {
         <AboutScreen onGoBack={() => setScreen("mushaf")} />
       ) : (
         <MushafViewer
-          onGoBack={() => setScreen("home")}
+          onGoBack={hasCompletedSetup ? undefined : () => setScreen("home")}
           onNavigate={(s) => setScreen(s as Screen)}
         />
       )}

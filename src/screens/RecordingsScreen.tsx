@@ -113,7 +113,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
 
   // -- Local state: playback --
   const [playingKey, setPlayingKey] = useState<string | null>(null);
-  const [playMode, setPlayMode] = useState<"user" | "compare">("user");
+  const [playMode, setPlayMode] = useState<"user" | "compare" | "side_by_side">("user");
   const [isSequentialPlaying, setIsSequentialPlaying] = useState(false);
 
   // -- Local state: re-record --
@@ -249,7 +249,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   }, []);
 
   const playSound = useCallback(
-    (uri: string, key: string, mode: "user" | "compare") => {
+    (uri: string, key: string, mode: "user" | "compare" | "side_by_side") => {
       stopPlayback();
       try {
         const p = createAudioPlayer({ uri });
@@ -270,6 +270,19 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
               p.remove();
               playerRef.current = null;
             }
+
+            // Side-by-side: after user's recording, auto-play reciter's version
+            if (mode === "side_by_side") {
+              const match = key.match(/^s(\d+)a(\d+)$/);
+              if (match) {
+                const sura = parseInt(match[1], 10);
+                const aya = parseInt(match[2], 10);
+                const reciterUri = getAudioKsuUri(compareReciterId, sura, aya);
+                playSound(reciterUri, key, "compare");
+              }
+              return;
+            }
+
             // Sequential advance
             if (isSequentialRef.current) {
               sequentialIndexRef.current++;
@@ -296,7 +309,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
         }
       }
     },
-    [stopPlayback]
+    [stopPlayback, compareReciterId]
   );
 
   const handlePlayRecording = useCallback(
@@ -320,6 +333,18 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       }
     },
     [playingKey, playMode, compareReciterId, playSound, stopPlayback]
+  );
+
+  // Side-by-side: play user recording then reciter for comparison
+  const handleSideBySide = useCallback(
+    (item: RecordingItem) => {
+      if (playingKey === item.key && playMode === "side_by_side") {
+        stopPlayback();
+      } else {
+        playSound(item.uri, item.key, "side_by_side");
+      }
+    },
+    [playingKey, playMode, playSound, stopPlayback]
   );
 
   const handlePlayAll = useCallback(() => {
@@ -846,6 +871,26 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
               />
             </Pressable>
 
+            {/* Side-by-side: play user then reciter */}
+            <Pressable
+              style={[
+                styles.actionBtn,
+                {
+                  backgroundColor:
+                    isPlaying && playMode === "side_by_side"
+                      ? "#ff9800"
+                      : inputBg,
+                },
+              ]}
+              onPress={() => handleSideBySide(item)}
+            >
+              <Ionicons
+                name={isPlaying && playMode === "side_by_side" ? "stop" : "git-compare-outline"}
+                size={15}
+                color={isPlaying && playMode === "side_by_side" ? "#fff" : "#ff9800"}
+              />
+            </Pressable>
+
             {/* Re-record */}
             <Pressable
               style={[
@@ -934,6 +979,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       toggleSelect,
       handlePlayRecording,
       handlePlayComparison,
+      handleSideBySide,
       handleReRecord,
       handleStopReRecord,
       handleGoToAyah,
