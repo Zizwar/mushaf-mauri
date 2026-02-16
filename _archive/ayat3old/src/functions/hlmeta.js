@@ -1,0 +1,53 @@
+export const  hlMeta = {
+        "hafs": {
+            height: 30,
+            mgwidth: 40,
+            twidth: 416,
+            ofwidth: 10,
+            ofheight: 15,
+            fasel_sura: 110,
+            page_top: 37,
+            page_sura_top: 80,
+            mem_height: 45,
+            mem_ofheight: 24,
+            fp_height: 20,
+            fp_mgwidth: 80,
+            fp_twidth: 376,
+            fp_ofwidth: 5,
+            fp_ofheight: 10
+        },
+        "warsh": {
+            height: 40,
+            mgwidth: 25,
+            twidth: 427,
+            ofwidth: 17,
+            ofheight: 20,
+            fasel_sura: 140,
+            page_top: 30,
+            page_sura_top: 130,
+            mem_height: 48,
+            mem_ofheight: 22,
+            fp_height: 20,
+            fp_mgwidth: 80,
+            fp_twidth: 376,
+            fp_ofwidth: 5,
+            fp_ofheight: 10
+        },
+        "tajweed": {
+            height: 40,
+            mgwidth: 25,
+            twidth: 427,
+            ofwidth: 17,
+            ofheight: 20,
+            fasel_sura: 140,
+            page_top: 30,
+            page_sura_top: 80,
+            mem_height: 48,
+            mem_ofheight: 22,
+            fp_height: 30,
+            fp_mgwidth: 100,
+            fp_twidth: 350,
+            fp_ofwidth: 10,
+            fp_ofheight: 15
+        }
+    }

@@ -1,0 +1,275 @@
+import { WARSH, HAFS, TAJWEED,HAFS_DORAR } from "../amaken";
+import { hlMeta } from "./hlmeta";
+import { Dimensions } from "react-native";
+import { aya2id } from "./Functions";
+
+let { width: WIDTH, height: HEIGHT } = Dimensions.get("window");
+
+let LEFT = 2;
+let TOP = 12;
+
+const MARGIN_PAGE = 54;
+const HEIGH_PAGE = 707;
+const WIDTH_PAGE = 456;
+
+const MARGIN_PAGE_RENDER = (WIDTH / WIDTH_PAGE) * MARGIN_PAGE;
+const SCREEN_DEFAULT_WIDTH = /*WIDTH - 54;/*/ 456;
+const heightScala = (HEIGH_PAGE - MARGIN_PAGE) * (WIDTH / WIDTH_PAGE);
+//
+let WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH;
+
+export const amakenPage = (page, mosshaf) => {
+  let currMosshaf = mosshaf;
+  let quira;
+  //defult HAFS
+
+  if (currMosshaf === "hafs") {    
+quira = HAFS;
+    WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 2;//+ 0.6 / MARGIN_PAGE_RENDER;// - 22;
+    LEFT =-(MARGIN_PAGE/2)+16;// -22//+(MARGIN_PAGE * 0.6);
+    TOP = -26; //-44;
+  }
+
+  if (currMosshaf === "hafsDorar"
+  || currMosshaf === "hafsShohbah" ) {
+
+    currMosshaf = "hafs";
+	    WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 2;//+ 0.6 / MARGIN_PAGE_RENDER;// - 22;
+    LEFT =-(MARGIN_PAGE/2)+16;// -22//+(MARGIN_PAGE * 0.6);
+    TOP = -26; //-44;
+  	
+	quira = HAFS_DORAR;
+    /* WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH+16// + MARGIN_PAGE;
+    LEFT = (MARGIN_PAGE / 2)-16;
+    TOP = -3;
+	*/
+  }
+    
+//warsh
+  if (currMosshaf === "warsh") {
+    WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH + MARGIN_PAGE*0.4 ;
+   
+	TOP = -10;
+    quira = WARSH;
+  }
+
+  if (currMosshaf === "hafsAlsose") {
+    currMosshaf = "hafs";
+	    WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - MARGIN_PAGE / 2;//+ 0.6 / MARGIN_PAGE_RENDER;// - 22;
+    LEFT =-(MARGIN_PAGE/2)+16;// -22//+(MARGIN_PAGE * 0.6);
+    TOP = -26; //-44;
+  	quira = HAFS_DORAR;//WARSH;
+  } 
+
+  if (currMosshaf === "tajweed") {
+    quira = TAJWEED;
+    WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH +MARGIN_PAGE*0.4 ;
+    //LEFT = -3;
+    TOP = -7;
+  }
+  
+  const amaken = quira[page]; ////quraa[page]; //[page];
+  //alert(JSON.stringify(quraa[page]));
+  //wino.tafssir[page]
+  //tafssir = tafssirArr[page];
+  ////logz("tafssir =======>",wino.tafssir[page])
+  //  //err("amaken=" + amaken)
+  //  let plaket = "";
+  let hilite_id = "_winoId_";
+  //logz("FN drawHilites")
+
+  //  let amaken = json;//hilites[currMosshaf][page];
+  // //logz("amaken", amaken)
+  let sura,
+    aya,
+    top,
+    left,
+    prev_top,
+    prev_left,
+    mgwidth,
+    mgheight,
+    twidth,
+    ofwidth,
+    ofheight,
+    fasel_sura,
+    page_top,
+    page_sura_top,
+    width,
+    height,
+    diff,
+    hl_id,
+    //hilite_id,
+    b_top = 0,
+    b_left = 0;
+  height = hlMeta[currMosshaf]["height"];
+  mgwidth = hlMeta[currMosshaf]["mgwidth"];
+  twidth = hlMeta[currMosshaf]["twidth"];
+  ofwidth = hlMeta[currMosshaf]["ofwidth"];
+  ofheight = hlMeta[currMosshaf]["ofheight"];
+  fasel_sura = hlMeta[currMosshaf]["fasel_sura"];
+  page_top = hlMeta[currMosshaf]["page_top"];
+  page_sura_top = hlMeta[currMosshaf]["page_sura_top"];
+  //  //logz("page_sura_top", page_sura_top);
+  if (page == 1 || page == 2) {
+    if (page == 1 && currMosshaf == "hafsMadina") {
+      WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - 65;
+      LEFT = 90;
+      TOP = 15;
+    }
+    //
+    if (page == 2 && currMosshaf == "hafsMadina") {
+      WIDTH_SCREEN_RENDER = SCREEN_DEFAULT_WIDTH - 65;
+      LEFT = 0;
+      TOP = 7;
+    }
+    //
+    height = hlMeta[currMosshaf]["fp_height"];
+    mgwidth = hlMeta[currMosshaf]["fp_mgwidth"];
+    twidth = hlMeta[currMosshaf]["fp_twidth"];
+    ofwidth = hlMeta[currMosshaf]["fp_ofwidth"];
+    ofheight = hlMeta[currMosshaf]["fp_ofheight"];
+  }
+  prev_top = null;
+  prev_left = null;
+  let count = 1;
+  let winotafssir = [];
+  let allPosition = [];
+  for (let i in amaken) {
+    // //logz("play forEach")
+    //    _.forEach(amaken, function(value,i) {
+    //  //logz("forEach" + i)
+    //
+    sura = i.split("_")[0];
+    aya = i.split("_")[1];
+    top = amaken[sura + "_" + aya][1] - ofheight;
+    left = amaken[sura + "_" + aya][0] - ofwidth;
+    let wino_ = {
+      aya: aya,
+      sura: sura,
+      page: page,
+      id: "s" + sura + "a" + aya + "z"
+    };
+
+    //  //logz('coneten = ',wino.tafssir[page][sura + "_" + aya],sura + "_" + aya)
+    //if (itm[1] === sura && itm[2] === aya){
+
+    //   //logz('foreach tafsir, _____',winotafssir,"")
+    //  //logz("left =",left,"___",
+    //  "top =",top,"___|||||")
+    //  if (currMosshaf == "hafs" && (page == 1 || page == 2)) { }
+    width = 0;
+
+    hl_id = "s" + sura + "a" + aya + "z";
+    if (count == 1) {
+      prev_left = twidth;
+      if (page == 1 || page == 2) {
+        prev_top = 270;
+      } else {
+        if (aya == 1) {
+          prev_top = page_sura_top;
+        } else {
+          prev_top = page_top;
+        }
+      }
+    } else {
+      if (aya == 1) {
+        prev_top += fasel_sura;
+        prev_left = twidth;
+      }
+    }
+    diff = top - prev_top;
+    if (diff > height * 1.6) {
+      allPosition.push(
+        hl_draw(
+          hl_id + "_1",
+          prev_top,
+          mgwidth,
+          prev_left - mgwidth,
+          height,
+          b_top,
+          b_left,
+          wino_ //.id+"d_1"
+        )
+      );
+      allPosition.push(
+        hl_draw(
+          hl_id + "_2",
+          top,
+          left,
+          twidth - left,
+          height,
+          b_top,
+          b_left,
+          wino_ //_.id+ "_2"
+        )
+      );
+      allPosition.push(
+        hl_draw(
+          hl_id + "_3",
+          prev_top + height,
+          mgwidth,
+          twidth - mgwidth,
+          diff - height,
+          b_top,
+          b_left,
+          wino_ //id +"_3"
+        )
+      );
+    } else if (diff > height * 0.6) {
+      allPosition.push(
+        hl_draw(
+          hl_id + "_1",
+          prev_top,
+          mgwidth,
+          prev_left - mgwidth,
+          height,
+          b_top,
+          b_left,
+          wino_ //.id+"d_1"
+        )
+      );
+      allPosition.push(
+        hl_draw(
+          hl_id + "_2",
+          top,
+          left,
+          twidth - left,
+          height,
+          b_top,
+          b_left,
+          wino_ //.id +"_2"
+        )
+      );
+    } else {
+      width = prev_left - left;
+      allPosition.push(
+        hl_draw(hl_id + "_1", top, left, width, height, b_top, b_left, wino_)
+      );
+    }
+    count++;
+    prev_top = top;
+    prev_left = left;
+  }
+  return allPosition;
+  // wino.tafssir[page] = winotafssir
+  //    );//forlodash
+};
+//
+
+function hl_draw(id, top, left, width, height, b_top = 0, b_left = 0, wino) {
+  //  "agr b_top =",b_top,"_______________________");
+  //let b_top = 0;
+  //let b_left = 0;
+  //top = b_top + top;
+  //left = b_left + left;
+  //return { width, height, left, top, wino, id };
+  width = (WIDTH / WIDTH_SCREEN_RENDER) * width;
+  height = (WIDTH / WIDTH_SCREEN_RENDER) * height;
+  left = (WIDTH / WIDTH_SCREEN_RENDER) * left + LEFT;
+  top = (WIDTH / WIDTH_SCREEN_RENDER) * top + TOP;
+
+  return { width, height, left, top, wino, id };
+
+  ///creeat composite
+}
+//

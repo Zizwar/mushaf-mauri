@@ -1,0 +1,189 @@
+import React, { Component } from "react";
+
+import {
+  Button,
+  Text,
+  Card,
+  CardItem,
+  Left,
+  View,
+  Thumbnail,
+  ListItem,
+  Icon,
+  Right,
+  Body,
+  H3,
+  Col
+} from "native-base";
+import {isRTL} from "expo-localization";
+
+export const ScreenAya = ({
+  onpress,
+  aya,
+  sura,
+  text,
+  page,
+  fontSize = 14
+}) => (
+  <Card>
+    <CardItem button onPress={onpress} style={{ height: 60 }}>
+      <Left>
+        <View
+          style={{
+            position: "absolute",
+            width: 56,
+            color: "#fff",
+            zIndex: 1
+          }}
+        >
+          <Text note style={{ color: "#fff", textAlign: "center" }}>
+            {aya}
+          </Text>
+        </View>
+        <Thumbnail
+          square
+          source={require("../../assets/number.png")}
+          style={{ position: "absolute", zIndex: 0 }}
+        />
+      </Left>
+
+      <Right>
+        <H3 style={{ textAlign: "right", color: "#007aff" }}>{sura}</H3>
+      </Right>
+    </CardItem>
+    <CardItem button onPress={onpress}>
+      <Col style={{ alignItems: "center", margin: 3 }}>
+        <View style={{ alignSelf: "center" }}>
+          <Text style={{ textAlign: "center", color: "#555", fontSize }}>
+            {text}
+          </Text>
+        </View>
+      </Col>
+    </CardItem>
+    {page && (
+      <CardItem>
+        <Left />
+        <Right>
+          <Text note style={{ color: "#555", textAlign: "right" }}>
+            {page}
+          </Text>
+        </Right>
+      </CardItem>
+    )}
+  </Card>
+);
+///////
+export const ScreenBookmark = ({
+  onpress,
+  aya,
+  sura,
+  note,
+  time = "",
+  fontSize = 14
+}) => (
+  <Card>
+    <CardItem button onPress={onpress} style={{ height: 60 }}>
+      <Left>
+        <Icon color="#d4aa1e" name={"arrow-back"} />
+      </Left>
+      <Body>
+        <H3 style={{ textAlign: "right", color: "#007aff" }}>{sura}</H3>
+      </Body>
+      <Right>
+        <View
+          style={{
+            position: "absolute",
+            width: 56,
+            zIndex: 1
+          }}
+        >
+          <Text note style={{ color: "#fff", textAlign: "center" }}>
+            {aya}
+          </Text>
+        </View>
+        <Thumbnail
+          square
+          source={require("../../assets/number.png")}
+          style={{ position: "absolute", zIndex: 0 }}
+        />
+      </Right>
+    </CardItem>
+    <CardItem button onPress={onpress}>
+      <Col style={{ alignItems: "center", margin: 3 }}>
+        <View style={{ alignSelf: "center" }}>
+          <Text style={{ textAlign: "center", color: "#555", fontSize }}>
+            {note}
+          </Text>
+        </View>
+      </Col>
+    </CardItem>
+
+    <CardItem>
+      <Left />
+      <Right>
+        <Text note style={{ color: "#555", textAlign: "right" }}>
+          {time}
+        </Text>
+      </Right>
+    </CardItem>
+  </Card>
+);
+
+export const Itemino = ({
+  onPress,
+  icon,
+  iconSize = 26,
+  text = null,
+  color = "#555",
+  lang = "en",
+  isRtl = false
+}) => (
+
+  <ListItem noBorder style={{ height: 42 }} transparent onPress={onPress}>
+  {isRtl ?
+    ({lang === "ar"  ? (
+      <Left />
+    ) : (
+      <Left>
+        <Button transparent>
+          <Icon name={icon} size={iconSize} />
+        </Button>
+      </Left>
+    )}
+    <Body>
+      <Text style={{ color }}>{text}</Text>
+    </Body>
+    {lang === "ar" ? (
+      <Right>
+        <Button transparent>
+          <Icon name={icon} size={iconSize} />
+        </Button>
+      </Right>
+    ) : (
+      <Right />
+    )}
+	):    ({lang !== "ar"  ? (
+      <Left />
+    ) : (
+      <Left>
+        <Button transparent>
+          <Icon name={icon} size={iconSize} />
+        </Button>
+      </Left>
+    )}
+    <Body>
+      <Text style={{ color }}>{text}</Text>
+    </Body>
+    {lang !== "ar" ? (
+      <Right>
+        <Button transparent>
+          <Icon name={icon} size={iconSize} />
+        </Button>
+      </Right>
+    ) : (
+      <Right />
+    )}
+	)
+  }
+  </ListItem>
+);
