@@ -80,6 +80,31 @@ export async function fetchTafsirOnline(
 }
 
 /**
+ * Try to extract translation text from a JSON response.
+ * The KSU API sometimes returns JSON like {"tafsir":{"1":"text"}} or {"tafsir":{}}
+ */
+function extractFromJson(raw: string): string | null {
+  try {
+    const json = JSON.parse(raw);
+    // Handle {"tafsir":{"1":"text here"}} format
+    if (json?.tafsir && typeof json.tafsir === "object") {
+      const values = Object.values(json.tafsir);
+      if (values.length > 0) {
+        return values.map((v) => (typeof v === "string" ? stripHtml(v) : "")).join("\n").trim();
+      }
+      return null; // empty tafsir object
+    }
+    // Handle {"text":"..."} format
+    if (json?.text && typeof json.text === "string") {
+      return stripHtml(json.text);
+    }
+    return null;
+  } catch {
+    return null; // not JSON
+  }
+}
+
+/**
  * Fetch translation (tarjama) text from KSU online API.
  */
 export async function fetchTarjamaOnline(
@@ -99,11 +124,22 @@ export async function fetchTarjamaOnline(
     throw new Error(`Translation request failed: ${response.status}`);
   }
 
-  const html = await response.text();
-  const text = stripHtml(html);
+  const raw = await response.text();
+
+  // Check if response is JSON (API returns {"tafsir":{}} when unavailable)
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+    const jsonText = extractFromJson(trimmed);
+    if (jsonText && jsonText.length > 1) {
+      return jsonText;
+    }
+    throw new Error("no_translation");
+  }
+
+  const text = stripHtml(raw);
 
   if (!text || text.length < 2) {
-    throw new Error("Empty translation response");
+    throw new Error("no_translation");
   }
 
   return text;

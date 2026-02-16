@@ -9,7 +9,9 @@ import {
   ActivityIndicator,
   Dimensions,
   Platform,
+  Alert,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
@@ -212,6 +214,79 @@ export default function TafsirModal({
     [activeTab]
   );
 
+  const handleCopy = useCallback(async () => {
+    if (!content) return;
+    try {
+      await Clipboard.setStringAsync(content);
+      Alert.alert(t("copied_to_clipboard", lang));
+    } catch {
+      // ignore
+    }
+  }, [content, lang]);
+
+  /**
+   * Renders tafsir content with Quranic verses styled differently.
+   * Text within { } brackets is treated as Quranic verses.
+   */
+  const renderFormattedContent = useCallback(() => {
+    if (!content) return null;
+
+    // Split by the ||| separator if present (ayah text ||| tafsir text)
+    const parts = content.split("|||");
+    const tafsirText = parts.length > 1 ? parts[1].trim() : content;
+    const ayahText = parts.length > 1 ? parts[0].trim() : null;
+
+    // Parse Quranic verses within { } brackets
+    const segments: { text: string; isVerse: boolean }[] = [];
+    let remaining = tafsirText;
+    const verseRegex = /\{([^}]+)\}/g;
+    let match;
+    let lastIndex = 0;
+
+    while ((match = verseRegex.exec(tafsirText)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ text: tafsirText.slice(lastIndex, match.index), isVerse: false });
+      }
+      segments.push({ text: match[1], isVerse: true });
+      lastIndex = match.index + match[0].length;
+    }
+    if (lastIndex < tafsirText.length) {
+      segments.push({ text: tafsirText.slice(lastIndex), isVerse: false });
+    }
+    if (segments.length === 0) {
+      segments.push({ text: tafsirText, isVerse: false });
+    }
+
+    return (
+      <View>
+        {ayahText && (
+          <View style={[styles.ayahBox, { backgroundColor: isNight ? "#1a2a1e" : "#e8f5e9", borderColor: ACCENT_COLOR }]}>
+            <Text style={[styles.ayahBoxText, { color: isNight ? "#a5d6a7" : ACCENT_COLOR }]}>
+              {ayahText}
+            </Text>
+          </View>
+        )}
+        <Text style={[styles.contentText, { color: textColor }]} selectable>
+          {segments.map((seg, i) =>
+            seg.isVerse ? (
+              <Text
+                key={i}
+                style={[
+                  styles.verseInTafsir,
+                  { color: isNight ? "#81c784" : ACCENT_COLOR },
+                ]}
+              >
+                {"\uFD3F"}{seg.text}{"\uFD3E"}
+              </Text>
+            ) : (
+              <Text key={i}>{seg.text}</Text>
+            )
+          )}
+        </Text>
+      </View>
+    );
+  }, [content, textColor, isNight]);
+
   return (
     <Modal
       visible={visible}
@@ -315,7 +390,7 @@ export default function TafsirModal({
                   },
                 ]}
               >
-                {"\u062A\u0631\u062C\u0645\u0629"}
+                {t("tarjama", lang)}
               </Text>
             </Pressable>
           </View>
@@ -388,19 +463,23 @@ export default function TafsirModal({
                   color={mutedColor}
                 />
                 <Text style={[styles.errorText, { color: mutedColor }]}>
-                  {error}
+                  {error === "no_translation" ? t("no_translation", lang) : error}
                 </Text>
               </View>
             ) : content ? (
-              <Text
-                style={[
-                  styles.contentText,
-                  { color: textColor },
-                ]}
-                selectable
-              >
-                {content}
-              </Text>
+              <View>
+                {/* Copy button */}
+                <Pressable
+                  style={[styles.copyBtn, { backgroundColor: isNight ? "#2a2a3e" : "#f0f2f5" }]}
+                  onPress={handleCopy}
+                >
+                  <Ionicons name="copy-outline" size={16} color={ACCENT_COLOR} />
+                  <Text style={[styles.copyBtnText, { color: ACCENT_COLOR }]}>
+                    {t("copy_tafsir", lang)}
+                  </Text>
+                </Pressable>
+                {renderFormattedContent()}
+              </View>
             ) : (
               <View style={styles.centerBox}>
                 <Ionicons
@@ -625,6 +704,39 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     textAlign: "center",
+  },
+  copyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    alignSelf: "flex-end",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    gap: 6,
+    marginBottom: 12,
+  },
+  copyBtnText: {
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  ayahBox: {
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 14,
+    marginBottom: 16,
+  },
+  ayahBoxText: {
+    fontSize: 20,
+    lineHeight: 36,
+    textAlign: "right",
+    writingDirection: "rtl",
+    fontWeight: "600",
+    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
+  },
+  verseInTafsir: {
+    fontWeight: "700",
+    fontSize: 20,
+    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
   },
 
   // Bottom navigation

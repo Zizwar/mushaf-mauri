@@ -119,9 +119,9 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const isDark = !!theme.night;
   const colors = useMemo(
     () => ({
-      miniBar: isDark ? "#0d0d1a" : "#1a1a2e",
-      miniText: "#ffffff",
-      miniSecondary: "rgba(255,255,255,0.6)",
+      miniBar: isDark ? "#0d0d1a" : theme.backgroundColor || "#f5f5f0",
+      miniText: isDark ? "#ffffff" : theme.color || "#1a1a2e",
+      miniSecondary: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
       fullBg: isDark ? "#0d0d1a" : "#f8f9fa",
       fullText: isDark ? "#e8e8e8" : "#1a1a2e",
       fullSecondary: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
@@ -131,7 +131,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       modalBorder: isDark ? "rgba(255,255,255,0.08)" : "#eeeeee",
       accent: ACCENT,
       accentLight: isDark ? "rgba(66,133,244,0.2)" : ACCENT_LIGHT,
-      progressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.25)",
+      progressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
       fullProgressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
       sliderThumb: ACCENT,
     }),
@@ -147,9 +147,29 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     return loc;
   }, [lang]);
 
-  const reciters: { id: string; voice: string }[] = useMemo(
-    () => listVoiceMoqri(translations),
-    [translations],
+  const recordingProfiles = useAppStore((s) => s.recordingProfiles);
+
+  const reciters: { id: string; voice: string; isProfile?: boolean }[] = useMemo(
+    () => {
+      const base = listVoiceMoqri(translations);
+      // Insert recording profiles after the user recording entry
+      if (recordingProfiles.length > 0) {
+        const userIdx = base.findIndex((r: { id: string }) => r.id === USER_RECORDING_ID);
+        const insertAt = userIdx >= 0 ? userIdx + 1 : 1;
+        const profileEntries = recordingProfiles.map((p: { id: string; name: string }) => ({
+          id: `__profile_${p.id}__`,
+          voice: p.name,
+          isProfile: true,
+        }));
+        return [
+          ...base.slice(0, insertAt),
+          ...profileEntries,
+          ...base.slice(insertAt),
+        ];
+      }
+      return base;
+    },
+    [translations, recordingProfiles],
   );
 
   const currentReciterName = useMemo(
@@ -1020,6 +1040,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             renderItem={({ item }) => {
               const isActive = moqriId === item.id;
               const isUser = item.id === USER_RECORDING_ID;
+              const isProfile = !!(item as any).isProfile;
               return (
                 <Pressable
                   style={({ pressed }) => [
@@ -1031,6 +1052,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                         : pressed
                         ? colors.accentLight
                         : "transparent",
+                    },
+                    isProfile && {
+                      borderLeftWidth: 3,
+                      borderLeftColor: "#e91e63",
                     },
                   ]}
                   onPress={() => handleReciterChange(item.id)}
@@ -1052,6 +1077,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                         style={styles.reciterCheckIcon}
                       />
                     )}
+                    {isProfile && !isActive && (
+                      <Ionicons
+                        name="person-circle-outline"
+                        size={18}
+                        color="#e91e63"
+                        style={styles.reciterCheckIcon}
+                      />
+                    )}
                     <Text
                       style={[
                         styles.reciterItemText,
@@ -1062,6 +1095,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
                         },
                         isUser && !isActive && {
                           color: RECORDING_COLOR,
+                          fontWeight: "600",
+                        },
+                        isProfile && !isActive && {
+                          color: "#e91e63",
                           fontWeight: "600",
                         },
                       ]}
