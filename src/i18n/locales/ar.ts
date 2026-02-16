@@ -227,6 +227,7 @@ export default {
   // About & Support
   about: "حول التطبيق",
   developer: "المطور",
+  contact_dev: "مراسلة المبرمج",
   links: "الروابط",
   privacy_policy: "سياسة الخصوصية",
   open_source: "مشروع مفتوح المصدر",

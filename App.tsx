@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from "react";
+import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
 import HomeScreen from "./src/screens/HomeScreen";
 import MushafViewer from "./src/screens/MushafViewer";
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -27,8 +29,22 @@ type Screen =
   | "autoscroll";
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    hafs: require("./assets/fonts/hafs.ttf"),
+    rustam: require("./assets/fonts/rustam.ttf"),
+    uthmanic: require("./assets/fonts/uthmanic.ttf"),
+  });
+
   const hasCompletedSetup = useAppStore((s) => s.hasCompletedSetup);
   const [screen, setScreen] = useState<Screen>(hasCompletedSetup ? "mushaf" : "home");
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1a5c2e" />
+      </View>
+    );
+  }
 
   const handleNavigateToPage = useCallback((page: number, sura?: number, aya?: number) => {
     useAppStore.getState().setCurrentPage(page);

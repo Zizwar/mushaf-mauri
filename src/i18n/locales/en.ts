@@ -227,6 +227,7 @@ export default {
   // About & Support
   about: "About",
   developer: "Developer",
+  contact_dev: "Contact Developer",
   links: "Links",
   privacy_policy: "Privacy Policy",
   open_source: "Open Source Project",

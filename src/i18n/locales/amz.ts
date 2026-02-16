@@ -227,6 +227,7 @@ export default {
   // About & Support
   about: "ⵅⴼ ⵓⵙⵏⴰⵙ",
   developer: "ⴰⵎⵙⵏⴼⵍⵓⵍ",
+  contact_dev: "ⴰⵔⴰ ⵉ ⵓⵎⵙⵏⴼⵍⵓⵍ",
   links: "ⵉⵙⵖⵏⴰⵏ",
   privacy_policy: "ⵜⴰⵙⵔⵜⵉⵜ ⵏ ⵜⵉⵏⵏⵓⵜⵍⴰ",
   open_source: "ⴰⵙⵏⴼⴰⵔ ⴰⵏⵉⵍⵍⵉ",

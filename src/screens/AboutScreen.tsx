@@ -191,60 +191,47 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
             {t("donors", lang)}
           </Text>
 
-          {DONORS.map((donor) => (
-            <View
-              key={donor.code}
-              style={[
-                styles.donorCard,
-                {
-                  backgroundColor: isDark ? "#111125" : "#fafafa",
-                  borderColor,
-                  flexDirection: rowDir,
-                },
-              ]}
-            >
-              {/* Avatar */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.donorsScrollContent}
+          >
+            {DONORS.map((donor) => (
               <View
-                style={[styles.donorAvatar, { backgroundColor: donor.color }]}
+                key={donor.code}
+                style={[
+                  styles.donorCardCompact,
+                  {
+                    backgroundColor: isDark ? "#111125" : "#fafafa",
+                    borderColor,
+                  },
+                ]}
               >
-                <Text style={styles.donorAvatarText}>
-                  {donor.name.charAt(0)}
-                </Text>
-              </View>
-
-              {/* Info */}
-              <View style={styles.donorInfo}>
                 <View
-                  style={[styles.donorNameRow, { flexDirection: rowDir }]}
+                  style={[styles.donorAvatar, { backgroundColor: donor.color }]}
                 >
-                  <Text
-                    style={[
-                      styles.donorName,
-                      { color: textColor },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {donor.name}
-                  </Text>
-                  <Text style={[styles.donorCode, { color: mutedColor }]}>
-                    {donor.code}
+                  <Text style={styles.donorAvatarText}>
+                    {donor.name.charAt(0)}
                   </Text>
                 </View>
+                <Text
+                  style={[styles.donorName, { color: textColor, textAlign: "center" }]}
+                  numberOfLines={1}
+                >
+                  {donor.name}
+                </Text>
                 <Text style={[styles.donorAmount, { color: ACCENT }]}>
                   {donor.amount}
                 </Text>
                 <Text
-                  style={[
-                    styles.donorMessage,
-                    { color: mutedColor },
-                  ]}
+                  style={[styles.donorMessage, { color: mutedColor, textAlign: "center" }]}
                   numberOfLines={2}
                 >
                   {donor.message}
                 </Text>
               </View>
-            </View>
-          ))}
+            ))}
+          </ScrollView>
 
           <Text style={[styles.thankDonors, { color: mutedColor }]}>
             {t("thank_donors", lang)}
@@ -259,10 +246,24 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
           <Text style={[styles.infoText, { color: textColor, textAlign }]}>
             Brahim Bidi
           </Text>
-          <Pressable onPress={() => openLink("mailto:Ibrahimbidi@ymail.com")}>
-            <Text style={[styles.linkText, { color: ACCENT, textAlign }]}>
-              Ibrahimbidi@ymail.com
-            </Text>
+          <Pressable
+            onPress={() => openLink("mailto:ibrahimbidi@yahoo.com")}
+            style={({ pressed }) => [
+              styles.contactDevBtn,
+              {
+                backgroundColor: pressed ? ACCENT : "transparent",
+                borderColor: ACCENT,
+              },
+            ]}
+          >
+            {({ pressed }) => (
+              <View style={[styles.contactDevBtnInner, { flexDirection: rowDir }]}>
+                <Ionicons name="mail-outline" size={18} color={pressed ? "#fff" : ACCENT} />
+                <Text style={[styles.contactDevBtnText, { color: pressed ? "#fff" : ACCENT }]}>
+                  {t("contact_dev", lang)}
+                </Text>
+              </View>
+            )}
           </Pressable>
         </View>
 
@@ -440,13 +441,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 8,
   },
-  donorCard: {
-    alignItems: "flex-start",
+  donorsScrollContent: {
     gap: 10,
+    paddingVertical: 4,
+    paddingHorizontal: 2,
+  },
+  donorCardCompact: {
+    alignItems: "center",
+    gap: 6,
     padding: 10,
     borderRadius: 10,
     borderWidth: StyleSheet.hairlineWidth,
-    marginBottom: 8,
+    width: 130,
   },
   donorAvatar: {
     width: 34,
@@ -517,5 +523,22 @@ const styles = StyleSheet.create({
     fontSize: 13,
     paddingVertical: 2,
     fontFamily: "monospace",
+  },
+  contactDevBtn: {
+    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginTop: 8,
+    alignSelf: "center",
+  },
+  contactDevBtnInner: {
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+  },
+  contactDevBtnText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

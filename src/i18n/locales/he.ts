@@ -218,6 +218,7 @@ export default {
   side_by_side: "השוואה זה לצד זה",
   about: "אודות",
   developer: "מפתח",
+  contact_dev: "צור קשר עם המפתח",
   links: "קישורים",
   privacy_policy: "מדיניות פרטיות",
   open_source: "פרויקט קוד פתוח",
