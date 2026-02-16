@@ -28,6 +28,7 @@ const LANGUAGES: { key: LangKey; label: string }[] = [
   { key: "en", label: "EN" },
   { key: "fr", label: "FR" },
   { key: "amz", label: "ⵣ" },
+  { key: "he", label: "עב" },
 ];
 
 const MUSHAFS: { key: Quira; labelKey: string }[] = [
@@ -44,7 +45,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
   const setTheme = useAppStore((s) => s.setTheme);
 
   const isNight = !!theme.night;
-  const isRTL = lang === "ar" || lang === "amz";
+  const isRTL = lang === "ar" || lang === "amz" || lang === "he";
   const textColor = theme.color;
   const mutedColor = isNight ? "#888" : "#999";
   const bgColor = isNight ? "#111122" : "#fafafa";
@@ -200,6 +201,30 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 <Ionicons name="calendar-outline" size={22} color={accentColor} />
                 <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
                   {t("khatma", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* Tasbih */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("tasbih")}
+              >
+                <Ionicons name="radio-button-on-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("tasbih", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* Auto-scroll / Prayer Mode */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("autoscroll")}
+              >
+                <Ionicons name="swap-vertical-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("prayer_mode", lang)}
                 </Text>
                 <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>

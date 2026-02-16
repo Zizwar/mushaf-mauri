@@ -16,6 +16,7 @@ interface PersistedSettings {
   themeName: string;
   moqriId: string;
   currentPage: number;
+  quranFont: string;
 }
 
 // ---------------------------------------------------------------------------

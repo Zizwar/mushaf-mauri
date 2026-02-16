@@ -9,6 +9,8 @@ import BookmarksScreen from "./src/screens/BookmarksScreen";
 import RecitingScreen from "./src/screens/RecitingScreen";
 import KhatmaScreen from "./src/screens/KhatmaScreen";
 import AboutScreen from "./src/screens/AboutScreen";
+import TasbihScreen from "./src/screens/TasbihScreen";
+import AutoScrollScreen from "./src/screens/AutoScrollScreen";
 import { useAppStore } from "./src/store/useAppStore";
 
 type Screen =
@@ -20,7 +22,9 @@ type Screen =
   | "bookmarks"
   | "recitation"
   | "khatma"
-  | "about";
+  | "about"
+  | "tasbih"
+  | "autoscroll";
 
 export default function App() {
   const hasCompletedSetup = useAppStore((s) => s.hasCompletedSetup);
@@ -63,6 +67,10 @@ export default function App() {
         <KhatmaScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "about" ? (
         <AboutScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "tasbih" ? (
+        <TasbihScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "autoscroll" ? (
+        <AutoScrollScreen onGoBack={() => setScreen("mushaf")} />
       ) : (
         <MushafViewer
           onGoBack={hasCompletedSetup ? undefined : () => setScreen("home")}

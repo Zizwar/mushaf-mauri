@@ -31,6 +31,80 @@ interface SettingsScreenProps {
   onNavigate?: (screen: string) => void;
 }
 
+const FONT_OPTIONS = [
+  { key: "default", labelKey: "standard_font" },
+  { key: "hafs", labelKey: "hafs_font" },
+  { key: "rustam", labelKey: "rustam_font" },
+  { key: "uthmanic", labelKey: "uthmanic_font" },
+];
+
+function FontSelector() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const quranFont = useAppStore((s) => s.quranFont);
+  const setQuranFont = useAppStore((s) => s.setQuranFont);
+
+  const isDark = !!theme.night;
+  const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
+  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+
+  return (
+    <View style={{ gap: 8 }}>
+      <Text style={{ fontSize: 13, color: isDark ? "#888" : "#999", marginBottom: 4 }}>
+        {t("choose_font", lang)}
+      </Text>
+      {FONT_OPTIONS.map((font) => (
+        <Pressable
+          key={font.key}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 10,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: quranFont === font.key ? ACCENT : borderColor,
+            backgroundColor:
+              quranFont === font.key
+                ? isDark
+                  ? "#1a3a2e"
+                  : "#e8f5e9"
+                : "transparent",
+            gap: 10,
+          }}
+          onPress={() => setQuranFont(font.key)}
+        >
+          {quranFont === font.key && (
+            <Ionicons name="checkmark-circle" size={18} color={ACCENT} />
+          )}
+          <Text
+            style={{
+              fontSize: 15,
+              color: quranFont === font.key ? ACCENT : textColor,
+              fontWeight: quranFont === font.key ? "700" : "400",
+              fontFamily: font.key !== "default" ? font.key : undefined,
+            }}
+          >
+            {t(font.labelKey, lang)}
+          </Text>
+          {font.key !== "default" && (
+            <Text
+              style={{
+                fontSize: 18,
+                color: isDark ? "#aaa" : "#666",
+                fontFamily: font.key,
+                marginStart: "auto",
+              }}
+            >
+              بسم الله
+            </Text>
+          )}
+        </Pressable>
+      ))}
+    </View>
+  );
+}
+
 export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
@@ -340,6 +414,14 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
             <Ionicons name="chevron-forward" size={20} color={mutedColor} />
           </View>
         </Pressable>
+
+        {/* Font Selection */}
+        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+          {t("font_selection", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <FontSelector />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

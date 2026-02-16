@@ -95,6 +95,9 @@ interface AppState {
   // Khatma (Quran completion tracking)
   khatma: KhatmaState;
 
+  // Font preference for Quran text
+  quranFont: string; // "default" | "hafs" | "rustam" | "uthmanic"
+
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
   setTheme: (theme: Theme) => void;
@@ -118,6 +121,7 @@ interface AppState {
   setHasCompletedSetup: (done: boolean) => void;
   setTekrar: (tekrar: TekrarConfig) => void;
   setKhatma: (khatma: KhatmaState) => void;
+  setQuranFont: (font: string) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -168,6 +172,8 @@ export const useAppStore = create<AppState>((set) => ({
     selection: 0,
     ok: false,
   },
+
+  quranFont: _persisted.quranFont || "default",
 
   setLang: (lang) => { set({ lang }); saveSettings({ lang }); },
   setQuira: (quira) => { set({ quira }); saveSettings({ quira }); },
@@ -222,4 +228,5 @@ export const useAppStore = create<AppState>((set) => ({
   setHasCompletedSetup: (hasCompletedSetup) => { set({ hasCompletedSetup }); saveSettings({ hasCompletedSetup }); },
   setTekrar: (tekrar) => set({ tekrar }),
   setKhatma: (khatma) => set({ khatma }),
+  setQuranFont: (quranFont) => { set({ quranFont }); saveSettings({ quranFont }); },
 }));
