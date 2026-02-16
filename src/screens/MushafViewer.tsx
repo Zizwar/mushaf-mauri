@@ -182,7 +182,9 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       screen === "bookmarks" ||
       screen === "recitation" ||
       screen === "khatma" ||
-      screen === "about"
+      screen === "about" ||
+      screen === "tasbih" ||
+      screen === "autoscroll"
     ) {
       if (onNavigate) onNavigate(screen);
     }
