@@ -25,9 +25,41 @@ const WARSH_EXCEPTIONS: Record<
     type: "manual",
     map: { 1: [2], 2: [3], 3: [4], 4: [5], 5: [6], 6: [7], 7: [7] },
   },
+  // === Category 1: Simple Fawatih Offset (+1) — 17 surahs ===
+  // Warsh merges fawatih letters + next ayah into one; subsequent ayahs offset +1
+  // الم surahs:
   2: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  // Al-Imran: 200 ayahs in both. Warsh merges الم (ayahs 1+2), but splits Hafs ayah 92
-  // at {مما تحبون} to compensate → offset returns to 0 from ayah 93.
+  29: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  30: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  31: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  32: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // المص:
+  7: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // طه:
+  20: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // طسم:
+  26: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  28: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // يس:
+  36: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // ص:
+  38: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // حم surahs:
+  40: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  41: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  43: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  44: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  45: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  46: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+
+  // === Category 2: Double Fawatih Offset (+2) — Ash-Shura ===
+  // Warsh merges {حم} + {عسق} + next verse into one ayah → offset +2
+  42: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2, 3], offsetForSubsequent: 2 },
+
+  // === Category 3: Complex Structural Shifts ===
+
+  // Al-Imran (3): 200 ayahs in both. Warsh merges الم (ayahs 1+2), but splits
+  // Hafs ayah 92 at {مما تحبون} to compensate → offset returns to 0 from ayah 93.
   3: {
     type: "advanced",
     explicit_map: { 1: [1, 2], 91: [92], 92: [92] },
@@ -36,21 +68,22 @@ const WARSH_EXCEPTIONS: Record<
       { warshStart: 93, warshEnd: 200, hafsOffset: 0 },
     ],
   },
-  7: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  19: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  20: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  26: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  28: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  36: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  40: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  41: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  42: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  43: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  44: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  45: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  46: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  // Muhammad: Warsh 39 ayahs, Hafs 38. Warsh splits Hafs ayah 15 at {لذة للشاربين}.
-  // Warsh 15 & 16 both map to Hafs 15. From 17 onwards, offset -1.
+
+  // Maryam (19): Hafs 98 ayahs, Warsh 99 ayahs. Warsh merges كهيعص (1+2),
+  // but splits Hafs ayah 42 at {واذكر في الكتاب إبراهيم} → offset 0 from 43.
+  // A second split near the end accounts for Warsh having 99 total.
+  // TODO: verify second split point (likely near ayah 96-97)
+  19: {
+    type: "advanced",
+    explicit_map: { 1: [1, 2], 41: [42], 42: [42] },
+    ranges: [
+      { warshStart: 2, warshEnd: 40, hafsOffset: 1 },
+      { warshStart: 43, warshEnd: 99, hafsOffset: 0 },
+    ],
+  },
+
+  // Muhammad (47): Warsh 39 ayahs, Hafs 38. Warsh splits Hafs ayah 15
+  // at {لذة للشاربين}. Warsh 15 & 16 both map to Hafs 15.
   47: {
     type: "advanced",
     explicit_map: { 15: [15], 16: [15] },

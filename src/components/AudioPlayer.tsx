@@ -113,8 +113,8 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const isWarshDbMode = quira === "warsh" && (moqriId === "__warsh_db_1__" || moqriId === "__warsh_db_2__");
   const isWarshCdnMode = quira === "warsh" && moqriId.startsWith("warsh_");
 
-  // Queue for the second Hafs ayah audio when a Warsh CDN merged ayah plays
-  const warshCdnQueueRef = useRef<string | null>(null);
+  // Queue of pending Hafs ayah URIs when a Warsh CDN merged ayah plays
+  const warshCdnQueueRef = useRef<string[]>([]);
 
   // Keep refs in sync for listener access
   quiraRef.current = quira;
@@ -350,9 +350,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     // Warsh CDN mode: map Warsh ayah to Hafs ayah(s) for audio URL
     if (q === "warsh" && mid.startsWith("warsh_")) {
       const hafsAyahs = warshToHafsAyahs(sura, aya);
-      warshCdnQueueRef.current = hafsAyahs.length > 1
-        ? getAudioKsuUri(mid, sura, hafsAyahs[1])
-        : null;
+      warshCdnQueueRef.current = hafsAyahs.slice(1).map(h => getAudioKsuUri(mid, sura, h));
       const uri = getAudioKsuUri(mid, sura, hafsAyahs[0]);
       player.replace({ uri });
       player.play();
@@ -392,10 +390,9 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         return;
       }
 
-      // Warsh CDN queue: play the second merged ayah audio before advancing
-      if (warshCdnQueueRef.current) {
-        const queuedUri = warshCdnQueueRef.current;
-        warshCdnQueueRef.current = null;
+      // Warsh CDN queue: play next queued merged ayah audio before advancing
+      if (warshCdnQueueRef.current.length > 0) {
+        const queuedUri = warshCdnQueueRef.current.shift()!;
         player.replace({ uri: queuedUri });
         player.play();
         return;
@@ -542,9 +539,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       // Warsh CDN mode: map Warsh ayah to Hafs ayah(s) for audio URL
       if (isWarshCdnMode) {
         const hafsAyahs = warshToHafsAyahs(sura, aya);
-        warshCdnQueueRef.current = hafsAyahs.length > 1
-          ? getAudioKsuUri(moqriId, sura, hafsAyahs[1])
-          : null;
+        warshCdnQueueRef.current = hafsAyahs.slice(1).map(h => getAudioKsuUri(moqriId, sura, h));
         const mappedUri = getAudioKsuUri(moqriId, sura, hafsAyahs[0]);
         player.replace({ uri: mappedUri });
         player.play();
@@ -809,9 +804,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
           player.pause();
           currentAyaRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
           const hafsAyahs = warshToHafsAyahs(selectedAya.sura, selectedAya.aya);
-          warshCdnQueueRef.current = hafsAyahs.length > 1
-            ? getAudioKsuUri(id, selectedAya.sura, hafsAyahs[1])
-            : null;
+          warshCdnQueueRef.current = hafsAyahs.slice(1).map(h => getAudioKsuUri(id, selectedAya.sura, h));
           const uri = getAudioKsuUri(id, selectedAya.sura, hafsAyahs[0]);
           player.replace({ uri });
           player.play();
