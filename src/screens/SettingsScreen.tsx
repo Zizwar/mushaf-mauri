@@ -176,12 +176,11 @@ function WarshAudioDownloader() {
     if (!recitorDir.exists) recitorDir.create();
 
     let count = 0;
-    // Download files: hizb01a.mp3 through hizb30d.mp3
-    const parts = ["a", "b", "c", "d"];
+    // Download files: {folder}-001-1.mp3 through {folder}-030-4.mp3
     for (let hizb = 1; hizb <= 30; hizb++) {
-      for (const part of parts) {
+      for (let part = 1; part <= 4; part++) {
         if (abortRef.current) break;
-        const fileName = `hizb${String(hizb).padStart(2, "0")}${part}.mp3`;
+        const fileName = `${recitor.folder}-${String(hizb).padStart(3, "0")}-${part}.mp3`;
         const destFile = new File(recitorDir, fileName);
 
         if (destFile.exists) {
