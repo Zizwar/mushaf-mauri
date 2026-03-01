@@ -19,7 +19,7 @@ import { t } from "../i18n";
 import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listAuthorTafsir, listAuthorTarajem } from "../data/listAuthor";
-import { fetchTafsirOnline, fetchTarjamaOnline } from "../utils/tafsir";
+import { fetchTafsirOnline, fetchTarjamaOnline, warshToHafsAyahs } from "../utils/tafsir";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.85;
@@ -62,6 +62,7 @@ export default function TafsirModal({
 }: TafsirModalProps) {
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
+  const quira = useAppStore((s) => s.quira);
 
   // Navigation state
   const [currentSura, setCurrentSura] = useState(initialSura);
@@ -147,12 +148,22 @@ export default function TafsirModal({
       setContent("");
 
       try {
+        const hafsAyahs = quira === "warsh"
+          ? warshToHafsAyahs(currentSura, currentAya)
+          : [currentAya];
+
         let result: string;
 
         if (activeTab === "tafsir") {
-          result = await fetchTafsirOnline(selectedTafsir, currentSura, currentAya);
+          const parts = await Promise.all(
+            hafsAyahs.map((aya) => fetchTafsirOnline(selectedTafsir, currentSura, aya))
+          );
+          result = parts.join("\n\n---\n\n");
         } else {
-          result = await fetchTarjamaOnline(selectedTarjama, currentSura, currentAya);
+          const parts = await Promise.all(
+            hafsAyahs.map((aya) => fetchTarjamaOnline(selectedTarjama, currentSura, aya))
+          );
+          result = parts.join("\n\n---\n\n");
         }
 
         if (!cancelled) {
@@ -176,7 +187,7 @@ export default function TafsirModal({
     return () => {
       cancelled = true;
     };
-  }, [visible, activeTab, selectedTafsir, selectedTarjama, currentSura, currentAya, lang]);
+  }, [visible, activeTab, selectedTafsir, selectedTarjama, currentSura, currentAya, lang, quira]);
 
   // Navigation helpers
   const suraData = QuranData.Sura[currentSura];
