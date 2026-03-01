@@ -9,22 +9,33 @@ import { openDatabaseAsync } from "expo-sqlite";
  * Exception map for surahs where Warsh (Madani) ayah numbering
  * differs from Hafs (Kufi) numbering.
  *
- * - Al-Fatihah (1): manual mapping (Warsh doesn't count Basmalah,
- *   splits Hafs ayah 7 into two)
- * - Fawatih surahs (2,3,7,19,20,26,28,36,40-46): Warsh merges
- *   Hafs ayahs 1+2 into one; subsequent ayahs offset by +1
+ * Types:
+ * - "manual": full explicit map (Al-Fatihah)
+ * - "offset": simple fawatih merge with constant offset for all subsequent ayahs
+ * - "advanced": explicit_map for merge/split points + ranges with variable offsets
+ *   (for surahs with internal shifts or count mismatches)
  */
 const WARSH_EXCEPTIONS: Record<
   number,
   | { type: "manual"; map: Record<number, number[]> }
   | { type: "offset"; mergeAtWarshAyah: number; hafsTargetsToMerge: number[]; offsetForSubsequent: number }
+  | { type: "advanced"; explicit_map: Record<number, number[]>; ranges: { warshStart: number; warshEnd: number; hafsOffset: number }[] }
 > = {
   1: {
     type: "manual",
     map: { 1: [2], 2: [3], 3: [4], 4: [5], 5: [6], 6: [7], 7: [7] },
   },
   2: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
-  3: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // Al-Imran: 200 ayahs in both. Warsh merges الم (ayahs 1+2), but splits Hafs ayah 92
+  // at {مما تحبون} to compensate → offset returns to 0 from ayah 93.
+  3: {
+    type: "advanced",
+    explicit_map: { 1: [1, 2], 91: [92], 92: [92] },
+    ranges: [
+      { warshStart: 2, warshEnd: 90, hafsOffset: 1 },
+      { warshStart: 93, warshEnd: 200, hafsOffset: 0 },
+    ],
+  },
   7: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
   19: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
   20: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
@@ -38,6 +49,16 @@ const WARSH_EXCEPTIONS: Record<
   44: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
   45: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
   46: { type: "offset", mergeAtWarshAyah: 1, hafsTargetsToMerge: [1, 2], offsetForSubsequent: 1 },
+  // Muhammad: Warsh 39 ayahs, Hafs 38. Warsh splits Hafs ayah 15 at {لذة للشاربين}.
+  // Warsh 15 & 16 both map to Hafs 15. From 17 onwards, offset -1.
+  47: {
+    type: "advanced",
+    explicit_map: { 15: [15], 16: [15] },
+    ranges: [
+      { warshStart: 1, warshEnd: 14, hafsOffset: 0 },
+      { warshStart: 17, warshEnd: 39, hafsOffset: -1 },
+    ],
+  },
 };
 
 /**
@@ -52,7 +73,20 @@ export function warshToHafsAyahs(sura: number, warshAya: number): number[] {
     return exception.map[warshAya] ?? [warshAya];
   }
 
-  // offset type (fawatih)
+  if (exception.type === "advanced") {
+    // Check explicit_map first (merge/split points)
+    const mapped = exception.explicit_map[warshAya];
+    if (mapped) return mapped;
+    // Find matching range
+    for (const r of exception.ranges) {
+      if (warshAya >= r.warshStart && warshAya <= r.warshEnd) {
+        return [warshAya + r.hafsOffset];
+      }
+    }
+    return [warshAya];
+  }
+
+  // offset type (simple fawatih)
   if (warshAya === exception.mergeAtWarshAyah) {
     return exception.hafsTargetsToMerge;
   }
