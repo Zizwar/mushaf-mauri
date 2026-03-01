@@ -5,8 +5,7 @@ import { coordinateMadina } from "../data/coordinateMadina";
 import { coordinateMuhammadi } from "../data/coordinateMuhammadi";
 // @ts-ignore
 import indexMadina from "../data/indexMadina";
-// @ts-ignore
-import indexMuhammadi from "../data/indexMuhammadi";
+import { getWarshIndex } from "./warshAudioDB";
 import type { AyahPosition } from "../types";
 import type { Quira } from "../store/useAppStore";
 
@@ -165,13 +164,18 @@ export function getPageCoordinates(page: number, quira: Quira = "madina"): AyahP
 }
 
 function getIndex(quira: Quira) {
-  return quira === "warsh" ? indexMuhammadi : indexMadina;
+  return quira === "warsh" ? getWarshIndex() : indexMadina;
+}
+
+// indexMuhammadi pages start at 2 while app pages start at 1 → offset -1 for warsh
+function adjustPage(page: number, quira: Quira): number {
+  return quira === "warsh" ? page - 1 : page;
 }
 
 export function getPageBySuraAya(sura: number, aya: number, quira: Quira = "madina"): number {
   const index = getIndex(quira);
   const entry = index.find(([, , s, a]: number[]) => s === sura && a === aya);
-  return entry ? entry[1] : 1;
+  return entry ? adjustPage(entry[1], quira) : 1;
 }
 
 export function getNextAya(
@@ -181,7 +185,7 @@ export function getNextAya(
   const currentIdx = index.findIndex(([, , s, a]: number[]) => s === sura && a === aya);
   if (currentIdx === -1 || currentIdx >= index.length - 1) return null;
   const next = index[currentIdx + 1];
-  return { sura: next[2], aya: next[3], page: next[1] };
+  return { sura: next[2], aya: next[3], page: adjustPage(next[1], quira) };
 }
 
 export function getPrevAya(
@@ -191,9 +195,9 @@ export function getPrevAya(
   const currentIdx = index.findIndex(([, , s, a]: number[]) => s === sura && a === aya);
   if (currentIdx <= 0) return null;
   const prev = index[currentIdx - 1];
-  return { sura: prev[2], aya: prev[3], page: prev[1] };
+  return { sura: prev[2], aya: prev[3], page: adjustPage(prev[1], quira) };
 }
 
 export function getTotalPages(quira: Quira = "madina"): number {
-  return quira === "warsh" ? 604 : 604;
+  return quira === "warsh" ? 638 : 604;
 }

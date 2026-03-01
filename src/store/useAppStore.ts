@@ -98,6 +98,9 @@ interface AppState {
   // Font preference for Quran text
   quranFont: string; // "default" | "hafs" | "rustam" | "uthmanic"
 
+  // Warsh-specific audio state
+  warshRecitorId: number; // 1=Al-Kouchi, 2=Al-Kazabri
+
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
   setTheme: (theme: Theme) => void;
@@ -122,6 +125,7 @@ interface AppState {
   setTekrar: (tekrar: TekrarConfig) => void;
   setKhatma: (khatma: KhatmaState) => void;
   setQuranFont: (font: string) => void;
+  setWarshRecitorId: (id: number) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -174,6 +178,7 @@ export const useAppStore = create<AppState>((set) => ({
   },
 
   quranFont: _persisted.quranFont || "default",
+  warshRecitorId: _persisted.warshRecitorId || 1,
 
   setLang: (lang) => { set({ lang }); saveSettings({ lang }); },
   setQuira: (quira) => { set({ quira }); saveSettings({ quira }); },
@@ -229,4 +234,5 @@ export const useAppStore = create<AppState>((set) => ({
   setTekrar: (tekrar) => set({ tekrar }),
   setKhatma: (khatma) => set({ khatma }),
   setQuranFont: (quranFont) => { set({ quranFont }); saveSettings({ quranFont }); },
+  setWarshRecitorId: (warshRecitorId) => { set({ warshRecitorId }); saveSettings({ warshRecitorId }); },
 }));

@@ -301,4 +301,16 @@ export default {
   copy_tafsir: "نسخ التفسير",
   // Translation empty
   no_translation: "الترجمة غير متوفرة لهذه الآية",
+  // Prayer reading mode
+  prayer_reading_mode: "وضع القراءة للصلاة",
+  // Warsh reciters
+  warsh_db_reciters: "قراء ورش - المصحف الموري",
+  warsh_cdn_reciters: "قراء ورش - آخرون",
+  download_warsh_audio: "تنزيل صوتيات ورش",
+  download_warsh_desc: "لتشغيل وضع أوف لاين، قم بتنزيل الصوتيات",
+  download_progress: "جاري التنزيل",
+  files_downloaded: "ملفات تم تنزيلها",
+  recitor_alkouchi: "العيون الكوشي",
+  recitor_alkazabri: "عمر القزابري",
+  maghribi_font: "خط مغربي",
 };

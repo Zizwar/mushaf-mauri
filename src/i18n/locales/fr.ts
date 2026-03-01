@@ -301,4 +301,14 @@ export default {
   copy_tafsir: "Copier l'Exégèse",
   // Translation empty
   no_translation: "Traduction non disponible pour ce verset",
+  prayer_reading_mode: "Mode Lecture Pri\u00e8re",
+  warsh_db_reciters: "R\u00e9citateurs Warsh - Mushaf Mauri",
+  warsh_cdn_reciters: "R\u00e9citateurs Warsh - Autres",
+  download_warsh_audio: "T\u00e9l\u00e9charger l'audio Warsh",
+  download_warsh_desc: "T\u00e9l\u00e9chargez les fichiers audio pour le mode hors ligne",
+  download_progress: "T\u00e9l\u00e9chargement",
+  files_downloaded: "fichiers t\u00e9l\u00e9charg\u00e9s",
+  recitor_alkouchi: "Al-Uyun Al-Kouchi",
+  recitor_alkazabri: "Omar Al-Kazabri",
+  maghribi_font: "Police Maghribi",
 };

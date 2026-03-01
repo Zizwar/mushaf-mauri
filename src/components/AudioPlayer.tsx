@@ -32,6 +32,7 @@ import { QuranData } from "../data/quranData";
 import { listVoiceMoqri } from "../data/listAuthor";
 import { getAyahText } from "../utils/ayahText";
 import { saveRecording, getRecordingUri, createProfile, loadProfiles } from "../utils/recordings";
+import * as WarshEngine from "../utils/warshAudioEngine";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -104,16 +105,23 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const tekrar = useAppStore((s) => s.tekrar);
   const setTekrar = useAppStore((s) => s.setTekrar);
 
+  const warshRecitorId = useAppStore((s) => s.warshRecitorId);
+  const warshRecitorIdRef = useRef(warshRecitorId);
+
   const isUserRecording = moqriId === USER_RECORDING_ID;
+  const isWarshDbMode = quira === "warsh" && (moqriId === "__warsh_db_1__" || moqriId === "__warsh_db_2__");
 
   // Keep refs in sync for listener access
   quiraRef.current = quira;
   moqriIdRef.current = moqriId;
+  warshRecitorIdRef.current = warshRecitorId;
   tekrarRef.current = tekrar;
   listenThenRecordRef.current = listenThenRecord;
 
   // -- Derived from status (replaces local state) --
-  const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
+  const progress = isWarshDbMode
+    ? WarshEngine.getWarshProgress()
+    : status.duration > 0 ? status.currentTime / status.duration : 0;
 
   // -- Derived theme values --
   const isDark = !!theme.night;
@@ -149,9 +157,20 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
 
   const recordingProfiles = useAppStore((s) => s.recordingProfiles);
 
-  const reciters: { id: string; voice: string; isProfile?: boolean }[] = useMemo(
+  const reciters: { id: string; voice: string; isProfile?: boolean; type?: string }[] = useMemo(
     () => {
-      const base = listVoiceMoqri(translations);
+      const all = listVoiceMoqri(translations);
+      // Filter by mushaf type:
+      // - Warsh mode: only user recording + Al-Kouchi & Al-Kazabri (DB reciters)
+      // - Hafs mode: show user recording + all non-warsh reciters
+      const base = quira === "warsh"
+        ? all.filter((r: { id: string; type?: string }) =>
+            r.id === USER_RECORDING_ID || r.type === "warsh_db"
+          )
+        : all.filter((r: { id: string; type?: string }) =>
+            r.type !== "warsh_db"
+          );
+
       // Insert recording profiles after the user recording entry
       if (recordingProfiles.length > 0) {
         const userIdx = base.findIndex((r: { id: string }) => r.id === USER_RECORDING_ID);
@@ -169,7 +188,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       }
       return base;
     },
-    [translations, recordingProfiles],
+    [translations, recordingProfiles, quira],
   );
 
   const currentReciterName = useMemo(
@@ -182,9 +201,15 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const suraData = selectedAya ? QuranData.Sura[selectedAya.sura] : null;
   const suraNameAr = suraData?.[0] ?? "";
   const suraNameEn = suraData?.[2] ?? "";
-  const ayahText = selectedAya
-    ? getAyahText(selectedAya.sura, selectedAya.aya, quira)
-    : null;
+
+  const [ayahText, setAyahText] = useState<string | null>(null);
+  useEffect(() => {
+    if (selectedAya) {
+      getAyahText(selectedAya.sura, selectedAya.aya, quira).then(setAyahText);
+    } else {
+      setAyahText(null);
+    }
+  }, [selectedAya?.sura, selectedAya?.aya, quira]);
 
   // ===========================================================================
   // Audio setup
@@ -198,6 +223,45 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       // Note: useAudioPlayer hook auto-releases the player on unmount
     };
   }, []);
+
+  // Initialize Warsh engine + callbacks
+  useEffect(() => {
+    if (quira === "warsh") {
+      WarshEngine.initWarshEngine().catch(() => {});
+      WarshEngine.setCallbacks(
+        // onVerseChange
+        (v) => {
+          const store = useAppStore.getState();
+          const sel = store.selectedAya;
+          // DB pageNum is 2-639, app pages are 1-638 → offset -1
+          const appPage = v.pageNum - 1;
+          if (!sel || sel.sura !== v.suraID || sel.aya !== v.ayaNum) {
+            store.setSelectedAya({
+              sura: v.suraID,
+              aya: v.ayaNum,
+              page: appPage,
+              id: `s${v.suraID}a${v.ayaNum}z`,
+            });
+            if (sel && sel.page !== appPage) {
+              onScrollToPage(appPage);
+            }
+          }
+        },
+        // onFinished
+        () => {
+          useAppStore.getState().setIsPlaying(false);
+        }
+      );
+    }
+    return () => {
+      WarshEngine.stopWarsh();
+    };
+  }, [quira, onScrollToPage]);
+
+  // Reset recitor folder cache when warshRecitorId changes
+  useEffect(() => {
+    WarshEngine.resetRecitorCache();
+  }, [warshRecitorId]);
 
   // Configure audio session once for background playback
   useEffect(() => {
@@ -220,8 +284,17 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     currentAyaRef.current = { sura, aya };
 
     const mid = moqriIdRef.current;
-    const isUser = mid === USER_RECORDING_ID;
     const q = quiraRef.current;
+
+    // Warsh DB mode: use WarshEngine
+    if (q === "warsh" && WarshEngine.isWarshDbRecitor(warshRecitorIdRef.current)) {
+      WarshEngine.playWarshVerse(sura, aya, page, warshRecitorIdRef.current).then((ok) => {
+        if (!ok) useAppStore.getState().setIsPlaying(false);
+      });
+      return;
+    }
+
+    const isUser = mid === USER_RECORDING_ID;
     let uri: string | null;
     if (isUser) {
       const profileId = useAppStore.getState().activeProfileId;
@@ -351,6 +424,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     (sura: number, aya: number, _page: number) => {
       currentAyaRef.current = { sura, aya };
 
+      // Warsh DB mode
+      if (isWarshDbMode) {
+        WarshEngine.playWarshVerse(sura, aya, _page, warshRecitorId).then((ok) => {
+          if (ok) setIsPlaying(true);
+        });
+        return;
+      }
+
       let uri: string | null;
 
       if (isUserRecording) {
@@ -373,7 +454,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         artist: currentReciterName,
       }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     },
-    [player, moqriId, quira, isUserRecording, setIsPlaying, currentReciterName],
+    [player, moqriId, quira, isUserRecording, isWarshDbMode, warshRecitorId, setIsPlaying, currentReciterName],
   );
 
   // -- Handle pending play requests (from action modal, etc.) --
@@ -501,18 +582,31 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // ===========================================================================
   const handlePlayPause = useCallback(() => {
     if (!selectedAya) return;
+
+    // Warsh DB mode
+    if (isWarshDbMode) {
+      if (WarshEngine.isWarshPlaying()) {
+        WarshEngine.pauseWarsh();
+        setIsPlaying(false);
+      } else if (WarshEngine.isWarshLoaded()) {
+        WarshEngine.resumeWarsh();
+        setIsPlaying(true);
+      } else {
+        playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
+      }
+      return;
+    }
+
     if (status.playing) {
       player.pause();
       setIsPlaying(false);
     } else if (status.isLoaded && status.currentTime > 0) {
-      // Resume existing playback
       player.play();
       setIsPlaying(true);
     } else {
-      // Start fresh
       playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
     }
-  }, [selectedAya, status.playing, status.isLoaded, status.currentTime, player, setIsPlaying, playAya]);
+  }, [selectedAya, status.playing, status.isLoaded, status.currentTime, player, setIsPlaying, playAya, isWarshDbMode]);
 
   const handleNext = useCallback(() => {
     if (!selectedAya) return;
@@ -547,25 +641,53 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   }, [selectedAya, quira, isPlaying, setSelectedAya, onScrollToPage, playAya]);
 
   const handleStop = useCallback(() => {
+    if (isWarshDbMode) {
+      WarshEngine.stopWarsh();
+    }
     player.pause();
     player.replace(null);
     try { player.clearLockScreenControls(); } catch {}
     setIsPlaying(false);
     setSelectedAya(null);
-  }, [player, setIsPlaying, setSelectedAya]);
+  }, [player, setIsPlaying, setSelectedAya, isWarshDbMode]);
 
   // -- Seek on progress bar tap (full player) --
   const handleSeek = useCallback(
     async (fraction: number) => {
+      if (isWarshDbMode) {
+        await WarshEngine.seekWarsh(fraction);
+        return;
+      }
       if (status.duration <= 0) return;
       await player.seekTo(fraction * status.duration);
     },
-    [player, status.duration],
+    [player, status.duration, isWarshDbMode],
   );
 
   // -- Reciter change --
   const handleReciterChange = useCallback(
     (id: string) => {
+      // Handle Warsh DB reciters
+      if (id === "__warsh_db_1__" || id === "__warsh_db_2__") {
+        const dbId = id === "__warsh_db_1__" ? 1 : 2;
+        useAppStore.getState().setWarshRecitorId(dbId);
+        WarshEngine.resetRecitorCache();
+        setMoqriId(id);
+        setShowReciterModal(false);
+        // Stop current & play with Warsh engine
+        if (selectedAya) {
+          player.pause();
+          WarshEngine.stopWarsh();
+          WarshEngine.playWarshVerse(
+            selectedAya.sura, selectedAya.aya, selectedAya.page, dbId
+          ).then((ok) => { if (ok) setIsPlaying(true); });
+        }
+        return;
+      }
+
+      // Stop Warsh engine if switching away from it
+      WarshEngine.stopWarsh();
+
       setMoqriId(id);
       setShowReciterModal(false);
       // Always stop current audio and replay with new reciter

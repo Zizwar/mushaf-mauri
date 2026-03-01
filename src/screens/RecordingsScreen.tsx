@@ -184,6 +184,17 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
     sortedRecsRef.current = recordings;
   }, [recordings]);
 
+  // Cache ayah texts for display (async)
+  const [ayahTexts, setAyahTexts] = useState<Record<string, string>>({});
+  useEffect(() => {
+    if (recordings.length === 0) { setAyahTexts({}); return; }
+    Promise.all(
+      recordings.map((r) =>
+        getAyahText(r.sura, r.aya, quira).then((text) => [r.key, text ?? ""] as const)
+      )
+    ).then((entries) => setAyahTexts(Object.fromEntries(entries)));
+  }, [recordings, quira]);
+
   // -- Load data --
   const refreshProfiles = useCallback(() => {
     const profiles = loadProfiles(quira);
@@ -755,7 +766,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       const suraData = QuranData.Sura[item.sura];
       const suraName = suraData?.[0] ?? "";
       const page = getPageBySuraAya(item.sura, item.aya, quira);
-      const ayahText = getAyahText(item.sura, item.aya, quira);
+      const ayahText = ayahTexts[item.key] ?? null;
       const isPlaying = playingKey === item.key;
       const isRecording = recordingKey === item.key;
       const isSelected = selectedKeys.has(item.key);
@@ -985,6 +996,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       handleGoToAyah,
       handleOpenNote,
       handleDeleteRecording,
+      ayahTexts,
     ]
   );
 

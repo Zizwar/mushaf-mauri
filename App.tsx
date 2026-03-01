@@ -1,7 +1,8 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import { initWarshDB } from "./src/utils/warshAudioDB";
 import HomeScreen from "./src/screens/HomeScreen";
 import MushafViewer from "./src/screens/MushafViewer";
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -33,18 +34,14 @@ export default function App() {
     hafs: require("./assets/fonts/hafs.ttf"),
     rustam: require("./assets/fonts/rustam.ttf"),
     uthmanic: require("./assets/fonts/uthmanic.ttf"),
+    Maghribi: require("./assets/fonts/maghribi.otf"),
   });
 
   const hasCompletedSetup = useAppStore((s) => s.hasCompletedSetup);
   const [screen, setScreen] = useState<Screen>(hasCompletedSetup ? "mushaf" : "home");
 
-  if (!fontsLoaded) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#1a5c2e" />
-      </View>
-    );
-  }
+  // Initialize Warsh DB early so warsh index is available synchronously
+  useEffect(() => { initWarshDB().catch((e) => console.warn("[App] initWarshDB failed:", e)); }, []);
 
   const handleNavigateToPage = useCallback((page: number, sura?: number, aya?: number) => {
     useAppStore.getState().setCurrentPage(page);
@@ -58,6 +55,14 @@ export default function App() {
     }
     setScreen("mushaf");
   }, []);
+
+  if (!fontsLoaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" color="#1a5c2e" />
+      </View>
+    );
+  }
 
   return (
     <SafeAreaProvider>

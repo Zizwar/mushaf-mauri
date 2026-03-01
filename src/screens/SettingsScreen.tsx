@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,13 @@ import {
   abortDownload,
 } from "../utils/imageCache";
 import { invalidateImageCacheSet } from "../components/QuranPage";
+import {
+  initWarshDB,
+  getWarshRecitors,
+  type WarshRecitor,
+} from "../utils/warshAudioDB";
+import { getWarshAudioUri } from "../utils/api";
+import { File, Directory, Paths } from "expo-file-system";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ACCENT = "#1a5c2e";
@@ -33,6 +40,7 @@ interface SettingsScreenProps {
 
 const FONT_OPTIONS = [
   { key: "default", labelKey: "standard_font" },
+  { key: "Maghribi", labelKey: "maghribi_font" },
   { key: "hafs", labelKey: "hafs_font" },
   { key: "rustam", labelKey: "rustam_font" },
   { key: "uthmanic", labelKey: "uthmanic_font" },
@@ -101,6 +109,232 @@ function FontSelector() {
           )}
         </Pressable>
       ))}
+    </View>
+  );
+}
+
+// ==================== WARSH AUDIO DOWNLOAD ====================
+
+const TOTAL_WARSH_FILES = 120; // 30 hizb × 4 parts per recitor
+
+function WarshAudioDownloader() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const warshRecitorId = useAppStore((s) => s.warshRecitorId);
+  const setWarshRecitorId = useAppStore((s) => s.setWarshRecitorId);
+
+  const isDark = !!theme.night;
+  const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const inputBg = isDark ? "#2a2a3e" : "#f0f0f0";
+
+  const [recitors, setRecitors] = useState<WarshRecitor[]>([]);
+  const [downloading, setDownloading] = useState(false);
+  const [downloaded, setDownloaded] = useState(0);
+  const [total, setTotal] = useState(0);
+  const [cachedFiles, setCachedFiles] = useState(0);
+  const abortRef = useRef(false);
+
+  useEffect(() => {
+    initWarshDB()
+      .then(() => getWarshRecitors())
+      .then(setRecitors)
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    countCachedWarshFiles().then(setCachedFiles);
+  }, [warshRecitorId]);
+
+  async function countCachedWarshFiles(): Promise<number> {
+    try {
+      const recitor = recitors.find((r) => r.recitorId === warshRecitorId);
+      if (!recitor) return 0;
+      const dir = new Directory(Paths.document, `warsh-audio/${recitor.folder}`);
+      if (!dir.exists) return 0;
+      // Count .mp3 files in directory
+      const entries = dir.list();
+      return entries.filter((entry) => entry instanceof File && entry.name.endsWith(".mp3")).length;
+    } catch {
+      return 0;
+    }
+  }
+
+  const handleDownload = useCallback(async () => {
+    const recitor = recitors.find((r) => r.recitorId === warshRecitorId);
+    if (!recitor) return;
+
+    abortRef.current = false;
+    setDownloading(true);
+    setDownloaded(0);
+    setTotal(TOTAL_WARSH_FILES);
+
+    const baseDir = new Directory(Paths.document, "warsh-audio");
+    if (!baseDir.exists) baseDir.create();
+    const recitorDir = new Directory(baseDir, recitor.folder);
+    if (!recitorDir.exists) recitorDir.create();
+
+    let count = 0;
+    // Download files: hizb01a.mp3 through hizb30d.mp3
+    const parts = ["a", "b", "c", "d"];
+    for (let hizb = 1; hizb <= 30; hizb++) {
+      for (const part of parts) {
+        if (abortRef.current) break;
+        const fileName = `hizb${String(hizb).padStart(2, "0")}${part}.mp3`;
+        const destFile = new File(recitorDir, fileName);
+
+        if (destFile.exists) {
+          count++;
+          setDownloaded(count);
+          continue;
+        }
+
+        try {
+          const url = getWarshAudioUri(recitor.folder, fileName);
+          const resp = await fetch(url);
+          if (resp.ok) {
+            const buf = await resp.arrayBuffer();
+            destFile.write(new Uint8Array(buf));
+          }
+        } catch {}
+
+        count++;
+        setDownloaded(count);
+      }
+      if (abortRef.current) break;
+    }
+
+    setDownloading(false);
+    countCachedWarshFiles().then(setCachedFiles);
+  }, [recitors, warshRecitorId]);
+
+  const handleAbort = useCallback(() => {
+    abortRef.current = true;
+    setDownloading(false);
+  }, []);
+
+  const handleDelete = useCallback(() => {
+    const recitor = recitors.find((r) => r.recitorId === warshRecitorId);
+    if (!recitor) return;
+
+    Alert.alert(
+      t("delete_downloads", lang),
+      t("confirm_delete_downloads", lang),
+      [
+        { text: t("cancel", lang), style: "cancel" },
+        {
+          text: t("yes", lang),
+          style: "destructive",
+          onPress: () => {
+            try {
+              const dir = new Directory(Paths.document, `warsh-audio/${recitor.folder}`);
+              if (dir.exists) dir.delete();
+            } catch {}
+            setCachedFiles(0);
+          },
+        },
+      ]
+    );
+  }, [recitors, warshRecitorId, lang]);
+
+  const progressFraction = downloading && total > 0 ? downloaded / total : 0;
+
+  return (
+    <View style={{ gap: 12 }}>
+      {/* Recitor picker */}
+      <Text style={{ fontSize: 13, color: mutedColor, marginBottom: 4 }}>
+        {t("warsh_db_reciters", lang)}
+      </Text>
+      <View style={{ flexDirection: "row", gap: 10 }}>
+        {recitors.map((r) => (
+          <Pressable
+            key={r.recitorId}
+            style={[
+              styles.mushafChip,
+              {
+                borderColor: warshRecitorId === r.recitorId ? ACCENT : borderColor,
+                backgroundColor:
+                  warshRecitorId === r.recitorId
+                    ? isDark ? "#1a3a2e" : "#e8f5e9"
+                    : "transparent",
+              },
+            ]}
+            onPress={() => setWarshRecitorId(r.recitorId)}
+          >
+            {warshRecitorId === r.recitorId && (
+              <Ionicons name="checkmark-circle" size={16} color={ACCENT} />
+            )}
+            <Text
+              style={[
+                styles.mushafChipText,
+                {
+                  color: warshRecitorId === r.recitorId ? ACCENT : textColor,
+                  fontWeight: warshRecitorId === r.recitorId ? "700" : "400",
+                },
+              ]}
+            >
+              {r.name}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Status */}
+      <View style={styles.statusRow}>
+        <Ionicons
+          name={cachedFiles >= TOTAL_WARSH_FILES ? "cloud-done-outline" : "cloud-download-outline"}
+          size={22}
+          color={cachedFiles >= TOTAL_WARSH_FILES ? "#4caf50" : ACCENT}
+        />
+        <Text style={[styles.statusText, { color: textColor }]}>
+          {t("files_downloaded", lang)}: {cachedFiles} / {TOTAL_WARSH_FILES}
+        </Text>
+      </View>
+
+      {/* Progress bar */}
+      <View style={[styles.progressTrack, { backgroundColor: inputBg }]}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              backgroundColor: ACCENT,
+              width: downloading
+                ? `${Math.min(progressFraction * 100, 100)}%` as any
+                : `${Math.min((cachedFiles / TOTAL_WARSH_FILES) * 100, 100)}%` as any,
+            },
+          ]}
+        />
+      </View>
+
+      {downloading && (
+        <Text style={[styles.progressText, { color: mutedColor }]}>
+          {t("download_progress", lang)} {downloaded}/{total}
+        </Text>
+      )}
+
+      {/* Buttons */}
+      <View style={styles.buttonRow}>
+        {downloading ? (
+          <Pressable style={[styles.btn, styles.btnDanger]} onPress={handleAbort}>
+            <Ionicons name="stop-circle-outline" size={18} color="#fff" />
+            <Text style={styles.btnText}>{t("abort_download", lang)}</Text>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable style={[styles.btn, { backgroundColor: ACCENT }]} onPress={handleDownload}>
+              <Ionicons name="cloud-download-outline" size={18} color="#fff" />
+              <Text style={styles.btnText}>{t("download_warsh_audio", lang)}</Text>
+            </Pressable>
+            {cachedFiles > 0 && (
+              <Pressable style={[styles.btn, styles.btnDanger]} onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={18} color="#fff" />
+                <Text style={styles.btnText}>{t("delete_downloads", lang)}</Text>
+              </Pressable>
+            )}
+          </>
+        )}
+      </View>
     </View>
   );
 }
@@ -397,6 +631,18 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
             )}
           </View>
         </View>
+
+        {/* Warsh Audio Download Section (only when Warsh mode) */}
+        {quira === "warsh" && (
+          <>
+            <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+              {t("download_warsh_audio", lang)}
+            </Text>
+            <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+              <WarshAudioDownloader />
+            </View>
+          </>
+        )}
 
         {/* Recordings Section */}
         <Text style={[styles.sectionTitle, { color: mutedColor }]}>

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   View,
   Text,
@@ -63,8 +63,15 @@ export default function KhatmaScreen({ onGoBack }: KhatmaScreenProps) {
   );
 
   // Compute current portion info when khatma is active
-  const portionInfo = useMemo(() => {
-    if (!khatma.ok) return null;
+  const [portionInfo, setPortionInfo] = useState<{
+    startSura: number; startAya: number;
+    endSura: number; endAya: number;
+    startText: string | null; endText: string | null;
+    startPage: number; day: number; totalDays: number; isComplete: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    if (!khatma.ok) { setPortionInfo(null); return; }
 
     const currentStart = khatma.startRob3 + khatma.selection * khatma.rob3Day;
     const currentEnd = Math.min(currentStart + khatma.rob3Day, 240);
@@ -73,27 +80,23 @@ export default function KhatmaScreen({ onGoBack }: KhatmaScreenProps) {
     const endIdx = currentEnd >= 240 ? 239 : currentEnd;
     const endPos = getHizbQuarterPosition(endIdx);
 
-    if (!startPos || !endPos) return null;
+    if (!startPos || !endPos) { setPortionInfo(null); return; }
 
-    const startText = getAyahText(startPos.sura, startPos.aya, quira);
-    const endText = getAyahText(endPos.sura, endPos.aya, quira);
     const startPage = getPageBySuraAya(startPos.sura, startPos.aya, quira);
-
     const totalDays = Math.ceil((240 - (khatma.juz - 1) * 8) / khatma.rob3Day);
     const isComplete = khatma.selection >= totalDays;
 
-    return {
-      startSura: startPos.sura,
-      startAya: startPos.aya,
-      endSura: endPos.sura,
-      endAya: endPos.aya,
-      startText,
-      endText,
-      startPage,
-      day: khatma.selection + 1,
-      totalDays,
-      isComplete,
-    };
+    Promise.all([
+      getAyahText(startPos.sura, startPos.aya, quira),
+      getAyahText(endPos.sura, endPos.aya, quira),
+    ]).then(([startText, endText]) => {
+      setPortionInfo({
+        startSura: startPos.sura, startAya: startPos.aya,
+        endSura: endPos.sura, endAya: endPos.aya,
+        startText, endText, startPage,
+        day: khatma.selection + 1, totalDays, isComplete,
+      });
+    });
   }, [khatma, quira]);
 
   const handleStartKhatma = useCallback(() => {

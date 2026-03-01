@@ -58,10 +58,30 @@ export const listAuthorTarajem = [
   { name: "Hausa - Gumi", filter: "Africa", id: "ha_gumi" },
   { name: "Swahili - Al-Barwani", filter: "Africa", id: "sw_barwani" }
 ];
+// Warsh DB reciters (Al-Kouchi, Al-Kazabri) - use quadratic timing from SQLite DB
+export const WARSH_DB_RECITERS = [
+  { id: "__warsh_db_1__", warshRecitorId: 1 },
+  { id: "__warsh_db_2__", warshRecitorId: 2 },
+];
+
+// No CDN Warsh reciters — only DB reciters (Al-Kouchi, Al-Kazabri) for now
+export const WARSH_CDN_IDS = [];
+
 export const listVoiceMoqri = _lang => [
   {
     id: "__user_recording__",
     voice: _lang["recite_user"] || "My Recitation"
+  },
+  // Warsh DB reciters (shown only in Warsh mode)
+  {
+    id: "__warsh_db_1__",
+    voice: _lang["recitor_alkouchi"] || "العيون الكوشي",
+    type: "warsh_db"
+  },
+  {
+    id: "__warsh_db_2__",
+    voice: _lang["recitor_alkazabri"] || "عمر القزابري",
+    type: "warsh_db"
   },
   {
     id: "Hudhaify_64kbps",

@@ -146,9 +146,9 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
     }
   }, [longPressInfo, setSelectedAya]);
 
-  const handleBookmark = useCallback(() => {
+  const handleBookmark = useCallback(async () => {
     if (!longPressInfo) return;
-    const text = getAyahText(longPressInfo.sura, longPressInfo.aya, quira) ?? undefined;
+    const text = (await getAyahText(longPressInfo.sura, longPressInfo.aya, quira)) ?? undefined;
     useAppStore.getState().addBookmark({
       sura: longPressInfo.sura,
       aya: longPressInfo.aya,
@@ -184,7 +184,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       screen === "khatma" ||
       screen === "about" ||
       screen === "tasbih" ||
-      screen === "autoscroll"
+      screen === "autoscroll" ||
+      screen === "prayerMode"
     ) {
       if (onNavigate) onNavigate(screen);
     }

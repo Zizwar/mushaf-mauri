@@ -1,11 +1,8 @@
 // @ts-ignore
 import { ayatJson } from "../data/ayatJson";
 // @ts-ignore
-import { textwarsh } from "../data/textWarsh";
-// @ts-ignore
-import indexMuhammadi from "../data/indexMuhammadi";
-// @ts-ignore
 import indexMadina from "../data/indexMadina";
+import { getWarshIndex, searchWarshText, type WarshSearchResult } from "./warshAudioDB";
 // @ts-ignore
 import { QuranData } from "../data/quranData";
 import type { Quira } from "../store/useAppStore";
@@ -60,38 +57,31 @@ export interface SearchResult {
 /**
  * Search ayat by text (without tashkeel) and return results with tashkeel text.
  */
-export function searchAyatByText(query: string, quira: Quira = "madina"): SearchResult[] {
+export async function searchAyatByText(query: string, quira: Quira = "madina"): Promise<SearchResult[]> {
   if (!query || query.length < 2) return [];
 
-  const normalizedQuery = normalizeArabic(query);
-  const results: SearchResult[] = [];
-
   if (quira === "warsh") {
-    const idx = indexMuhammadi as number[][];
-    for (let i = 0; i < idx.length && results.length < 100; i++) {
-      const [id, page, sura, aya] = idx[i];
-      const tw = textwarsh[id - 1];
-      if (!tw) continue;
-      const plain = normalizeArabic(String(tw[1] ?? tw[0]));
-      if (plain.includes(normalizedQuery)) {
-        results.push({ sura, aya, page, text: String(tw[0]) });
-      }
-    }
-  } else {
-    for (let i = 0; i < ayatJson.length && results.length < 100; i++) {
-      const entry = ayatJson[i] as any[];
-      const plain = normalizeArabic(String(entry[4] ?? entry[3]));
-      if (plain.includes(normalizedQuery)) {
-        results.push({
-          sura: Number(entry[1]),
-          aya: Number(entry[2]),
-          page: Number(entry[5]),
-          text: String(entry[3]),
-        });
-      }
-    }
+    // SQL search — fast, no memory needed
+    const dbResults = await searchWarshText(query, 100);
+    // DB pages start at 2, app pages at 1 → offset -1
+    return dbResults.map((r) => ({ sura: r.sura, aya: r.aya, page: r.page - 1, text: r.text }));
   }
 
+  // Hafs: search in-memory ayatJson
+  const normalizedQuery = normalizeArabic(query);
+  const results: SearchResult[] = [];
+  for (let i = 0; i < ayatJson.length && results.length < 100; i++) {
+    const entry = ayatJson[i] as any[];
+    const plain = normalizeArabic(String(entry[4] ?? entry[3]));
+    if (plain.includes(normalizedQuery)) {
+      results.push({
+        sura: Number(entry[1]),
+        aya: Number(entry[2]),
+        page: Number(entry[5]),
+        text: String(entry[3]),
+      });
+    }
+  }
   return results;
 }
 
@@ -114,12 +104,12 @@ export function getFirstAyahOnPage(
   page: number,
   quira: Quira = "madina"
 ): { sura: number; aya: number } | null {
-  const index = quira === "warsh" ? indexMuhammadi : indexMadina;
-  const entry = (index as number[][]).find(([, p]: number[]) => p === page);
+  const index = quira === "warsh" ? getWarshIndex() : indexMadina;
+  // getWarshIndex() pages start at 2 while app pages start at 1 → offset +1
+  const searchPage = quira === "warsh" ? page + 1 : page;
+  const entry = (index as number[][]).find(([, p]: number[]) => p === searchPage);
   if (!entry) return null;
-  return quira === "warsh"
-    ? { sura: entry[2], aya: entry[3] }
-    : { sura: entry[2], aya: entry[3] };
+  return { sura: entry[2], aya: entry[3] };
 }
 
 /**
@@ -206,9 +196,11 @@ export function getPageBySuraAya(
   aya: number,
   quira: Quira = "madina"
 ): number {
-  const index = quira === "warsh" ? indexMuhammadi : indexMadina;
+  const index = quira === "warsh" ? getWarshIndex() : indexMadina;
   const entry = (index as number[][]).find(
     ([, , s, a]: number[]) => s === sura && a === aya
   );
-  return entry ? entry[1] : 1;
+  if (!entry) return 1;
+  // getWarshIndex() pages start at 2 while app pages start at 1 → offset -1
+  return quira === "warsh" ? entry[1] - 1 : entry[1];
 }

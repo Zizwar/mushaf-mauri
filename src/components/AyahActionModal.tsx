@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -45,7 +45,11 @@ export default function AyahActionModal({
 
   const suraData = QuranData.Sura[sura];
   const suraName = suraData?.[0] ?? `${sura}`;
-  const ayahText = getAyahText(sura, aya, quira) ?? "";
+
+  const [ayahText, setAyahText] = useState("");
+  useEffect(() => {
+    getAyahText(sura, aya, quira).then((text) => setAyahText(text ?? ""));
+  }, [sura, aya, quira]);
 
   const isNight = !!theme.night;
   const cardBg = isNight ? "#262640" : "#ffffff";

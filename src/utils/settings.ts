@@ -17,6 +17,7 @@ interface PersistedSettings {
   moqriId: string;
   currentPage: number;
   quranFont: string;
+  warshRecitorId: number;
 }
 
 // ---------------------------------------------------------------------------

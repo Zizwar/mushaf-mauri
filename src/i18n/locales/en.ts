@@ -301,4 +301,14 @@ export default {
   copy_tafsir: "Copy Tafsir",
   // Translation empty
   no_translation: "Translation not available for this verse",
+  prayer_reading_mode: "Prayer Reading Mode",
+  warsh_db_reciters: "Warsh Reciters - Mushaf Mauri",
+  warsh_cdn_reciters: "Warsh Reciters - Others",
+  download_warsh_audio: "Download Warsh Audio",
+  download_warsh_desc: "Download audio files for offline mode",
+  download_progress: "Downloading",
+  files_downloaded: "files downloaded",
+  recitor_alkouchi: "Al-Uyun Al-Kouchi",
+  recitor_alkazabri: "Omar Al-Kazabri",
+  maghribi_font: "Maghribi Font",
 };

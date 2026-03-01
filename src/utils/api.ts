@@ -22,3 +22,8 @@ export const getAudioKsuUri = (moqriId: string, sura: number, aya: number): stri
   const ayaStr = String(aya).padStart(3, "0");
   return `https://quran.ksu.edu.sa/ayat/mp3/${moqriId}/${suraStr}${ayaStr}.mp3`;
 };
+
+// Warsh audio from al-mushaf.com (long files with quadratic timing)
+export const getWarshAudioUri = (folder: string, fileName: string): string => {
+  return `https://audio.al-mushaf.com/${folder}/${fileName}`;
+};

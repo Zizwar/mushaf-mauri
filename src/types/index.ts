@@ -20,3 +20,12 @@ export interface Reciter {
   id: string;
   voice: string;
 }
+
+export interface UserRecording {
+  id: string;
+  sura: number;
+  aya: number;
+  filePath: string;
+  mushafType: "hafs" | "warsh";
+  timestamp: number;
+}
