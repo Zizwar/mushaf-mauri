@@ -64,8 +64,8 @@ export const WARSH_DB_RECITERS = [
   { id: "__warsh_db_2__", warshRecitorId: 2 },
 ];
 
-// No CDN Warsh reciters — only DB reciters (Al-Kouchi, Al-Kazabri) for now
-export const WARSH_CDN_IDS = [];
+// Warsh CDN reciter IDs (tagged with type: "warsh_cdn" in listVoiceMoqri)
+export const WARSH_CDN_IDS = ["warsh_dossary_128kbps", "warsh_husary_64kbps", "warsh_yassin_64kbps"];
 
 export const listVoiceMoqri = _lang => [
   {
@@ -219,14 +219,17 @@ export const listVoiceMoqri = _lang => [
   },
   {
     id: "warsh_dossary_128kbps",
-    voice: _lang["recite_ibrahim_dosary"] + " - " + _lang["recite_warsh"]
+    voice: _lang["recite_ibrahim_dosary"] + " - " + _lang["recite_warsh"],
+    type: "warsh_cdn"
   },
   {
     id: "warsh_husary_64kbps",
-    voice: _lang["recite_husary"] + " - " + _lang["recite_warsh"]
+    voice: _lang["recite_husary"] + " - " + _lang["recite_warsh"],
+    type: "warsh_cdn"
   },
   {
     id: "warsh_yassin_64kbps",
-    voice: _lang["recite_yassin"] + " - " + _lang["recite_warsh"]
+    voice: _lang["recite_yassin"] + " - " + _lang["recite_warsh"],
+    type: "warsh_cdn"
   }
 ];

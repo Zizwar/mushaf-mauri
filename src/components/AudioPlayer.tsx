@@ -31,6 +31,7 @@ import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listVoiceMoqri } from "../data/listAuthor";
 import { getAyahText } from "../utils/ayahText";
+import { warshToHafsAyahs } from "../utils/tafsir";
 import { saveRecording, getRecordingUri, createProfile, loadProfiles } from "../utils/recordings";
 import * as WarshEngine from "../utils/warshAudioEngine";
 
@@ -110,6 +111,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
 
   const isUserRecording = moqriId === USER_RECORDING_ID;
   const isWarshDbMode = quira === "warsh" && (moqriId === "__warsh_db_1__" || moqriId === "__warsh_db_2__");
+  const isWarshCdnMode = quira === "warsh" && moqriId.startsWith("warsh_");
+
+  // Queue for the second Hafs ayah audio when a Warsh CDN merged ayah plays
+  const warshCdnQueueRef = useRef<string | null>(null);
 
   // Keep refs in sync for listener access
   quiraRef.current = quira;
@@ -162,15 +167,28 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     () => {
       const all = listVoiceMoqri(translations);
       // Filter by mushaf type:
-      // - Warsh mode: only user recording + Al-Kouchi & Al-Kazabri (DB reciters)
+      // - Warsh mode: user recording + DB reciters + separator + CDN reciters
       // - Hafs mode: show user recording + all non-warsh reciters
-      const base = quira === "warsh"
-        ? all.filter((r: { id: string; type?: string }) =>
-            r.id === USER_RECORDING_ID || r.type === "warsh_db"
-          )
-        : all.filter((r: { id: string; type?: string }) =>
-            r.type !== "warsh_db"
-          );
+      let base: typeof all;
+      if (quira === "warsh") {
+        const dbReciters = all.filter((r: { id: string; type?: string }) =>
+          r.id === USER_RECORDING_ID || r.type === "warsh_db"
+        );
+        const cdnReciters = all.filter((r: { type?: string }) => r.type === "warsh_cdn");
+        if (cdnReciters.length > 0) {
+          base = [
+            ...dbReciters,
+            { id: "__separator__", voice: "", type: "separator" },
+            ...cdnReciters,
+          ];
+        } else {
+          base = dbReciters;
+        }
+      } else {
+        base = all.filter((r: { id: string; type?: string }) =>
+          r.type !== "warsh_db" && r.type !== "warsh_cdn"
+        );
+      }
 
       // Insert recording profiles after the user recording entry
       if (recordingProfiles.length > 0) {
@@ -307,7 +325,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     const q = quiraRef.current;
 
     // Warsh DB mode: use hook player with WarshEngine data
-    if (q === "warsh" && WarshEngine.isWarshDbRecitor(warshRecitorIdRef.current)) {
+    if (q === "warsh" && (mid === "__warsh_db_1__" || mid === "__warsh_db_2__")) {
       WarshEngine.getWarshPlayInfo(sura, aya, page, warshRecitorIdRef.current).then((info) => {
         if (!info) {
           useAppStore.getState().setIsPlaying(false);
@@ -326,6 +344,18 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
           }
         }
       });
+      return;
+    }
+
+    // Warsh CDN mode: map Warsh ayah to Hafs ayah(s) for audio URL
+    if (q === "warsh" && mid.startsWith("warsh_")) {
+      const hafsAyahs = warshToHafsAyahs(sura, aya);
+      warshCdnQueueRef.current = hafsAyahs.length > 1
+        ? getAudioKsuUri(mid, sura, hafsAyahs[1])
+        : null;
+      const uri = getAudioKsuUri(mid, sura, hafsAyahs[0]);
+      player.replace({ uri });
+      player.play();
       return;
     }
 
@@ -359,6 +389,15 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       const current = currentAyaRef.current;
       if (!current) {
         useAppStore.getState().setIsPlaying(false);
+        return;
+      }
+
+      // Warsh CDN queue: play the second merged ayah audio before advancing
+      if (warshCdnQueueRef.current) {
+        const queuedUri = warshCdnQueueRef.current;
+        warshCdnQueueRef.current = null;
+        player.replace({ uri: queuedUri });
+        player.play();
         return;
       }
 
@@ -500,6 +539,24 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         return;
       }
 
+      // Warsh CDN mode: map Warsh ayah to Hafs ayah(s) for audio URL
+      if (isWarshCdnMode) {
+        const hafsAyahs = warshToHafsAyahs(sura, aya);
+        warshCdnQueueRef.current = hafsAyahs.length > 1
+          ? getAudioKsuUri(moqriId, sura, hafsAyahs[1])
+          : null;
+        const mappedUri = getAudioKsuUri(moqriId, sura, hafsAyahs[0]);
+        player.replace({ uri: mappedUri });
+        player.play();
+        setIsPlaying(true);
+        const sd = QuranData.Sura[sura];
+        try { player.setActiveForLockScreen(true, {
+          title: `${sd?.[0] ?? ""} - ${aya}`,
+          artist: currentReciterName,
+        }, { showSeekForward: true, showSeekBackward: true }); } catch {}
+        return;
+      }
+
       let uri: string | null;
 
       if (isUserRecording) {
@@ -522,7 +579,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         artist: currentReciterName,
       }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     },
-    [player, moqriId, quira, isUserRecording, isWarshDbMode, warshRecitorId, setIsPlaying, currentReciterName],
+    [player, moqriId, quira, isUserRecording, isWarshDbMode, isWarshCdnMode, warshRecitorId, setIsPlaying, currentReciterName],
   );
 
   // -- Handle pending play requests (from action modal, etc.) --
@@ -739,6 +796,32 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             player.play();
             setIsPlaying(true);
           });
+        }
+        return;
+      }
+
+      // Handle Warsh CDN reciters
+      if (id.startsWith("warsh_")) {
+        WarshEngine.stopWarsh();
+        setMoqriId(id);
+        setShowReciterModal(false);
+        if (selectedAya) {
+          player.pause();
+          currentAyaRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
+          const hafsAyahs = warshToHafsAyahs(selectedAya.sura, selectedAya.aya);
+          warshCdnQueueRef.current = hafsAyahs.length > 1
+            ? getAudioKsuUri(id, selectedAya.sura, hafsAyahs[1])
+            : null;
+          const uri = getAudioKsuUri(id, selectedAya.sura, hafsAyahs[0]);
+          player.replace({ uri });
+          player.play();
+          setIsPlaying(true);
+          const sd = QuranData.Sura[selectedAya.sura];
+          const name = reciters.find((r) => r.id === id)?.voice ?? id;
+          try { player.setActiveForLockScreen(true, {
+            title: `${sd?.[0] ?? ""} - ${selectedAya.aya}`,
+            artist: name,
+          }, { showSeekForward: true, showSeekBackward: true }); } catch {}
         }
         return;
       }
@@ -1218,6 +1301,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.reciterListContent}
             renderItem={({ item }) => {
+              // Render separator as a horizontal line
+              if (item.type === "separator") {
+                return (
+                  <View style={{ paddingVertical: 8, paddingHorizontal: 20 }}>
+                    <View style={{ height: 1, backgroundColor: colors.modalBorder }} />
+                  </View>
+                );
+              }
               const isActive = moqriId === item.id;
               const isUser = item.id === USER_RECORDING_ID;
               const isProfile = !!(item as any).isProfile;
