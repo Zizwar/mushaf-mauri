@@ -118,10 +118,11 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   tekrarRef.current = tekrar;
   listenThenRecordRef.current = listenThenRecord;
 
+  // Warsh pending seek: after loading a new file, seek to the target verse once duration is known
+  const warshPendingSeekRef = useRef<{ sura: number; aya: number } | null>(null);
+
   // -- Derived from status (replaces local state) --
-  const progress = isWarshDbMode
-    ? WarshEngine.getWarshProgress()
-    : status.duration > 0 ? status.currentTime / status.duration : 0;
+  const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
 
   // -- Derived theme values --
   const isDark = !!theme.night;
@@ -242,21 +243,40 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
               page: appPage,
               id: `s${v.suraID}a${v.ayaNum}z`,
             });
+            currentAyaRef.current = { sura: v.suraID, aya: v.ayaNum };
             if (sel && sel.page !== appPage) {
               onScrollToPage(appPage);
             }
           }
         },
-        // onFinished
-        () => {
-          useAppStore.getState().setIsPlaying(false);
-        }
+        // onFinished (no-op; didJustFinish listener handles it)
+        () => {}
       );
     }
     return () => {
       WarshEngine.stopWarsh();
     };
   }, [quira, onScrollToPage]);
+
+  // Warsh: once duration is available and we have a pending seek, compute and seek
+  useEffect(() => {
+    if (!isWarshDbMode || !warshPendingSeekRef.current) return;
+    if (status.isLoaded && status.duration > 0) {
+      WarshEngine.setDuration(status.duration);
+      const { sura, aya } = warshPendingSeekRef.current;
+      warshPendingSeekRef.current = null;
+      const seekTime = WarshEngine.computeSeekTime(sura, aya);
+      if (seekTime > 0) {
+        player.seekTo(seekTime);
+      }
+    }
+  }, [isWarshDbMode, status.isLoaded, status.duration, player]);
+
+  // Warsh: track verse position based on currentTime
+  useEffect(() => {
+    if (!isWarshDbMode || !status.playing || status.duration <= 0) return;
+    WarshEngine.updatePosition(status.currentTime);
+  }, [isWarshDbMode, status.currentTime, status.playing, status.duration]);
 
   // Reset recitor folder cache when warshRecitorId changes
   useEffect(() => {
@@ -286,10 +306,25 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     const mid = moqriIdRef.current;
     const q = quiraRef.current;
 
-    // Warsh DB mode: use WarshEngine
+    // Warsh DB mode: use hook player with WarshEngine data
     if (q === "warsh" && WarshEngine.isWarshDbRecitor(warshRecitorIdRef.current)) {
-      WarshEngine.playWarshVerse(sura, aya, page, warshRecitorIdRef.current).then((ok) => {
-        if (!ok) useAppStore.getState().setIsPlaying(false);
+      WarshEngine.getWarshPlayInfo(sura, aya, page, warshRecitorIdRef.current).then((info) => {
+        if (!info) {
+          useAppStore.getState().setIsPlaying(false);
+          return;
+        }
+        if (info.isNewFile) {
+          warshPendingSeekRef.current = { sura, aya };
+          player.replace({ uri: info.uri });
+          player.play();
+        } else {
+          // Same file - just seek
+          if (WarshEngine.getTotalDuration() > 0) {
+            const seekTime = WarshEngine.computeSeekTime(sura, aya);
+            player.seekTo(seekTime);
+            if (!player.playing) player.play();
+          }
+        }
       });
       return;
     }
@@ -368,6 +403,27 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       }
 
       const q = quiraRef.current;
+      const mid = moqriIdRef.current;
+
+      // -- Warsh DB mode: auto-advance to next file --
+      if (q === "warsh" && (mid === "__warsh_db_1__" || mid === "__warsh_db_2__")) {
+        const dbId = mid === "__warsh_db_1__" ? 1 : 2;
+        WarshEngine.getNextFileInfo(dbId).then((nextInfo) => {
+          if (nextInfo) {
+            const firstV = WarshEngine.getFirstVerse();
+            if (firstV) {
+              warshPendingSeekRef.current = { sura: firstV.suraID, aya: firstV.ayaNum };
+            }
+            player.replace({ uri: nextInfo.uri });
+            player.play();
+          } else {
+            useAppStore.getState().setIsPlaying(false);
+            try { player.clearLockScreenControls(); } catch {}
+          }
+        });
+        return;
+      }
+
       const tk = tekrarRef.current;
 
       // -- Tekrar (repetition) mode --
@@ -424,10 +480,22 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     (sura: number, aya: number, _page: number) => {
       currentAyaRef.current = { sura, aya };
 
-      // Warsh DB mode
+      // Warsh DB mode: use hook player with WarshEngine data
       if (isWarshDbMode) {
-        WarshEngine.playWarshVerse(sura, aya, _page, warshRecitorId).then((ok) => {
-          if (ok) setIsPlaying(true);
+        WarshEngine.getWarshPlayInfo(sura, aya, _page, warshRecitorId).then((info) => {
+          if (!info) return;
+          if (info.isNewFile) {
+            warshPendingSeekRef.current = { sura, aya };
+            player.replace({ uri: info.uri });
+            player.play();
+          } else {
+            if (WarshEngine.getTotalDuration() > 0) {
+              const seekTime = WarshEngine.computeSeekTime(sura, aya);
+              player.seekTo(seekTime);
+              if (!player.playing) player.play();
+            }
+          }
+          setIsPlaying(true);
         });
         return;
       }
@@ -583,20 +651,6 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const handlePlayPause = useCallback(() => {
     if (!selectedAya) return;
 
-    // Warsh DB mode
-    if (isWarshDbMode) {
-      if (WarshEngine.isWarshPlaying()) {
-        WarshEngine.pauseWarsh();
-        setIsPlaying(false);
-      } else if (WarshEngine.isWarshLoaded()) {
-        WarshEngine.resumeWarsh();
-        setIsPlaying(true);
-      } else {
-        playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
-      }
-      return;
-    }
-
     if (status.playing) {
       player.pause();
       setIsPlaying(false);
@@ -606,7 +660,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     } else {
       playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
     }
-  }, [selectedAya, status.playing, status.isLoaded, status.currentTime, player, setIsPlaying, playAya, isWarshDbMode]);
+  }, [selectedAya, status.playing, status.isLoaded, status.currentTime, player, setIsPlaying, playAya]);
 
   const handleNext = useCallback(() => {
     if (!selectedAya) return;
@@ -641,21 +695,19 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   }, [selectedAya, quira, isPlaying, setSelectedAya, onScrollToPage, playAya]);
 
   const handleStop = useCallback(() => {
-    if (isWarshDbMode) {
-      WarshEngine.stopWarsh();
-    }
+    WarshEngine.stopWarsh();
     player.pause();
     player.replace(null);
     try { player.clearLockScreenControls(); } catch {}
     setIsPlaying(false);
     setSelectedAya(null);
-  }, [player, setIsPlaying, setSelectedAya, isWarshDbMode]);
+  }, [player, setIsPlaying, setSelectedAya]);
 
   // -- Seek on progress bar tap (full player) --
   const handleSeek = useCallback(
     async (fraction: number) => {
-      if (isWarshDbMode) {
-        await WarshEngine.seekWarsh(fraction);
+      if (isWarshDbMode && WarshEngine.getTotalDuration() > 0) {
+        await player.seekTo(fraction * WarshEngine.getTotalDuration());
         return;
       }
       if (status.duration <= 0) return;
@@ -674,13 +726,19 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         WarshEngine.resetRecitorCache();
         setMoqriId(id);
         setShowReciterModal(false);
-        // Stop current & play with Warsh engine
+        // Stop current & play with hook player via WarshEngine data
         if (selectedAya) {
           player.pause();
           WarshEngine.stopWarsh();
-          WarshEngine.playWarshVerse(
+          WarshEngine.getWarshPlayInfo(
             selectedAya.sura, selectedAya.aya, selectedAya.page, dbId
-          ).then((ok) => { if (ok) setIsPlaying(true); });
+          ).then((info) => {
+            if (!info) return;
+            warshPendingSeekRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
+            player.replace({ uri: info.uri });
+            player.play();
+            setIsPlaying(true);
+          });
         }
         return;
       }

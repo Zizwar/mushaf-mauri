@@ -134,11 +134,18 @@ const defaultDownloadProgress: ImageDownloadProgress = {
   total: 604,
 };
 
-export const useAppStore = create<AppState>((set) => ({
+export const useAppStore = create<AppState>((set, get) => ({
   lang: (_persisted.lang as LangKey) || "ar",
   quira: (_persisted.quira as Quira) || "warsh",
   theme: _persisted.themeName ? resolveTheme(_persisted.themeName) : THEMES[0],
-  moqriId: _persisted.moqriId || "Husary_64kbps",
+  moqriId: (() => {
+    const q = (_persisted.quira as Quira) || "warsh";
+    const mid = _persisted.moqriId || "Husary_64kbps";
+    if (q === "warsh" && !mid.startsWith("__warsh_db_")) {
+      return (_persisted.warshRecitorId || 1) === 2 ? "__warsh_db_2__" : "__warsh_db_1__";
+    }
+    return mid;
+  })(),
   currentPage: _persisted.currentPage || 1,
   selectedAya: null,
   isPlaying: false,
@@ -181,7 +188,16 @@ export const useAppStore = create<AppState>((set) => ({
   warshRecitorId: _persisted.warshRecitorId || 1,
 
   setLang: (lang) => { set({ lang }); saveSettings({ lang }); },
-  setQuira: (quira) => { set({ quira }); saveSettings({ quira }); },
+  setQuira: (quira) => {
+    set({ quira });
+    saveSettings({ quira });
+    if (quira === "warsh") {
+      const wrid = get().warshRecitorId ?? 1;
+      const mid = wrid === 2 ? "__warsh_db_2__" : "__warsh_db_1__";
+      set({ moqriId: mid });
+      saveSettings({ moqriId: mid });
+    }
+  },
   setTheme: (theme) => { set({ theme }); saveSettings({ themeName: theme.name }); },
   setMoqriId: (moqriId) => { set({ moqriId }); saveSettings({ moqriId }); },
   setCurrentPage: (currentPage) => { set({ currentPage }); saveSettings({ currentPage }); },

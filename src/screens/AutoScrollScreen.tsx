@@ -56,17 +56,18 @@ interface ColorTheme {
   label: string;
   textColor: string;
   backgroundColor: string;
+  numberColor: string;
 }
 
 const COLOR_THEMES: ColorTheme[] = [
-  { id: "white_black", label: "أبيض/أسود", textColor: "#ffffff", backgroundColor: "#000000" },
-  { id: "gold_green", label: "ذهبي/أخضر", textColor: "#ffd700", backgroundColor: "#1a3c2a" },
-  { id: "blue_cream", label: "أزرق/كريمي", textColor: "#1a4a80", backgroundColor: "#fdf5e6" },
-  { id: "white_blue", label: "أبيض/أزرق", textColor: "#ffffff", backgroundColor: "#1a2744" },
-  { id: "black_white", label: "أسود/أبيض", textColor: "#000000", backgroundColor: "#ffffff" },
-  { id: "amber_brown", label: "عنبري/بني", textColor: "#ffbf00", backgroundColor: "#3b2f2f" },
-  { id: "green_gray", label: "أخضر/رمادي", textColor: "#90ee90", backgroundColor: "#2d2d2d" },
-  { id: "pink_purple", label: "وردي/بنفسجي", textColor: "#ffb6c1", backgroundColor: "#2d1b3d" },
+  { id: "white_black", label: "أبيض/أسود", textColor: "#ffffff", backgroundColor: "#000000", numberColor: "#ffa500" },
+  { id: "gold_green", label: "ذهبي/أخضر", textColor: "#ffd700", backgroundColor: "#1a3c2a", numberColor: "#90ee90" },
+  { id: "blue_cream", label: "أزرق/كريمي", textColor: "#1a4a80", backgroundColor: "#fdf5e6", numberColor: "#c0392b" },
+  { id: "white_blue", label: "أبيض/أزرق", textColor: "#ffffff", backgroundColor: "#1a2744", numberColor: "#ffd700" },
+  { id: "black_white", label: "أسود/أبيض", textColor: "#000000", backgroundColor: "#ffffff", numberColor: "#1a5c2e" },
+  { id: "amber_brown", label: "عنبري/بني", textColor: "#ffbf00", backgroundColor: "#3b2f2f", numberColor: "#87ceeb" },
+  { id: "green_gray", label: "أخضر/رمادي", textColor: "#90ee90", backgroundColor: "#2d2d2d", numberColor: "#ffd700" },
+  { id: "pink_purple", label: "وردي/بنفسجي", textColor: "#ffb6c1", backgroundColor: "#2d1b3d", numberColor: "#ffd700" },
 ];
 
 const FONT_OPTIONS = [
@@ -760,24 +761,26 @@ export default function AutoScrollScreen({ onGoBack }: AutoScrollScreenProps) {
             </Text>
           )}
 
-          {/* Verses */}
-          {verses.map((v) => (
-            <Text
-              key={v.aya}
-              style={[
-                styles.verseText,
-                {
-                  color: colorTheme.textColor,
-                  fontFamily,
-                  fontSize,
-                  lineHeight: fontSize * 2.2,
-                },
-              ]}
-            >
-              {v.text}{" "}
-              <Text style={{ fontSize: fontSize * 0.55, opacity: 0.6 }}>﴿{v.aya}﴾</Text>
-            </Text>
-          ))}
+          {/* Verses - inline flowing text */}
+          <Text
+            style={[
+              styles.verseText,
+              {
+                color: colorTheme.textColor,
+                fontFamily,
+                fontSize,
+                lineHeight: fontSize * 2.2,
+              },
+            ]}
+          >
+            {verses.map((v) => (
+              <React.Fragment key={v.aya}>
+                {v.text}{" "}
+                <Text style={{ fontSize: fontSize * 0.55, color: colorTheme.numberColor }}>﴿{v.aya}﴾</Text>
+                {"  "}
+              </React.Fragment>
+            ))}
+          </Text>
 
           {/* Bottom spacer */}
           <View style={{ height: SCREEN_HEIGHT * 0.5 }} />
@@ -985,7 +988,7 @@ const styles = StyleSheet.create({
 
   suraHeaderText: { textAlign: "center", fontWeight: "700", marginBottom: 16 },
   basmalaText: { textAlign: "center", marginBottom: 20 },
-  verseText: { textAlign: "right", writingDirection: "rtl", marginBottom: 8 },
+  verseText: { textAlign: "right", writingDirection: "rtl" },
 
   // Brightness Banner
   brightnessBanner: {

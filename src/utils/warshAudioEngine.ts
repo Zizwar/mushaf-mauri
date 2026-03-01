@@ -1,10 +1,9 @@
 /**
- * Warsh Audio Engine
- * Manages playback of long Warsh audio files with quadratic timing.
- * Used by AudioPlayer when in Warsh mode with DB reciters (Al-Kouchi, Al-Kazabri).
+ * Warsh Audio Engine (data-only API)
+ * Manages verse timing data and position tracking for Warsh audio.
+ * Does NOT own an AudioPlayer — the hook-based player in AudioPlayer.tsx
+ * drives playback; this module only computes URIs, seek times, and verse positions.
  */
-import { AudioModule } from "expo-audio";
-import type { AudioPlayer } from "expo-audio";
 import { getWarshAudioUri } from "./api";
 import {
   initWarshDB,
@@ -15,19 +14,16 @@ import {
   apiToSeconds,
   findVerseIndex,
   type VerseTimingData,
-  type WarshRecitor,
 } from "./warshAudioDB";
 
 // ==================== STATE ====================
 
-let warshPlayer: AudioPlayer | null = null;
 let verses: VerseTimingData[] = [];
 let maxTimeEnd = 0;
 let totalDuration = 0;
 let currentFile = "";
 let recitorFolder = "";
 let currentVerseIdx = -1;
-let posTimer: ReturnType<typeof setInterval> | null = null;
 let onVerseChange: ((v: VerseTimingData) => void) | null = null;
 let onFinished: (() => void) | null = null;
 
@@ -61,124 +57,159 @@ export function setCallbacks(
 }
 
 /**
- * Play a specific verse in Warsh mode.
- * Loads the correct audio file if needed, seeks to the verse position.
+ * Get playback info for a specific verse.
+ * Returns the URI and whether a new file needs to be loaded.
  */
-export async function playWarshVerse(
+export async function getWarshPlayInfo(
   sura: number,
   aya: number,
   page: number,
   recitorId: number
-): Promise<boolean> {
+): Promise<{ uri: string; fileTitle: string; isNewFile: boolean } | null> {
   try {
     await initWarshDB();
     const folder = await getRecitorFolder(recitorId);
-    if (!folder) return false;
+    if (!folder) return null;
 
     const fileTitle = await getAudioFileForPage(recitorId, page);
-    if (!fileTitle) return false;
+    if (!fileTitle) return null;
 
-    const needNewFile = fileTitle !== currentFile;
+    const isNewFile = fileTitle !== currentFile;
 
-    if (needNewFile) {
-      stopPosTimer();
-      disposePlayer();
-
-      // Load verses for this file
+    if (isNewFile) {
       verses = await getVersesForFile(recitorId, fileTitle);
       maxTimeEnd = getMaxTimeEnd(verses);
       currentFile = fileTitle;
-
-      // Create player
-      const audioUrl = getWarshAudioUri(folder, fileTitle);
-      warshPlayer = new AudioModule.AudioPlayer(audioUrl, 100, false, 0);
-
-      // Wait for duration to be available
-      await new Promise<void>((resolve) => {
-        const timeout = setTimeout(() => resolve(), 8000);
-        warshPlayer!.addListener("playbackStatusUpdate", (status: any) => {
-          if (status.didJustFinish) {
-            stopPosTimer();
-            onFinished?.();
-          }
-          if (warshPlayer!.duration > 0 && !warshPlayer!.isBuffering) {
-            clearTimeout(timeout);
-            totalDuration = warshPlayer!.duration;
-            resolve();
-          }
-        });
-        warshPlayer!.play();
-      });
+      totalDuration = 0; // will be set via setDuration() after audio loads
     }
 
-    // Seek to the verse
     const idx = findVerseIndex(verses, sura, aya);
-    if (idx >= 0 && warshPlayer) {
-      currentVerseIdx = idx;
-      const seekTime = apiToSeconds(
-        verses[idx].timeStart,
-        maxTimeEnd,
-        totalDuration
-      );
-      await warshPlayer.seekTo(Math.max(0, seekTime - 0.1));
-    }
+    if (idx >= 0) currentVerseIdx = idx;
 
-    if (warshPlayer && !warshPlayer.playing) {
-      warshPlayer.play();
-    }
-
-    startPosTimer();
-    return true;
+    const uri = getWarshAudioUri(folder, fileTitle);
+    return { uri, fileTitle, isNewFile };
   } catch (e) {
-    console.warn("Warsh audio error:", e);
-    return false;
+    console.warn("Warsh getWarshPlayInfo error:", e);
+    return null;
   }
 }
 
-export function pauseWarsh(): void {
-  warshPlayer?.pause();
-  stopPosTimer();
+/**
+ * Set total duration (call after the hook player reports duration).
+ */
+export function setDuration(d: number): void {
+  totalDuration = d;
 }
 
-export function resumeWarsh(): void {
-  warshPlayer?.play();
-  startPosTimer();
+/**
+ * Compute seek time in seconds for a specific verse.
+ */
+export function computeSeekTime(sura: number, aya: number): number {
+  if (totalDuration <= 0 || verses.length === 0) return 0;
+  const idx = findVerseIndex(verses, sura, aya);
+  if (idx < 0) return 0;
+  return Math.max(0, apiToSeconds(verses[idx].timeStart, maxTimeEnd, totalDuration) - 0.1);
+}
+
+/**
+ * Update position based on current playback time.
+ * Calls onVerseChange when the active verse changes.
+ */
+export function updatePosition(currentTime: number): void {
+  if (totalDuration <= 0 || verses.length === 0) return;
+
+  let found = -1;
+  for (let i = 0; i < verses.length; i++) {
+    const s = apiToSeconds(verses[i].timeStart, maxTimeEnd, totalDuration);
+    const e =
+      i + 1 < verses.length
+        ? apiToSeconds(verses[i + 1].timeStart, maxTimeEnd, totalDuration)
+        : apiToSeconds(verses[i].timeEnd, maxTimeEnd, totalDuration);
+    if (currentTime >= s - 0.1 && currentTime < e) {
+      found = i;
+      break;
+    }
+  }
+  if (found === -1 && verses.length > 0) {
+    if (currentTime >= apiToSeconds(verses[verses.length - 1].timeStart, maxTimeEnd, totalDuration)) {
+      found = verses.length - 1;
+    }
+  }
+
+  if (found !== currentVerseIdx && found >= 0) {
+    currentVerseIdx = found;
+    onVerseChange?.(verses[found]);
+  }
+}
+
+/**
+ * Get info for the next audio file (for auto-advance across file boundaries).
+ * Returns null if there's no next file.
+ */
+export async function getNextFileInfo(
+  recitorId: number
+): Promise<{ uri: string; fileTitle: string } | null> {
+  if (!currentFile || verses.length === 0) return null;
+
+  // Get the last verse in the current file to find the next page
+  const lastVerse = verses[verses.length - 1];
+  const nextPage = lastVerse.pageNum; // DB page; try next app page
+  // Actually, we need to find what file comes after currentFile
+  // Look up the page after the last verse's page
+  const nextAppPage = lastVerse.pageNum; // DB page = appPage + 1, so next app page = dbPage
+
+  try {
+    const folder = await getRecitorFolder(recitorId);
+    if (!folder) return null;
+
+    const fileTitle = await getAudioFileForPage(recitorId, nextAppPage);
+    if (!fileTitle || fileTitle === currentFile) {
+      // Try the next page
+      const fileTitle2 = await getAudioFileForPage(recitorId, nextAppPage + 1);
+      if (!fileTitle2 || fileTitle2 === currentFile) return null;
+
+      verses = await getVersesForFile(recitorId, fileTitle2);
+      maxTimeEnd = getMaxTimeEnd(verses);
+      currentFile = fileTitle2;
+      totalDuration = 0;
+      currentVerseIdx = 0;
+
+      return { uri: getWarshAudioUri(folder, fileTitle2), fileTitle: fileTitle2 };
+    }
+
+    verses = await getVersesForFile(recitorId, fileTitle);
+    maxTimeEnd = getMaxTimeEnd(verses);
+    currentFile = fileTitle;
+    totalDuration = 0;
+    currentVerseIdx = 0;
+
+    return { uri: getWarshAudioUri(folder, fileTitle), fileTitle };
+  } catch (e) {
+    console.warn("Warsh getNextFileInfo error:", e);
+    return null;
+  }
+}
+
+/**
+ * Get the first verse of the current file (for verse tracking after file load).
+ */
+export function getFirstVerse(): VerseTimingData | null {
+  return verses.length > 0 ? verses[0] : null;
+}
+
+/**
+ * Notify that audio finished (called by AudioPlayer on didJustFinish).
+ */
+export function notifyFinished(): void {
+  onFinished?.();
 }
 
 export function stopWarsh(): void {
-  stopPosTimer();
-  disposePlayer();
   verses = [];
   maxTimeEnd = 0;
   totalDuration = 0;
   currentFile = "";
   currentVerseIdx = -1;
-}
-
-export function isWarshPlaying(): boolean {
-  return warshPlayer?.playing ?? false;
-}
-
-export function isWarshLoaded(): boolean {
-  return warshPlayer !== null && currentFile !== "";
-}
-
-export function getWarshProgress(): number {
-  if (!warshPlayer || totalDuration <= 0) return 0;
-  return warshPlayer.currentTime / totalDuration;
-}
-
-export function getWarshCurrentTime(): number {
-  return warshPlayer?.currentTime ?? 0;
-}
-
-export function getWarshDuration(): number {
-  return totalDuration;
-}
-
-export async function seekWarsh(fraction: number): Promise<void> {
-  if (!warshPlayer || totalDuration <= 0) return;
-  await warshPlayer.seekTo(fraction * totalDuration);
 }
 
 /**
@@ -188,54 +219,10 @@ export function resetRecitorCache(): void {
   recitorFolder = "";
 }
 
-// ==================== INTERNAL ====================
-
-function disposePlayer(): void {
-  if (warshPlayer) {
-    try {
-      warshPlayer.pause();
-      warshPlayer.remove();
-    } catch {}
-    warshPlayer = null;
-  }
+export function getCurrentFile(): string {
+  return currentFile;
 }
 
-function startPosTimer(): void {
-  stopPosTimer();
-  posTimer = setInterval(() => {
-    if (!warshPlayer || !warshPlayer.playing) return;
-
-    const pos = warshPlayer.currentTime;
-    if (totalDuration <= 0 || verses.length === 0) return;
-
-    let found = -1;
-    for (let i = 0; i < verses.length; i++) {
-      const s = apiToSeconds(verses[i].timeStart, maxTimeEnd, totalDuration);
-      const e =
-        i + 1 < verses.length
-          ? apiToSeconds(verses[i + 1].timeStart, maxTimeEnd, totalDuration)
-          : apiToSeconds(verses[i].timeEnd, maxTimeEnd, totalDuration);
-      if (pos >= s - 0.1 && pos < e) {
-        found = i;
-        break;
-      }
-    }
-    if (found === -1 && verses.length > 0) {
-      if (pos >= apiToSeconds(verses[verses.length - 1].timeStart, maxTimeEnd, totalDuration)) {
-        found = verses.length - 1;
-      }
-    }
-
-    if (found !== currentVerseIdx && found >= 0) {
-      currentVerseIdx = found;
-      onVerseChange?.(verses[found]);
-    }
-  }, 60);
-}
-
-function stopPosTimer(): void {
-  if (posTimer) {
-    clearInterval(posTimer);
-    posTimer = null;
-  }
+export function getTotalDuration(): number {
+  return totalDuration;
 }
