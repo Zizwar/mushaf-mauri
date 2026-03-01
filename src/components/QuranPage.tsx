@@ -98,7 +98,7 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
     >
       <Image
         source={{ uri: imageUri }}
-        style={[styles.pageImage, theme.night && styles.nightImage]}
+        style={[styles.pageImage, theme.night && styles.nightImage] as any}
         resizeMode="stretch"
       />
       {isVisible &&
@@ -153,7 +153,8 @@ const styles = StyleSheet.create({
     height: IMAGE_HEIGHT,
   },
   nightImage: {
-    opacity: 0.85,
+    filter: [{ invert: 1 }],
+    opacity: 0.9,
   },
   ayahButton: {
     position: "absolute",
