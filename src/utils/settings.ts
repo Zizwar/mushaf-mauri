@@ -28,6 +28,9 @@ interface PersistedSettings {
     fontSize: number;
     fontFamily: string;
     colorThemeId: string;
+    speed?: number;
+    lastReadingSura?: number;
+    lastReadingAya?: number;
     scrollOffset?: number;
   };
 }

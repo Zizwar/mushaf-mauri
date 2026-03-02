@@ -9,7 +9,6 @@ import {
   Alert,
   BackHandler,
   Dimensions,
-  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -35,7 +34,6 @@ const SPEED_PROFILES = [
   { key: "fajr_prayer", speed: 0.5, icon: "sunny-outline" as const },
   { key: "taraweeh", speed: 1.0, icon: "moon-outline" as const },
   { key: "qiyam_layl", speed: 0.7, icon: "cloudy-night-outline" as const },
-  { key: "fast_reading", speed: 2.0, icon: "flash-outline" as const },
 ];
 
 // ==================== COLOR THEMES ====================
@@ -55,7 +53,6 @@ const COLOR_THEMES: ColorTheme[] = [
   { id: "black_white", label: "أسود على أبيض", textColor: "#000000", backgroundColor: "#ffffff" },
   { id: "amber_brown", label: "عنبري على بني", textColor: "#ffbf00", backgroundColor: "#3b2f2f" },
   { id: "green_gray", label: "أخضر على رمادي", textColor: "#90ee90", backgroundColor: "#2d2d2d" },
-  { id: "pink_purple", label: "وردي على بنفسجي", textColor: "#ffb6c1", backgroundColor: "#2d1b3d" },
 ];
 
 const FONT_OPTIONS = [
@@ -136,6 +133,8 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
 
   // ── Saved state ──────────────────────────────────────
   const [hasSavedState, setHasSavedState] = useState(false);
+  const [lastReadingSura, setLastReadingSura] = useState(0);
+  const [lastReadingAya, setLastReadingAya] = useState(0);
 
   // ── Refs ──────────────────────────────────────────────
   const scrollViewRef = useRef<ScrollView>(null);
@@ -170,6 +169,9 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
       setIsOpenEnded(saved.isOpenEnded);
       setFontSize(saved.fontSize);
       setFontFamily(saved.fontFamily);
+      if (saved.speed) setSpeed(saved.speed);
+      if (saved.lastReadingSura) setLastReadingSura(saved.lastReadingSura);
+      if (saved.lastReadingAya) setLastReadingAya(saved.lastReadingAya);
       const theme = COLOR_THEMES.find((ct) => ct.id === saved.colorThemeId);
       if (theme) setColorTheme(theme);
     }
@@ -243,9 +245,10 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
         fontSize,
         fontFamily,
         colorThemeId: colorTheme.id,
+        speed,
       },
     });
-  }, [startSura, startAya, endSura, endAya, isOpenEnded, fontSize, fontFamily, colorTheme.id]);
+  }, [startSura, startAya, endSura, endAya, isOpenEnded, fontSize, fontFamily, colorTheme.id, speed]);
 
   // ── Auto-scroll engine ─────────────────────────────────
   const startAutoScroll = useCallback(() => {
@@ -419,9 +422,39 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     setTimeout(() => { startAutoScroll(); }, 500);
   }, [loadInitialVerses, savePrayerState, startAutoScroll]);
 
-  // ── Resume reading ─────────────────────────────────────
-  const handleResume = useCallback(async () => {
-    await loadInitialVerses();
+  // ── Resume from last reading position ────────────────
+  const handleResumeFromLastPosition = useCallback(async () => {
+    if (lastReadingSura > 0) {
+      // Load from the saved sura/aya position
+      setStartSura(lastReadingSura);
+      setStartAya(lastReadingAya || 1);
+
+      const count = getAyahCount(lastReadingSura);
+      const from = lastReadingAya || 1;
+      const to =
+        lastReadingSura === endSura && !isOpenEnded
+          ? Math.min(endAya, count)
+          : count;
+
+      const newVerses = await getSuraVerses(lastReadingSura, from, to, quira);
+      const name = getSuraName(lastReadingSura);
+      const mapped: Verse[] = newVerses.map((v) => ({
+        sura: lastReadingSura,
+        aya: v.aya,
+        text: v.text,
+        suraName: name,
+      }));
+
+      setVerses(mapped);
+      setLoadedUpToSura(lastReadingSura);
+      if (lastReadingSura === endSura && !isOpenEnded) {
+        setAllLoaded(true);
+      } else {
+        setAllLoaded(false);
+      }
+    } else {
+      await loadInitialVerses();
+    }
     setMode("reading");
     setShowControls(false);
     setLocked(false);
@@ -430,7 +463,44 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     scrollYRef.current = 0;
 
     setTimeout(() => { startAutoScroll(); }, 500);
-  }, [loadInitialVerses, startAutoScroll]);
+  }, [lastReadingSura, lastReadingAya, endSura, endAya, isOpenEnded, quira, loadInitialVerses, startAutoScroll]);
+
+  // ── Save reading position on exit ─────────────────────
+  const saveReadingPosition = useCallback(() => {
+    // Estimate which sura/aya the user is at based on verses array
+    // Use loadedUpToSura and approximate position
+    const lastVerse = verses[verses.length - 1];
+    if (lastVerse) {
+      // Find approximate first visible verse based on scroll ratio
+      const ratio = totalContentHeightRef.current > 0
+        ? scrollYRef.current / totalContentHeightRef.current
+        : 0;
+      const approxIndex = Math.min(
+        Math.floor(ratio * verses.length),
+        verses.length - 1
+      );
+      const currentVerse = verses[Math.max(0, approxIndex)];
+      if (currentVerse) {
+        setLastReadingSura(currentVerse.sura);
+        setLastReadingAya(currentVerse.aya);
+        saveSettings({
+          prayerModeState: {
+            startSura,
+            startAya,
+            endSura,
+            endAya,
+            isOpenEnded,
+            fontSize,
+            fontFamily,
+            colorThemeId: colorTheme.id,
+            speed,
+            lastReadingSura: currentVerse.sura,
+            lastReadingAya: currentVerse.aya,
+          },
+        });
+      }
+    }
+  }, [verses, startSura, startAya, endSura, endAya, isOpenEnded, fontSize, fontFamily, colorTheme.id, speed]);
 
   // ── Exit reading with confirmation ─────────────────────
   const handleGoBack = useCallback(() => {
@@ -443,6 +513,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
           {
             text: t("yes", lang),
             onPress: () => {
+              saveReadingPosition();
               stopAutoScroll();
               StatusBar.setHidden(false);
               setMode("setup");
@@ -453,7 +524,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     } else {
       onGoBack();
     }
-  }, [mode, lang, onGoBack, stopAutoScroll]);
+  }, [mode, lang, onGoBack, stopAutoScroll, saveReadingPosition]);
 
   // ── Tap handler: single=pause, double=controls ─────────
   const handleScreenTap = useCallback(() => {
@@ -785,28 +856,6 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
             </View>
           )}
 
-          {/* Color theme selector */}
-          <View style={styles.setupSection}>
-            <Text style={styles.setupLabel}>{t("color", lang)}</Text>
-            <View style={styles.colorRow}>
-              {COLOR_THEMES.map((ct) => (
-                <Pressable
-                  key={ct.id}
-                  style={[
-                    styles.colorCircle,
-                    { backgroundColor: ct.backgroundColor, borderColor: ct.textColor },
-                    colorTheme.id === ct.id && styles.colorCircleActive,
-                  ]}
-                  onPress={() => setColorTheme(ct)}
-                >
-                  <View
-                    style={[styles.colorInner, { backgroundColor: ct.textColor }]}
-                  />
-                </Pressable>
-              ))}
-            </View>
-          </View>
-
           {/* Font family + size */}
           <View style={styles.setupSection}>
             <Text style={styles.setupLabel}>{t("font_selection", lang)}</Text>
@@ -873,6 +922,28 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
             </Text>
           </View>
 
+          {/* Color theme selector */}
+          <View style={styles.setupSection}>
+            <Text style={styles.setupLabel}>{t("color", lang)}</Text>
+            <View style={styles.colorRow}>
+              {COLOR_THEMES.map((ct) => (
+                <Pressable
+                  key={ct.id}
+                  style={[
+                    styles.colorCircle,
+                    { backgroundColor: ct.backgroundColor, borderColor: ct.textColor },
+                    colorTheme.id === ct.id && styles.colorCircleActive,
+                  ]}
+                  onPress={() => setColorTheme(ct)}
+                >
+                  <View
+                    style={[styles.colorInner, { backgroundColor: ct.textColor }]}
+                  />
+                </Pressable>
+              ))}
+            </View>
+          </View>
+
           {/* Speed controls section */}
           <View style={styles.setupSection}>
             <Text style={styles.setupLabel}>{t("scroll_speed", lang)}</Text>
@@ -916,14 +987,14 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
 
         {/* Bottom buttons */}
         <View style={styles.setupBottomBar}>
-          {hasSavedState && (
+          {hasSavedState && lastReadingSura > 0 && (
             <Pressable
               style={styles.resumeBtn}
-              onPress={handleResume}
+              onPress={handleResumeFromLastPosition}
             >
               <Ionicons name="play" size={18} color="#1a5c2e" />
               <Text style={styles.resumeBtnText}>
-                {t("resume_reading", lang)}
+                {getSuraName(lastReadingSura)} - {t("aya_s", lang)} {lastReadingAya}
               </Text>
             </Pressable>
           )}
@@ -972,23 +1043,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
                 {"\u0633\u0648\u0631\u0629"} {group.suraName}
               </Text>
 
-              {/* Basmala */}
-              {group.sura !== 9 && group.verses[0]?.aya === 1 && (
-                <Text
-                  style={[
-                    styles.basmala,
-                    {
-                      color: colorTheme.textColor,
-                      fontFamily,
-                      fontSize: fontSize - 4,
-                    },
-                  ]}
-                >
-                  {"\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"}
-                </Text>
-              )}
-
-              {/* Inline flowing text — all verses in ONE <Text> */}
+              {/* Inline flowing text — all verses in ONE <Text> (basmala is already in verse text) */}
               <Text
                 style={[
                   styles.verseText,
@@ -1476,11 +1531,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 12,
     marginTop: 16,
-  },
-  basmala: {
-    textAlign: "center",
-    marginBottom: 16,
-    opacity: 0.85,
   },
   verseText: {
     textAlign: "right",
