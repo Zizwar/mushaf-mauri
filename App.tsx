@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, BackHandler, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { initWarshDB } from "./src/utils/warshAudioDB";
@@ -42,6 +42,18 @@ export default function App() {
 
   // Initialize Warsh DB early so warsh index is available synchronously
   useEffect(() => { initWarshDB().catch((e) => console.warn("[App] initWarshDB failed:", e)); }, []);
+
+  // Android back button: close sub-screens instead of minimizing app
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (screen !== "mushaf" && screen !== "home") {
+        setScreen("mushaf");
+        return true;
+      }
+      return false;
+    });
+    return () => sub.remove();
+  }, [screen]);
 
   const handleNavigateToPage = useCallback((page: number, sura?: number, aya?: number) => {
     useAppStore.getState().setCurrentPage(page);

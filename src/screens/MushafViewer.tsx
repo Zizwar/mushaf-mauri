@@ -247,13 +247,15 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           </Pressable>
         </View>
 
-        {/* Center: Sura name + Page/Juz */}
+        {/* Center: Sura name + Page/Juz/Hizb */}
         <View style={styles.headerCenter}>
-          <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
-            {pageInfo.suraName}
-          </Text>
+          <Pressable onPress={() => onNavigate?.("search")} hitSlop={6}>
+            <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
+              {pageInfo.suraName}
+            </Text>
+          </Pressable>
           <Text style={[styles.headerMeta, { color: isDark ? "#888" : "#999" }]} numberOfLines={1}>
-            {currentPage} • {t("juz", lang)} {pageInfo.juz}
+            {currentPage} • {t("juz", lang)} {pageInfo.juz}{pageInfo.hizbLabel ? ` • ${pageInfo.hizbLabel}` : ""}
           </Text>
         </View>
 

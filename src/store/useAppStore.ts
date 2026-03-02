@@ -1,8 +1,27 @@
 import { create } from "zustand";
+import { File, Paths } from "expo-file-system";
 import type { LangKey } from "../i18n";
 import type { Theme } from "../theme/themes";
 import { THEMES } from "../theme/themes";
 import { loadSettings, saveSettings, resolveTheme } from "../utils/settings";
+
+const BOOKMARKS_FILE_PATH = `${Paths.document}/bookmarks.json`;
+
+function persistBookmarks(bookmarks: Bookmark[]) {
+  try {
+    const f = new File(BOOKMARKS_FILE_PATH);
+    f.create();
+    f.write(JSON.stringify(bookmarks));
+  } catch {}
+}
+
+function loadPersistedBookmarks(): Bookmark[] {
+  try {
+    const f = new File(BOOKMARKS_FILE_PATH);
+    if (f.exists) return JSON.parse(f.textSync());
+  } catch {}
+  return [];
+}
 
 export type Quira = "madina" | "warsh";
 
@@ -147,7 +166,7 @@ export const useAppStore = create<AppState>((set, get) => ({
     return mid;
   })(),
   currentPage: _persisted.currentPage || 1,
-  selectedAya: null,
+  selectedAya: _persisted.selectedAya ?? null,
   isPlaying: false,
   hasCompletedSetup: _persisted.hasCompletedSetup || false,
 
@@ -164,7 +183,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   showRecordingHighlights: true,
   pendingPlayAya: null,
 
-  bookmarks: [],
+  bookmarks: loadPersistedBookmarks(),
   tekrar: {
     startSura: 1,
     startAya: 1,
@@ -201,7 +220,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setTheme: (theme) => { set({ theme }); saveSettings({ themeName: theme.name }); },
   setMoqriId: (moqriId) => { set({ moqriId }); saveSettings({ moqriId }); },
   setCurrentPage: (currentPage) => { set({ currentPage }); saveSettings({ currentPage }); },
-  setSelectedAya: (selectedAya) => set({ selectedAya }),
+  setSelectedAya: (selectedAya) => { set({ selectedAya }); saveSettings({ selectedAya }); },
   setIsPlaying: (isPlaying) => set({ isPlaying }),
   setImageDownloadProgress: (quira, progress) =>
     set((state) => ({
@@ -225,27 +244,31 @@ export const useAppStore = create<AppState>((set, get) => ({
   setShowRecordingHighlights: (showRecordingHighlights) =>
     set({ showRecordingHighlights }),
   setPendingPlayAya: (pendingPlayAya) => set({ pendingPlayAya }),
-  addBookmark: (bookmark) =>
-    set((state) => {
-      const exists = state.bookmarks.some(
-        (b) => b.sura === bookmark.sura && b.aya === bookmark.aya
-      );
-      if (exists) return state;
-      return { bookmarks: [bookmark, ...state.bookmarks] };
-    }),
-  removeBookmark: (sura, aya) =>
-    set((state) => ({
-      bookmarks: state.bookmarks.filter(
-        (b) => !(b.sura === sura && b.aya === aya)
-      ),
-    })),
-  setBookmarks: (bookmarks) => set({ bookmarks }),
-  updateBookmarkNote: (sura, aya, note) =>
-    set((state) => ({
-      bookmarks: state.bookmarks.map((b) =>
-        b.sura === sura && b.aya === aya ? { ...b, note } : b
-      ),
-    })),
+  addBookmark: (bookmark) => {
+    const state = get();
+    const exists = state.bookmarks.some(
+      (b) => b.sura === bookmark.sura && b.aya === bookmark.aya
+    );
+    if (exists) return;
+    const updated = [bookmark, ...state.bookmarks];
+    set({ bookmarks: updated });
+    persistBookmarks(updated);
+  },
+  removeBookmark: (sura, aya) => {
+    const updated = get().bookmarks.filter(
+      (b) => !(b.sura === sura && b.aya === aya)
+    );
+    set({ bookmarks: updated });
+    persistBookmarks(updated);
+  },
+  setBookmarks: (bookmarks) => { set({ bookmarks }); persistBookmarks(bookmarks); },
+  updateBookmarkNote: (sura, aya, note) => {
+    const updated = get().bookmarks.map((b) =>
+      b.sura === sura && b.aya === aya ? { ...b, note } : b
+    );
+    set({ bookmarks: updated });
+    persistBookmarks(updated);
+  },
   setHasCompletedSetup: (hasCompletedSetup) => { set({ hasCompletedSetup }); saveSettings({ hasCompletedSetup }); },
   setTekrar: (tekrar) => set({ tekrar }),
   setKhatma: (khatma) => set({ khatma }),

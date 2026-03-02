@@ -11,6 +11,7 @@ import {
   Dimensions,
   Platform,
   Alert,
+  Image,
 } from "react-native";
 import {
   useAudioPlayer,
@@ -46,6 +47,8 @@ const RECORDING_COLOR = "#d32f2f";
 const MINI_HEIGHT = 64;
 const PROGRESS_HEIGHT = 3;
 const USER_RECORDING_ID = "__user_recording__";
+// App icon for lock screen / notification artwork
+const APP_ICON_URL = Image.resolveAssetSource(require("../../assets/icon.png"))?.uri ?? "";
 
 const TRANSLATION_KEYS = [
   "recite_hudhaify", "recite_husary", "recite_basfar", "recite_ayyoub",
@@ -373,6 +376,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       try { player.setActiveForLockScreen(true, {
         title: `${sd?.[0] ?? ""} - ${aya}`,
         artist: reciterNameRef.current,
+        artworkUrl: APP_ICON_URL,
       }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     } else {
       useAppStore.getState().setIsPlaying(false);
@@ -548,6 +552,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         try { player.setActiveForLockScreen(true, {
           title: `${sd?.[0] ?? ""} - ${aya}`,
           artist: currentReciterName,
+          artworkUrl: APP_ICON_URL,
         }, { showSeekForward: true, showSeekBackward: true }); } catch {}
         return;
       }
@@ -572,6 +577,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       try { player.setActiveForLockScreen(true, {
         title: `${sd?.[0] ?? ""} - ${aya}`,
         artist: currentReciterName,
+        artworkUrl: APP_ICON_URL,
       }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     },
     [player, moqriId, quira, isUserRecording, isWarshDbMode, isWarshCdnMode, warshRecitorId, setIsPlaying, currentReciterName],
@@ -707,8 +713,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       player.pause();
       setIsPlaying(false);
     } else if (status.isLoaded && status.currentTime > 0) {
-      player.play();
-      setIsPlaying(true);
+      // Check if selectedAya changed since last play — if so, play the new ayah
+      const cur = currentAyaRef.current;
+      if (cur && (cur.sura !== selectedAya.sura || cur.aya !== selectedAya.aya)) {
+        playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
+      } else {
+        player.play();
+        setIsPlaying(true);
+      }
     } else {
       playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
     }
@@ -814,6 +826,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
           try { player.setActiveForLockScreen(true, {
             title: `${sd?.[0] ?? ""} - ${selectedAya.aya}`,
             artist: name,
+            artworkUrl: APP_ICON_URL,
           }, { showSeekForward: true, showSeekBackward: true }); } catch {}
         }
         return;
@@ -847,6 +860,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         try { player.setActiveForLockScreen(true, {
           title: `${sd?.[0] ?? ""} - ${selectedAya.aya}`,
           artist: name,
+          artworkUrl: APP_ICON_URL,
         }, { showSeekForward: true, showSeekBackward: true }); } catch {}
       }
     },

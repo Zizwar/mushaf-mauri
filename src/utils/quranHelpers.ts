@@ -168,23 +168,60 @@ export function getJuzBySuraAya(sura: number, aya: number = 1): number {
 }
 
 /**
+ * Get hizb and quarter info for a given sura and aya.
+ * Returns: { hizb: number (1-60), quarter: 0-3, label: string }
+ * quarter: 0 = start of hizb, 1 = ربع, 2 = نصف, 3 = ¾
+ */
+export function getHizbInfo(
+  sura: number,
+  aya: number
+): { hizb: number; quarter: number; label: string } {
+  const hq = QuranData.HizbQaurter;
+  if (!hq) return { hizb: 1, quarter: 0, label: "حزب 1" };
+
+  // Find the highest index where [sura, aya] >= entry
+  let idx = 1;
+  for (let i = 1; i < hq.length; i++) {
+    if (!hq[i]) continue;
+    const [s, a] = hq[i];
+    if (s < sura || (s === sura && a <= aya)) {
+      idx = i;
+    } else {
+      break;
+    }
+  }
+
+  const hizb = Math.ceil(idx / 4);
+  const quarter = (idx - 1) % 4;
+  const quarterLabels = ["", "¼", "½", "¾"];
+  const label = quarter === 0
+    ? `حزب ${hizb}`
+    : `حزب ${hizb} ${quarterLabels[quarter]}`;
+
+  return { hizb, quarter, label };
+}
+
+/**
  * Get sura name and juz number for a given page using QuranData.Page.
  */
 export function getPageInfo(
   page: number,
   quira: Quira = "madina"
-): { suraName: string; sura: number; juz: number } {
+): { suraName: string; sura: number; aya: number; juz: number; hizbLabel: string } {
   const pageData = quira === "warsh" ? QuranData.Page_warsh : QuranData.Page;
   const entry = pageData?.[page];
   if (!entry || !entry.length) {
-    return { suraName: "", sura: 1, juz: 1 };
+    return { suraName: "", sura: 1, aya: 1, juz: 1, hizbLabel: "" };
   }
   const sura = entry[0];
   const aya = entry[1];
+  const hizbInfo = getHizbInfo(sura, aya);
   return {
     suraName: QuranData.Sura[sura]?.[0] ?? "",
     sura,
+    aya,
     juz: getJuzBySuraAya(sura, aya),
+    hizbLabel: hizbInfo.label,
   };
 }
 

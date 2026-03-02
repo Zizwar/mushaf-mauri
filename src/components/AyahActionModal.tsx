@@ -8,6 +8,7 @@ import {
   Share,
   Alert,
   Platform,
+  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
@@ -50,6 +51,17 @@ export default function AyahActionModal({
   useEffect(() => {
     getAyahText(sura, aya, quira).then((text) => setAyahText(text ?? ""));
   }, [sura, aya, quira]);
+
+  const [showNoteInput, setShowNoteInput] = useState(false);
+  const [noteText, setNoteText] = useState("");
+
+  // Reset note state when modal opens
+  useEffect(() => {
+    if (visible) {
+      setShowNoteInput(false);
+      setNoteText("");
+    }
+  }, [visible]);
 
   const isNight = !!theme.night;
   const cardBg = isNight ? "#262640" : "#ffffff";
@@ -129,12 +141,30 @@ export default function AyahActionModal({
       onPress: handleShare,
     },
     {
-      key: "close",
-      labelKey: "close",
-      icon: "close-circle-outline",
-      onPress: onClose,
+      key: "note",
+      labelKey: "add_note",
+      icon: "create-outline",
+      onPress: () => setShowNoteInput(true),
     },
   ];
+
+  const handleSaveNote = () => {
+    // First bookmark the ayah (addBookmark deduplicates)
+    getAyahText(sura, aya, quira).then((text) => {
+      useAppStore.getState().addBookmark({
+        sura,
+        aya,
+        page,
+        timestamp: Date.now(),
+        text: text ?? undefined,
+      });
+      if (noteText.trim()) {
+        useAppStore.getState().updateBookmarkNote(sura, aya, noteText.trim());
+      }
+    });
+    setShowNoteInput(false);
+    onClose();
+  };
 
   return (
     <Modal
@@ -164,38 +194,60 @@ export default function AyahActionModal({
           {/* Divider */}
           <View style={[styles.divider, { backgroundColor: dividerColor }]} />
 
-          {/* Action grid: 2 columns, 3 rows */}
-          <View style={styles.grid}>
-            {actions.map((action) => (
-              <Pressable
-                key={action.key}
-                style={({ pressed }) => [
-                  styles.actionBtn,
-                  { backgroundColor: pressed ? btnPressedBg : btnBg },
-                ]}
-                onPress={action.onPress}
-              >
-                <Ionicons
-                  name={action.icon}
-                  size={ICON_SIZE}
-                  color={action.key === "close" ? (isNight ? "#ff8a8a" : "#e53935") : iconColor}
-                />
-                <Text
-                  style={[
-                    styles.actionLabel,
-                    {
-                      color: action.key === "close"
-                        ? (isNight ? "#ff8a8a" : "#e53935")
-                        : textColor,
-                    },
-                  ]}
-                  numberOfLines={1}
+          {/* Action grid or Note input */}
+          {showNoteInput ? (
+            <View style={styles.noteContainer}>
+              <TextInput
+                style={[styles.noteInput, { color: textColor, borderColor: dividerColor }]}
+                value={noteText}
+                onChangeText={setNoteText}
+                placeholder={t("note_placeholder", lang)}
+                placeholderTextColor={subtitleColor}
+                multiline
+                autoFocus
+                textAlignVertical="top"
+              />
+              <View style={styles.noteButtons}>
+                <Pressable
+                  onPress={() => setShowNoteInput(false)}
+                  style={[styles.noteBtn, { borderColor: dividerColor }]}
                 >
-                  {t(action.labelKey, lang)}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
+                  <Text style={{ color: subtitleColor }}>{t("cancel", lang)}</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleSaveNote}
+                  style={[styles.noteBtn, { backgroundColor: "#4285f4" }]}
+                >
+                  <Text style={{ color: "#fff", fontWeight: "600" }}>{t("save_note", lang)}</Text>
+                </Pressable>
+              </View>
+            </View>
+          ) : (
+            <View style={styles.grid}>
+              {actions.map((action) => (
+                <Pressable
+                  key={action.key}
+                  style={({ pressed }) => [
+                    styles.actionBtn,
+                    { backgroundColor: pressed ? btnPressedBg : btnBg },
+                  ]}
+                  onPress={action.onPress}
+                >
+                  <Ionicons
+                    name={action.icon}
+                    size={ICON_SIZE}
+                    color={iconColor}
+                  />
+                  <Text
+                    style={[styles.actionLabel, { color: textColor }]}
+                    numberOfLines={1}
+                  >
+                    {t(action.labelKey, lang)}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+          )}
         </Pressable>
       </Pressable>
     </Modal>
@@ -278,5 +330,30 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginTop: 6,
     textAlign: "center",
+  },
+  noteContainer: {
+    padding: 16,
+  },
+  noteInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 12,
+    minHeight: 80,
+    fontSize: 15,
+    writingDirection: "rtl",
+    textAlign: "right",
+  },
+  noteButtons: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 12,
+  },
+  noteBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "transparent",
   },
 });

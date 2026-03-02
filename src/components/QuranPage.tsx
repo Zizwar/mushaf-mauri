@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import {
   View,
   Image,
@@ -35,14 +35,24 @@ const AyahOverlay = React.memo(
     onLongPress?: () => void;
   }) => {
     const setSelectedAya = useAppStore((s) => s.setSelectedAya);
+    const lastTapRef = useRef(0);
 
     const onPress = () => {
-      setSelectedAya({
-        sura: position.wino.sura,
-        aya: position.wino.aya,
-        page: position.wino.page,
-        id: position.wino.id,
-      });
+      const now = Date.now();
+      if (now - lastTapRef.current < 300) {
+        // Double tap — open action modal
+        onLongPress?.();
+        lastTapRef.current = 0;
+      } else {
+        // Single tap — select ayah
+        setSelectedAya({
+          sura: position.wino.sura,
+          aya: position.wino.aya,
+          page: position.wino.page,
+          id: position.wino.id,
+        });
+        lastTapRef.current = now;
+      }
     };
 
     return (

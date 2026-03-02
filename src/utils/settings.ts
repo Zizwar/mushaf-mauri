@@ -18,6 +18,7 @@ interface PersistedSettings {
   currentPage: number;
   quranFont: string;
   warshRecitorId: number;
+  selectedAya: { sura: number; aya: number; page: number; id: string } | null;
 }
 
 // ---------------------------------------------------------------------------

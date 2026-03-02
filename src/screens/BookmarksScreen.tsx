@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,33 +11,15 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Paths, File } from "expo-file-system";
 import { useAppStore, type Bookmark } from "../store/useAppStore";
 import { t } from "../i18n";
 import { getSuraName } from "../utils/quranHelpers";
 
-const BOOKMARKS_FILE = new File(Paths.document, "bookmarks.json");
 const ACCENT = "#1a5c2e";
 
 interface BookmarksScreenProps {
   onGoBack: () => void;
   onNavigateToPage?: (page: number, sura?: number, aya?: number) => void;
-}
-
-function loadBookmarks(): Bookmark[] {
-  try {
-    if (BOOKMARKS_FILE.exists) {
-      const json = BOOKMARKS_FILE.textSync();
-      return JSON.parse(json);
-    }
-  } catch {}
-  return [];
-}
-
-function saveBookmarks(bookmarks: Bookmark[]) {
-  try {
-    BOOKMARKS_FILE.write(JSON.stringify(bookmarks));
-  } catch {}
 }
 
 export default function BookmarksScreen({ onGoBack, onNavigateToPage }: BookmarksScreenProps) {
@@ -60,18 +42,8 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [noteText, setNoteText] = useState("");
 
-  // Load bookmarks from file on mount
-  useEffect(() => {
-    const saved = loadBookmarks();
-    if (saved.length > 0) {
-      setBookmarks(saved);
-    }
-  }, [setBookmarks]);
-
-  // Save bookmarks to file whenever they change
-  useEffect(() => {
-    saveBookmarks(bookmarks);
-  }, [bookmarks]);
+  // Bookmarks are loaded at store init and persisted on every mutation
+  // No need for load/save effects here
 
   const handleRemove = (sura: number, aya: number) => {
     Alert.alert(t("remove", lang), "", [
