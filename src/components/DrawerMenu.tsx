@@ -220,7 +220,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
               {/* Auto-scroll / Prayer Mode */}
               <Pressable
                 style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
-                onPress={() => handleMenuPress("autoscroll")}
+                onPress={() => handleMenuPress("prayerMode")}
               >
                 <Ionicons name="swap-vertical-outline" size={22} color={accentColor} />
                 <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
