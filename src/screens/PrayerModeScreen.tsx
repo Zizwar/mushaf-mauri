@@ -2,13 +2,14 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import {
   View,
   Text,
-  FlatList,
   Pressable,
   ScrollView,
   StyleSheet,
   StatusBar,
   Alert,
   BackHandler,
+  Dimensions,
+  Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +24,19 @@ import {
 import { getSuraVerses, getAyahText } from "../utils/ayahText";
 import { loadSettings, saveSettings } from "../utils/settings";
 import type { Quira } from "../store/useAppStore";
+
+// ==================== CONSTANTS ====================
+
+const { height: SCREEN_HEIGHT, width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const SCROLL_INTERVAL = 150; // ms between scroll updates
+
+const SPEED_PROFILES = [
+  { key: "fajr_prayer", speed: 0.5, icon: "sunny-outline" as const },
+  { key: "taraweeh", speed: 1.0, icon: "moon-outline" as const },
+  { key: "qiyam_layl", speed: 0.7, icon: "cloudy-night-outline" as const },
+  { key: "fast_reading", speed: 2.0, icon: "flash-outline" as const },
+];
 
 // ==================== COLOR THEMES ====================
 
@@ -59,17 +73,17 @@ const FONT_STEP = 4;
 
 type ScreenMode = "setup" | "reading";
 
-type ListItem =
-  | { type: "suraHeader"; sura: number; suraName: string; key: string }
-  | { type: "basmala"; sura: number; key: string }
-  | { type: "verse"; sura: number; aya: number; text: string; key: string }
-  | { type: "continuation"; key: string };
-
 interface Verse {
   sura: number;
   aya: number;
   text: string;
   suraName: string;
+}
+
+interface SuraGroup {
+  sura: number;
+  suraName: string;
+  verses: Verse[];
 }
 
 interface Props {
@@ -97,14 +111,21 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
   const [fontFamily, setFontFamily] = useState("Maghribi");
   const [colorTheme, setColorTheme] = useState(COLOR_THEMES[0]);
 
+  // ── Speed state ────────────────────────────────────────
+  const [speed, setSpeed] = useState(1.0);
+
   // ── Reading state ────────────────────────────────────
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loadedUpToSura, setLoadedUpToSura] = useState(0);
-  const [toolbarVisible, setToolbarVisible] = useState(false);
   const [locked, setLocked] = useState(false);
   const [freeContinuation, setFreeContinuation] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [allLoaded, setAllLoaded] = useState(false);
+
+  // ── Auto-scroll state ──────────────────────────────────
+  const [isScrolling, setIsScrolling] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [showControls, setShowControls] = useState(false);
 
   // ── Ayah previews ────────────────────────────────────
   const [fromPreview, setFromPreview] = useState("");
@@ -117,14 +138,25 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
   const [hasSavedState, setHasSavedState] = useState(false);
 
   // ── Refs ──────────────────────────────────────────────
-  const flatListRef = useRef<FlatList>(null);
-  const toolbarTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const scrollYRef = useRef(0);
+  const scrollIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const speedRef = useRef(speed);
+  const isPausedRef = useRef(false);
+  const isScrollingRef = useRef(false);
+  const lastTapRef = useRef(0);
+  const totalContentHeightRef = useRef(0);
   const loadingRef = useRef(false);
 
   // ── Derived data ──────────────────────────────────────
   const suwarList = useMemo(() => allSuwar(), []);
   const startAyahCount = useMemo(() => getAyahCount(startSura), [startSura]);
   const endAyahCount = useMemo(() => getAyahCount(endSura), [endSura]);
+
+  // ── Keep refs synced ────────────────────────────────────
+  useEffect(() => { speedRef.current = speed; }, [speed]);
+  useEffect(() => { isPausedRef.current = isPaused; }, [isPaused]);
+  useEffect(() => { isScrollingRef.current = isScrolling; }, [isScrolling]);
 
   // ── Load saved state on mount ─────────────────────────
   useEffect(() => {
@@ -184,18 +216,20 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     return () => sub.remove();
   }, [mode]);
 
-  // ── Auto-hide toolbar after 5s ─────────────────────────
+  // ── Auto-hide controls after 5s ─────────────────────────
   useEffect(() => {
-    if (toolbarVisible) {
-      if (toolbarTimerRef.current) clearTimeout(toolbarTimerRef.current);
-      toolbarTimerRef.current = setTimeout(() => {
-        setToolbarVisible(false);
-      }, 5000);
+    if (showControls) {
+      const timer = setTimeout(() => setShowControls(false), 5000);
+      return () => clearTimeout(timer);
     }
+  }, [showControls]);
+
+  // ── Cleanup on unmount ─────────────────────────────────
+  useEffect(() => {
     return () => {
-      if (toolbarTimerRef.current) clearTimeout(toolbarTimerRef.current);
+      if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
     };
-  }, [toolbarVisible]);
+  }, []);
 
   // ── Save state periodically ────────────────────────────
   const savePrayerState = useCallback(() => {
@@ -212,6 +246,56 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
       },
     });
   }, [startSura, startAya, endSura, endAya, isOpenEnded, fontSize, fontFamily, colorTheme.id]);
+
+  // ── Auto-scroll engine ─────────────────────────────────
+  const startAutoScroll = useCallback(() => {
+    isScrollingRef.current = true;
+    setIsScrolling(true);
+    setIsPaused(false);
+    isPausedRef.current = false;
+
+    if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+
+    scrollIntervalRef.current = setInterval(() => {
+      if (!isScrollingRef.current) {
+        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+        return;
+      }
+      if (isPausedRef.current) return;
+
+      const pxPerInterval = 0.03 * speedRef.current * SCROLL_INTERVAL;
+      scrollYRef.current += pxPerInterval;
+
+      const maxScroll = Math.max(0, totalContentHeightRef.current - SCREEN_HEIGHT);
+      if (scrollYRef.current >= maxScroll) {
+        scrollYRef.current = maxScroll;
+        if (scrollIntervalRef.current) clearInterval(scrollIntervalRef.current);
+        isScrollingRef.current = false;
+        setIsScrolling(false);
+        setIsPaused(true);
+        return;
+      }
+
+      scrollViewRef.current?.scrollTo({ y: scrollYRef.current, animated: true });
+    }, SCROLL_INTERVAL);
+  }, []);
+
+  const stopAutoScroll = useCallback(() => {
+    isScrollingRef.current = false;
+    setIsScrolling(false);
+    if (scrollIntervalRef.current) {
+      clearInterval(scrollIntervalRef.current);
+      scrollIntervalRef.current = null;
+    }
+  }, []);
+
+  const togglePause = useCallback(() => {
+    setIsPaused((prev) => {
+      const next = !prev;
+      isPausedRef.current = next;
+      return next;
+    });
+  }, []);
 
   // ── Load initial sura on entering reading mode ─────────
   const loadInitialVerses = useCallback(async () => {
@@ -234,7 +318,6 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     setVerses(mapped);
     setLoadedUpToSura(startSura);
 
-    // If single sura and not open-ended, we're done
     if (startSura === endSura && !isOpenEnded) {
       setAllLoaded(true);
     } else {
@@ -276,69 +359,78 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     setIsLoadingMore(false);
     loadingRef.current = false;
 
-    // Check if this was the last sura
     if (nextSura >= limit) {
       setAllLoaded(true);
     }
   }, [loadedUpToSura, endSura, endAya, freeContinuation, isOpenEnded, quira]);
 
-  // ── Transform verses into FlatList items ───────────────
-  const listItems: ListItem[] = useMemo(() => {
-    const items: ListItem[] = [];
-    let lastSura = -1;
+  // ── Group verses by sura for inline rendering ──────────
+  const suraGroups: SuraGroup[] = useMemo(() => {
+    const groups: SuraGroup[] = [];
+    let current: SuraGroup | null = null;
 
     for (const v of verses) {
-      if (v.sura !== lastSura) {
-        items.push({
-          type: "suraHeader",
-          sura: v.sura,
-          suraName: v.suraName,
-          key: `header_${v.sura}`,
-        });
-        if (v.sura !== 9 && v.aya === 1) {
-          items.push({
-            type: "basmala",
-            sura: v.sura,
-            key: `basmala_${v.sura}`,
-          });
-        }
-        lastSura = v.sura;
+      if (!current || current.sura !== v.sura) {
+        current = { sura: v.sura, suraName: v.suraName, verses: [] };
+        groups.push(current);
       }
-      items.push({
-        type: "verse",
-        sura: v.sura,
-        aya: v.aya,
-        text: v.text,
-        key: `v_${v.sura}_${v.aya}`,
-      });
+      current.verses.push(v);
     }
+    return groups;
+  }, [verses]);
 
-    // Show continuation button at end of loaded range
-    if (allLoaded && !isOpenEnded && !freeContinuation && verses.length > 0) {
-      items.push({ type: "continuation", key: "continuation" });
-    }
+  // ── ScrollView lazy loading handlers ───────────────────
+  const viewportHeightRef = useRef(SCREEN_HEIGHT);
 
-    return items;
-  }, [verses, allLoaded, isOpenEnded, freeContinuation]);
+  const handleScroll = useCallback(
+    (e: any) => {
+      scrollYRef.current = e.nativeEvent.contentOffset.y;
+      viewportHeightRef.current = e.nativeEvent.layoutMeasurement.height;
+
+      // Lazy load when near bottom
+      const { contentOffset, layoutMeasurement, contentSize } = e.nativeEvent;
+      if (
+        contentOffset.y + layoutMeasurement.height > contentSize.height - 500 &&
+        !allLoaded &&
+        !isLoadingMore
+      ) {
+        loadNextSura();
+      }
+    },
+    [allLoaded, isLoadingMore, loadNextSura]
+  );
+
+  const handleContentSizeChange = useCallback((_w: number, h: number) => {
+    totalContentHeightRef.current = h;
+  }, []);
 
   // ── Start reading ──────────────────────────────────────
   const handleStartReading = useCallback(async () => {
     await loadInitialVerses();
     setMode("reading");
-    setToolbarVisible(false);
+    setShowControls(false);
     setLocked(false);
     setFreeContinuation(false);
+    setIsPaused(false);
+    scrollYRef.current = 0;
     savePrayerState();
-  }, [loadInitialVerses, savePrayerState]);
+
+    // Start auto-scroll after a short delay
+    setTimeout(() => { startAutoScroll(); }, 500);
+  }, [loadInitialVerses, savePrayerState, startAutoScroll]);
 
   // ── Resume reading ─────────────────────────────────────
   const handleResume = useCallback(async () => {
     await loadInitialVerses();
     setMode("reading");
-    setToolbarVisible(false);
+    setShowControls(false);
     setLocked(false);
     setFreeContinuation(false);
-  }, [loadInitialVerses]);
+    setIsPaused(false);
+    scrollYRef.current = 0;
+
+    setTimeout(() => { startAutoScroll(); }, 500);
+  }, [loadInitialVerses, startAutoScroll]);
 
   // ── Exit reading with confirmation ─────────────────────
   const handleGoBack = useCallback(() => {
@@ -351,6 +443,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
           {
             text: t("yes", lang),
             onPress: () => {
+              stopAutoScroll();
               StatusBar.setHidden(false);
               setMode("setup");
             },
@@ -360,13 +453,29 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     } else {
       onGoBack();
     }
-  }, [mode, lang, onGoBack]);
+  }, [mode, lang, onGoBack, stopAutoScroll]);
 
-  // ── Toggle toolbar on tap ──────────────────────────────
-  const handleContentTap = useCallback(() => {
+  // ── Tap handler: single=pause, double=controls ─────────
+  const handleScreenTap = useCallback(() => {
     if (locked) return;
-    setToolbarVisible((v) => !v);
-  }, [locked]);
+
+    const now = Date.now();
+    const DOUBLE_TAP_DELAY = 300;
+
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      // Double tap → toggle controls overlay
+      setShowControls((prev) => !prev);
+      lastTapRef.current = 0;
+    } else {
+      lastTapRef.current = now;
+      setTimeout(() => {
+        if (lastTapRef.current === now) {
+          // Single tap → pause/resume
+          togglePause();
+        }
+      }, DOUBLE_TAP_DELAY);
+    }
+  }, [locked, togglePause]);
 
   // ── Free continuation: load beyond original range ──────
   const handleFreeContinuation = useCallback(() => {
@@ -377,7 +486,6 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
   // ── Sura navigation from toolbar ───────────────────────
   const handleToolbarPrevSura = useCallback(() => {
     if (loadedUpToSura < 114) {
-      // Navigate forward to next sura
       const nextSura = loadedUpToSura + 1;
       setStartSura(nextSura);
       setStartAya(1);
@@ -386,7 +494,6 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
       setIsOpenEnded(false);
       setFreeContinuation(false);
       setAllLoaded(false);
-      // Reload
       (async () => {
         const count = getAyahCount(nextSura);
         const newVerses = await getSuraVerses(nextSura, 1, count, quira);
@@ -400,14 +507,14 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
         setVerses(mapped);
         setLoadedUpToSura(nextSura);
         setAllLoaded(true);
-        flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+        scrollYRef.current = 0;
       })();
     }
   }, [loadedUpToSura, quira]);
 
   const handleToolbarNextSura = useCallback(() => {
     if (startSura > 1) {
-      // Navigate backward to previous sura
       const prevSura = startSura - 1;
       setStartSura(prevSura);
       setStartAya(1);
@@ -429,10 +536,21 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
         setVerses(mapped);
         setLoadedUpToSura(prevSura);
         setAllLoaded(true);
-        flatListRef.current?.scrollToOffset({ offset: 0, animated: false });
+        scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+        scrollYRef.current = 0;
       })();
     }
   }, [startSura, quira]);
+
+  // ── Lock handlers ───────────────────────────────────────
+  const handleLockPress = useCallback(() => {
+    setLocked(true);
+    setShowControls(false);
+  }, []);
+
+  const handleUnlock = useCallback(() => {
+    setLocked(false);
+  }, []);
 
   // ── Sura picker handlers ───────────────────────────────
   const handleStartSuraSelect = useCallback(
@@ -460,86 +578,43 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     [startSura]
   );
 
-  // ── FlatList renderItem ────────────────────────────────
-  const renderItem = useCallback(
-    ({ item }: { item: ListItem }) => {
-      switch (item.type) {
-        case "suraHeader":
-          return (
-            <Text
-              style={[
-                styles.suraHeader,
-                { color: colorTheme.textColor, fontFamily },
-              ]}
-            >
-              {"\u0633\u0648\u0631\u0629"} {item.suraName}
-            </Text>
-          );
-        case "basmala":
-          return (
-            <Text
-              style={[
-                styles.basmala,
-                {
-                  color: colorTheme.textColor,
-                  fontFamily,
-                  fontSize: fontSize - 4,
-                },
-              ]}
-            >
-              {"\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"}
-            </Text>
-          );
-        case "verse":
-          return (
-            <Pressable onPress={handleContentTap}>
-              <Text
-                style={[
-                  styles.verseText,
-                  {
-                    color: colorTheme.textColor,
-                    fontFamily,
-                    fontSize,
-                    lineHeight: fontSize * 2,
-                  },
-                ]}
-              >
-                {item.text}
-              </Text>
-            </Pressable>
-          );
-        case "continuation":
-          return (
-            <Pressable
-              style={styles.freeContinueBtn}
-              onPress={handleFreeContinuation}
-            >
-              <Text style={styles.freeContinueBtnText}>
-                {t("free_continuation", lang)}
-              </Text>
-              <Ionicons name="arrow-down" size={18} color="#fff" />
-            </Pressable>
-          );
-      }
-    },
-    [
-      colorTheme,
-      fontFamily,
-      fontSize,
-      lang,
-      handleContentTap,
-      handleFreeContinuation,
-    ]
-  );
+  // ── Speed slider renderer ──────────────────────────────
+  const renderSpeedSlider = (
+    currentSpeed: number,
+    onSpeedChange: (s: number) => void,
+    compact: boolean = false
+  ) => {
+    const sliderW = compact ? SCREEN_WIDTH - 120 : SCREEN_WIDTH - 80;
+    const thumbLeft = ((currentSpeed - 0.1) / (3.0 - 0.1)) * sliderW;
 
-  const keyExtractor = useCallback((item: ListItem) => item.key, []);
-
-  // ── onEndReached for lazy loading ──────────────────────
-  const handleEndReached = useCallback(() => {
-    if (!allLoaded && !isLoadingMore) {
-      loadNextSura();
-    }
-  }, [allLoaded, isLoadingMore, loadNextSura]);
+    return (
+      <View style={[styles.sliderContainer, compact && { paddingHorizontal: 8 }]}>
+        <View style={styles.sliderLabels}>
+          <Text style={[styles.sliderLabelText, { color: compact ? "#aaa" : "#999" }]}>
+            {t("slow", lang)}
+          </Text>
+          <Text style={[styles.sliderLabelValue, { color: compact ? "#fff" : "#1a5c2e" }]}>
+            {currentSpeed.toFixed(1)}x
+          </Text>
+          <Text style={[styles.sliderLabelText, { color: compact ? "#aaa" : "#999" }]}>
+            {t("fast", lang)}
+          </Text>
+        </View>
+        <View style={[styles.sliderTrack, { width: sliderW }]}>
+          <View style={[styles.sliderFill, { width: thumbLeft, backgroundColor: compact ? "#fff" : "#1a5c2e" }]} />
+          <View style={[styles.sliderThumb, { left: Math.max(0, Math.min(thumbLeft - 12, sliderW - 24)), backgroundColor: compact ? "#fff" : "#1a5c2e" }]} />
+        </View>
+        <Pressable
+          style={[styles.sliderTouchArea, { width: sliderW }]}
+          onPress={(e) => {
+            const x = e.nativeEvent.locationX;
+            const newSpeed = Math.round((0.1 + (x / sliderW) * (3.0 - 0.1)) * 10) / 10;
+            onSpeedChange(Math.max(0.1, Math.min(3.0, newSpeed)));
+          }}
+        />
+      </View>
+    );
+  };
 
   // =====================================================
   // SETUP MODE
@@ -797,6 +872,46 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
               {"\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"}
             </Text>
           </View>
+
+          {/* Speed controls section */}
+          <View style={styles.setupSection}>
+            <Text style={styles.setupLabel}>{t("scroll_speed", lang)}</Text>
+            {renderSpeedSlider(speed, setSpeed)}
+            <Text style={[styles.setupSubLabel, { marginTop: 14 }]}>
+              {t("speed_profiles", lang)}
+            </Text>
+            <View style={styles.profileRow}>
+              {SPEED_PROFILES.map((profile) => {
+                const isActive = Math.abs(speed - profile.speed) < 0.05;
+                return (
+                  <Pressable
+                    key={profile.key}
+                    style={[
+                      styles.profileBtn,
+                      isActive && styles.profileBtnActive,
+                    ]}
+                    onPress={() => setSpeed(profile.speed)}
+                  >
+                    <Ionicons
+                      name={profile.icon}
+                      size={18}
+                      color={isActive ? "#1a5c2e" : "#999"}
+                    />
+                    <Text
+                      style={[
+                        styles.profileLabel,
+                        isActive && styles.profileLabelActive,
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {t(profile.key, lang)}
+                    </Text>
+                    <Text style={styles.profileSpeed}>{profile.speed}x</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </View>
         </ScrollView>
 
         {/* Bottom buttons */}
@@ -833,25 +948,92 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
     <View style={[styles.readingContainer, { backgroundColor: colorTheme.backgroundColor }]}>
       <StatusBar hidden />
 
-      {/* FlatList with verses */}
-      <Pressable
-        style={{ flex: 1 }}
-        onPress={handleContentTap}
-      >
-        <FlatList
-          ref={flatListRef}
-          data={listItems}
-          renderItem={renderItem}
-          keyExtractor={keyExtractor}
+      {/* Main scrollable text area */}
+      <Pressable style={{ flex: 1 }} onPress={handleScreenTap}>
+        <ScrollView
+          ref={scrollViewRef}
+          style={{ flex: 1 }}
           contentContainerStyle={styles.readingContent}
-          onEndReached={handleEndReached}
-          onEndReachedThreshold={0.5}
           showsVerticalScrollIndicator={false}
-          removeClippedSubviews
-          maxToRenderPerBatch={20}
-          windowSize={7}
-        />
+          scrollEventThrottle={16}
+          onScroll={handleScroll}
+          onContentSizeChange={handleContentSizeChange}
+          scrollEnabled={!locked}
+        >
+          {suraGroups.map((group) => (
+            <View key={`sura_${group.sura}`}>
+              {/* Sura header */}
+              <Text
+                style={[
+                  styles.suraHeader,
+                  { color: colorTheme.textColor, fontFamily },
+                ]}
+              >
+                {"\u0633\u0648\u0631\u0629"} {group.suraName}
+              </Text>
+
+              {/* Basmala */}
+              {group.sura !== 9 && group.verses[0]?.aya === 1 && (
+                <Text
+                  style={[
+                    styles.basmala,
+                    {
+                      color: colorTheme.textColor,
+                      fontFamily,
+                      fontSize: fontSize - 4,
+                    },
+                  ]}
+                >
+                  {"\u0628\u0650\u0633\u0652\u0645\u0650 \u0671\u0644\u0644\u0651\u064e\u0647\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0652\u0645\u064e\u0670\u0646\u0650 \u0671\u0644\u0631\u0651\u064e\u062d\u0650\u064a\u0645\u0650"}
+                </Text>
+              )}
+
+              {/* Inline flowing text — all verses in ONE <Text> */}
+              <Text
+                style={[
+                  styles.verseText,
+                  {
+                    color: colorTheme.textColor,
+                    fontFamily,
+                    fontSize,
+                    lineHeight: fontSize * 2.2,
+                  },
+                ]}
+              >
+                {group.verses.map((v) => (
+                  <React.Fragment key={`${v.sura}_${v.aya}`}>
+                    {v.text}{" "}
+                  </React.Fragment>
+                ))}
+              </Text>
+            </View>
+          ))}
+
+          {/* Continuation button at end of loaded range */}
+          {allLoaded && !isOpenEnded && !freeContinuation && verses.length > 0 && (
+            <Pressable
+              style={styles.freeContinueBtn}
+              onPress={handleFreeContinuation}
+            >
+              <Text style={styles.freeContinueBtnText}>
+                {t("free_continuation", lang)}
+              </Text>
+              <Ionicons name="arrow-down" size={18} color="#fff" />
+            </Pressable>
+          )}
+
+          {/* Bottom spacer for auto-scroll clearance */}
+          <View style={{ height: SCREEN_HEIGHT * 0.5 }} />
+        </ScrollView>
       </Pressable>
+
+      {/* Pause indicator */}
+      {isPaused && !showControls && !locked && (
+        <View style={styles.pauseIndicator} pointerEvents="none">
+          <Ionicons name="pause-circle-outline" size={60} color="rgba(255,255,255,0.6)" />
+          <Text style={styles.pauseText}>{t("tap_to_pause", lang)}</Text>
+        </View>
+      )}
 
       {/* Lock overlay — blocks all touches on content */}
       {locked && (
@@ -862,73 +1044,76 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
       {locked && (
         <Pressable
           style={styles.unlockFab}
-          onPress={() => setLocked(false)}
+          onPress={handleUnlock}
         >
           <Ionicons name="lock-open" size={20} color="#fff" />
         </Pressable>
       )}
 
-      {/* Bottom toolbar — toggled by tap */}
-      {toolbarVisible && !locked && (
-        <View style={styles.toolbar}>
-          {/* Back to setup */}
-          <Pressable style={styles.toolbarBtn} onPress={handleGoBack}>
-            <Ionicons name="arrow-forward" size={20} color="#fff" />
-          </Pressable>
+      {/* Controls Overlay — toggled by double-tap */}
+      {showControls && !locked && (
+        <View style={styles.controlsOverlay}>
+          {/* Top bar */}
+          <SafeAreaView edges={["top"]} style={styles.controlsTopBar}>
+            <Pressable onPress={handleGoBack} hitSlop={10} style={styles.controlBtn}>
+              <Ionicons name="close" size={26} color="#fff" />
+            </Pressable>
 
-          {/* Lock toggle */}
-          <Pressable
-            style={styles.toolbarBtn}
-            onPress={() => {
-              setLocked(true);
-              setToolbarVisible(false);
-            }}
-          >
-            <Ionicons name="lock-closed" size={20} color="#fff" />
-          </Pressable>
+            <View style={styles.pageIndicator}>
+              <Text style={styles.pageIndicatorText}>
+                {getSuraName(startSura)}
+              </Text>
+            </View>
 
-          {/* Font size - */}
-          <Pressable
-            style={styles.toolbarBtn}
-            onPress={() =>
-              setFontSize((s) => Math.max(s - FONT_STEP, MIN_FONT_SIZE))
-            }
-          >
-            <Ionicons name="remove-circle-outline" size={20} color="#fff" />
-          </Pressable>
+            <Pressable onPress={handleLockPress} hitSlop={10} style={styles.controlBtn}>
+              <Ionicons name="lock-closed-outline" size={22} color="#fff" />
+            </Pressable>
+          </SafeAreaView>
 
-          {/* Font size + */}
-          <Pressable
-            style={styles.toolbarBtn}
-            onPress={() =>
-              setFontSize((s) => Math.min(s + FONT_STEP, MAX_FONT_SIZE))
-            }
-          >
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
-          </Pressable>
+          {/* Bottom controls */}
+          <SafeAreaView edges={["bottom"]} style={styles.controlsBottomBar}>
+            {renderSpeedSlider(speed, setSpeed, true)}
 
-          {/* Prev sura (RTL: forward arrow = previous) */}
-          <Pressable
-            style={[styles.toolbarBtn, startSura >= 114 && { opacity: 0.3 }]}
-            onPress={handleToolbarPrevSura}
-            disabled={startSura >= 114}
-          >
-            <Ionicons name="chevron-back" size={20} color="#fff" />
-          </Pressable>
+            {/* Font size in controls */}
+            <View style={styles.controlFontRow}>
+              <Pressable
+                style={styles.controlFontBtn}
+                onPress={() => setFontSize((s) => Math.max(s - FONT_STEP, MIN_FONT_SIZE))}
+              >
+                <Text style={styles.controlFontBtnText}>A-</Text>
+              </Pressable>
+              <Text style={styles.controlFontSizeText}>{fontSize}</Text>
+              <Pressable
+                style={styles.controlFontBtn}
+                onPress={() => setFontSize((s) => Math.min(s + FONT_STEP, MAX_FONT_SIZE))}
+              >
+                <Text style={styles.controlFontBtnText}>A+</Text>
+              </Pressable>
+            </View>
 
-          {/* Current sura name */}
-          <Text style={styles.toolbarSuraName} numberOfLines={1}>
-            {getSuraName(startSura)}
-          </Text>
+            {/* Action buttons */}
+            <View style={styles.controlActions}>
+              <Pressable
+                style={[styles.controlActionBtn, { backgroundColor: "#1a5c2e" }]}
+                onPress={togglePause}
+              >
+                <Ionicons name={isPaused ? "play" : "pause"} size={22} color="#fff" />
+                <Text style={styles.controlActionText}>
+                  {isPaused ? t("resume_scrolling", lang) : t("pause_scrolling", lang)}
+                </Text>
+              </Pressable>
 
-          {/* Next sura */}
-          <Pressable
-            style={[styles.toolbarBtn, startSura <= 1 && { opacity: 0.3 }]}
-            onPress={handleToolbarNextSura}
-            disabled={startSura <= 1}
-          >
-            <Ionicons name="chevron-forward" size={20} color="#fff" />
-          </Pressable>
+              <Pressable
+                style={[styles.controlActionBtn, { backgroundColor: "rgba(255,255,255,0.15)" }]}
+                onPress={handleLockPress}
+              >
+                <Ionicons name="lock-closed" size={20} color="#fff" />
+                <Text style={styles.controlActionText}>
+                  {t("lock_screen_mode", lang)}
+                </Text>
+              </Pressable>
+            </View>
+          </SafeAreaView>
         </View>
       )}
     </View>
@@ -975,6 +1160,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#666",
+    marginBottom: 8,
+    textAlign: "right",
+    writingDirection: "rtl",
+  },
+  setupSubLabel: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#999",
     marginBottom: 8,
     textAlign: "right",
     writingDirection: "rtl",
@@ -1183,13 +1376,99 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  // ── Speed controls (setup) ────────────────────────────
+  sliderContainer: {
+    paddingHorizontal: 4,
+    paddingTop: 2,
+  },
+  sliderLabels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  sliderLabelText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  sliderLabelValue: {
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  sliderTrack: {
+    height: 6,
+    backgroundColor: "rgba(128,128,128,0.2)",
+    borderRadius: 3,
+    overflow: "visible",
+    position: "relative",
+  },
+  sliderFill: {
+    height: 6,
+    borderRadius: 3,
+  },
+  sliderThumb: {
+    position: "absolute",
+    top: -9,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 3,
+    borderColor: "#fff",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+  },
+  sliderTouchArea: {
+    position: "absolute",
+    top: 20,
+    height: 36,
+    left: 4,
+  },
+  profileRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  profileBtn: {
+    flexDirection: "column",
+    alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: "#ddd",
+    backgroundColor: "transparent",
+    minWidth: 72,
+    gap: 4,
+  },
+  profileBtnActive: {
+    borderColor: "#1a5c2e",
+    backgroundColor: "#e8f4ed",
+  },
+  profileLabel: {
+    fontSize: 11,
+    textAlign: "center",
+    color: "#333",
+  },
+  profileLabelActive: {
+    color: "#1a5c2e",
+    fontWeight: "700",
+  },
+  profileSpeed: {
+    fontSize: 10,
+    color: "#999",
+  },
+
   // ── Reading mode ─────────────────────────────────────
   readingContainer: {
     flex: 1,
   },
   readingContent: {
-    padding: 20,
-    paddingBottom: 80,
+    paddingHorizontal: 20,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
   suraHeader: {
     fontSize: 26,
@@ -1206,7 +1485,6 @@ const styles = StyleSheet.create({
   verseText: {
     textAlign: "right",
     writingDirection: "rtl",
-    marginBottom: 4,
   },
   freeContinueBtn: {
     flexDirection: "row",
@@ -1225,6 +1503,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
   },
+
+  // ── Pause indicator ────────────────────────────────────
+  pauseIndicator: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pauseText: {
+    color: "rgba(255,255,255,0.6)",
+    fontSize: 14,
+    marginTop: 8,
+  },
+
+  // ── Lock mode ─────────────────────────────────────────
   lockOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "transparent",
@@ -1247,25 +1543,93 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     zIndex: 20,
   },
-  toolbar: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 50,
-    backgroundColor: "rgba(26, 92, 46, 0.92)",
+
+  // ── Controls overlay ──────────────────────────────────
+  controlsOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 150,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "space-between",
+  },
+  controlsTopBar: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-around",
-    paddingHorizontal: 8,
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 12,
   },
-  toolbarBtn: {
-    padding: 8,
+  controlBtn: {
+    width: 44,
+    height: 44,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.15)",
   },
-  toolbarSuraName: {
+  pageIndicator: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingVertical: 6,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+  },
+  pageIndicatorText: {
+    color: "#fff",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  controlsBottomBar: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    backgroundColor: "rgba(0,0,0,0.3)",
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  controlFontRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 12,
+    marginTop: 10,
+  },
+  controlFontBtn: {
+    width: 40,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  controlFontBtnText: {
     color: "#fff",
     fontSize: 14,
     fontWeight: "700",
-    maxWidth: 80,
+  },
+  controlFontSizeText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+    minWidth: 30,
+    textAlign: "center",
+  },
+  controlActions: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 16,
+  },
+  controlActionBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  controlActionText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
