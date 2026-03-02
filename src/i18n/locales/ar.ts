@@ -313,4 +313,9 @@ export default {
   recitor_alkouchi: "العيون الكوشي",
   recitor_alkazabri: "عمر القزابري",
   maghribi_font: "خط مغربي",
+  exit_prayer_reading: "هل تريد الخروج من وضع القراءة؟",
+  start_reading: "بدء القراءة",
+  resume_reading: "استئناف",
+  free_continuation: "متابعة حرة",
+  open_ended: "مفتوحة",
 };

@@ -301,4 +301,9 @@ export default {
   copy_tafsir: "ⵙⵏⵖⵍ ⴰⴼⵙⵙⴰⵔ",
   // Translation
   no_translation: "ⵓⵔ ⵉⵍⵍⵉ ⵓⵙⵓⵖⵍ",
+  exit_prayer_reading: "ⴰⴷ ⵜⴼⴼⵖⴷ ⵙⴳ ⵓⵙⵎⵔⵙ ⵏ ⵜⵖⵔⵉ?",
+  start_reading: "ⵙⵏⵜⵉ ⵜⴰⵖⵔⵉ",
+  resume_reading: "ⴽⵎⵍ",
+  free_continuation: "ⴰⵙⵎⴷⵢⴰ ⵉⵍⴻⵍⵍⵉ",
+  open_ended: "ⵜⵉⵍⴻⵍⵍⵉⵜ",
 };

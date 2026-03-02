@@ -19,6 +19,17 @@ interface PersistedSettings {
   quranFont: string;
   warshRecitorId: number;
   selectedAya: { sura: number; aya: number; page: number; id: string } | null;
+  prayerModeState?: {
+    startSura: number;
+    startAya: number;
+    endSura: number;
+    endAya: number;
+    isOpenEnded: boolean;
+    fontSize: number;
+    fontFamily: string;
+    colorThemeId: string;
+    scrollOffset?: number;
+  };
 }
 
 // ---------------------------------------------------------------------------

@@ -311,4 +311,9 @@ export default {
   recitor_alkouchi: "Al-Uyun Al-Kouchi",
   recitor_alkazabri: "Omar Al-Kazabri",
   maghribi_font: "Police Maghribi",
+  exit_prayer_reading: "Quitter le mode lecture ?",
+  start_reading: "Commencer la Lecture",
+  resume_reading: "Reprendre",
+  free_continuation: "Continuation Libre",
+  open_ended: "Ouverte",
 };

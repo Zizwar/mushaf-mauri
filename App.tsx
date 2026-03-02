@@ -14,6 +14,7 @@ import KhatmaScreen from "./src/screens/KhatmaScreen";
 import AboutScreen from "./src/screens/AboutScreen";
 import TasbihScreen from "./src/screens/TasbihScreen";
 import AutoScrollScreen from "./src/screens/AutoScrollScreen";
+import PrayerModeScreen from "./src/screens/PrayerModeScreen";
 import { useAppStore } from "./src/store/useAppStore";
 
 type Screen =
@@ -27,7 +28,8 @@ type Screen =
   | "khatma"
   | "about"
   | "tasbih"
-  | "autoscroll";
+  | "autoscroll"
+  | "prayerMode";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -104,6 +106,8 @@ export default function App() {
         <TasbihScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "autoscroll" ? (
         <AutoScrollScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "prayerMode" ? (
+        <PrayerModeScreen onGoBack={() => setScreen("mushaf")} />
       ) : (
         <MushafViewer
           onGoBack={hasCompletedSetup ? undefined : () => setScreen("home")}

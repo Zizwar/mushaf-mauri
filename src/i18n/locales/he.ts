@@ -287,4 +287,9 @@ export default {
   copied_to_clipboard: "הועתק",
   copy_tafsir: "העתק תפסיר",
   no_translation: "התרגום אינו זמין לפסוק זה",
+  exit_prayer_reading: "לצאת ממצב קריאה?",
+  start_reading: "התחל קריאה",
+  resume_reading: "המשך",
+  free_continuation: "המשך חופשי",
+  open_ended: "פתוח",
 };
