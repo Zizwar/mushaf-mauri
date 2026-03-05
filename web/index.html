@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quran Player - Warsh (Offline DB)</title>
+<style>
+  @font-face {
+    font-family: 'Maghribi';
+    src: url('https://app.al-mushaf.com/_content/quranRCL/ressources/fonts/AALMAGHRIBI_v4.9.6.otf') format('opentype');
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Maghribi', 'Amiri', 'Traditional Arabic', serif;
+    background: #1a1a2e; color: #e0e0e0; min-height: 100vh;
+  }
+
+  /* === TOP BAR === */
+  #topBar {
+    position: sticky; top: 0; z-index: 100;
+    background: #16213e; padding: 10px 15px;
+    border-bottom: 2px solid #0f3460;
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  }
+  .cg { display: flex; align-items: center; gap: 4px; }
+  .cg label { font-size: 12px; color: #8090b0; font-family: sans-serif; white-space: nowrap; }
+  #topBar select, #topBar input, #topBar button {
+    background: #0f3460; color: #e0e0e0; border: 1px solid #1a3a6a;
+    padding: 5px 8px; border-radius: 4px; font-size: 13px; font-family: sans-serif; cursor: pointer;
+  }
+  #topBar input[type=number] { width: 55px; text-align: center; }
+  #topBar button:hover { background: #1a4a80; }
+  #topBar button.active { background: #e94560; }
+  #fileInfo { font-size: 11px; color: #607090; font-family: monospace; padding: 2px 6px; }
+
+  /* === DEBUG === */
+  #debugPanel {
+    background: #0d1b2a; padding: 8px 15px;
+    font-family: monospace; font-size: 11px; color: #80ffa0;
+    border-bottom: 1px solid #1b2838;
+    display: none; max-height: 180px; overflow-y: auto;
+    direction: ltr; text-align: left;
+  }
+  #debugPanel.show { display: block; }
+
+  /* === VERSES === */
+  #versesContainer {
+    padding: 12px; max-width: 950px; margin: 0 auto; padding-bottom: 110px;
+  }
+  /* Surah header separator */
+  .surah-header {
+    text-align: center; padding: 12px 0 6px;
+    font-size: 20px; color: #e0a060;
+    border-top: 1px solid #1a3060; margin-top: 8px;
+    font-family: sans-serif;
+  }
+  .verse-row {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 8px 10px; margin: 2px 0;
+    border-radius: 6px; cursor: pointer;
+    transition: all 0.15s; border: 1px solid transparent;
+  }
+  .verse-row:hover { background: rgba(15,52,96,0.5); border-color: #1a4a80; }
+  .verse-row.active { background: rgba(80,120,200,0.12); border-color: #3060a0; }
+  .verse-row.playing {
+    background: rgba(233,69,96,0.18); border-color: #e94560;
+    box-shadow: 0 0 8px rgba(233,69,96,0.2);
+  }
+  .verse-num {
+    min-width: 34px; height: 34px;
+    display: flex; align-items: center; justify-content: center;
+    background: #0f3460; border-radius: 50%;
+    font-size: 13px; font-family: sans-serif; font-weight: bold;
+    color: #80b0ff; flex-shrink: 0;
+  }
+  .verse-text { font-size: 26px; line-height: 1.9; flex: 1; }
+  .verse-timing {
+    font-family: monospace; font-size: 10px; color: #506070;
+    min-width: 105px; text-align: left; direction: ltr;
+    flex-shrink: 0; padding-top: 6px; line-height: 1.5;
+  }
+  .verse-timing .ct { color: #60a080; }
+  .verse-timing .rw { color: #505060; font-size: 9px; }
+
+  /* === PLAYER BAR === */
+  #playerBar {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #16213e; border-top: 2px solid #0f3460;
+    padding: 8px 15px; z-index: 100;
+  }
+  #progressWrap {
+    position: relative; width: 100%; height: 8px; background: #0f3460;
+    border-radius: 4px; cursor: pointer; margin-bottom: 6px;
+  }
+  #progressFill { height: 100%; background: #e94560; border-radius: 4px; width: 0; transition: width 0.08s; }
+  .vm { position: absolute; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.15); }
+  #playerControls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  #playerControls button {
+    background: #0f3460; color: #e0e0e0; border: none;
+    padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 15px;
+  }
+  #playerControls button:hover { background: #1a4a80; }
+  #timeDisplay { font-family: monospace; font-size: 12px; color: #80b0ff; direction: ltr; }
+  #statusDisplay { font-family: sans-serif; font-size: 11px; color: #8090a0; flex: 1; text-align: center; }
+  #curInfo { font-family: sans-serif; font-size: 11px; color: #e0a060; }
+  #loading {
+    display: flex; align-items: center; justify-content: center;
+    height: 200px; font-size: 16px; color: #607080; font-family: sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <div class="cg">
+    <label>القارئ:</label>
+    <select id="recitorSel"></select>
+  </div>
+  <div class="cg">
+    <label>صفحة:</label>
+    <input type="number" id="pageIn" value="2" min="1" max="604">
+  </div>
+  <button onclick="loadPage()">تحميل</button>
+  <button onclick="loadPage(prevPage())">&#9664;</button>
+  <button onclick="loadPage(nextPage())">&#9654;</button>
+  <div class="cg">
+    <label>سورة:</label>
+    <select id="suraSel" onchange="goToSura()"></select>
+  </div>
+  <span id="fileInfo"></span>
+  <div style="flex:1"></div>
+  <button id="dbgBtn" onclick="toggleDebug()">Debug</button>
+</div>
+
+<div id="debugPanel"><div id="dbgLog"></div></div>
+
+<div id="versesContainer">
+  <div id="loading">جاري تحميل قاعدة البيانات...</div>
+</div>
+
+<div id="playerBar">
+  <div id="progressWrap" onclick="seekProg(event)">
+    <div id="progressFill"></div>
+  </div>
+  <div id="playerControls">
+    <button onclick="playPrev()">&#9664;&#9664;</button>
+    <button onclick="playPause()" id="ppBtn">&#9654;&#xFE0E;</button>
+    <button onclick="playNext()">&#9654;&#9654;</button>
+    <button onclick="stopAudio()">&#9632;</button>
+    <span id="timeDisplay">0:00 / 0:00</span>
+    <span id="curInfo"></span>
+    <span id="statusDisplay"></span>
+  </div>
+</div>
+
+<!-- sql.js: SQLite in the browser via WebAssembly -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<!-- Howler.js: Audio playback -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+<!-- Verse text now loaded from DB (aya_audio.content / content_plain) -->
+
+<script>
+// ==========================================================
+// CONFIG
+// ==========================================================
+// Audio served via Express proxy at /audio/{folder}/{file}
+// No external proxy needed - everything runs on one server.
+const AUDIO_BASE = '/audio/'; // + folder/filename.mp3
+
+// ==========================================================
+// STATE
+// ==========================================================
+let DB = null;             // sql.js database instance
+let versesData = [];       // current loaded verses [{idAya, ayaNum, suraID, timeStart, timeEnd, fileTitle, pageNum}]
+let maxTimeEnd = 0;        // max timeEnd for current file (for quadratic formula)
+let sound = null;          // Howler.js instance
+let totalDuration = 0;     // audio duration in seconds
+let currentVerseIdx = -1;
+let isPlaying = false;
+let posTimer = null;
+let debugMode = false;
+let currentFile = '';
+let currentRecitorFolder = '';
+let suraNames = [];        // [{suraID, name}] - built from aya_audio
+let allPages = [];         // [{pageNum, firstAya}] - for navigation
+
+// ==========================================================
+// QUADRATIC TIMING MODEL
+// ----------------------------------------------------------
+// The timing values in the DB (timeStart/timeEnd) grow as t².
+// To convert to real seconds:
+//   time_seconds = totalDuration * sqrt(apiValue / maxTimeEnd)
+//
+// This was discovered empirically:
+//   - The raw values span from ~7 (verse 1) to ~10^12 (last verse)
+//   - Simple linear division gives wrong results
+//   - The square root relationship was verified to 0.1% accuracy
+//   - k = maxTimeEnd / totalDuration² ≈ 995,000 for typical files
+//
+// Reverse (seconds → raw value):
+//   rawValue = maxTimeEnd * (seconds / totalDuration)²
+// ==========================================================
+function apiToSec(val) {
+  if (maxTimeEnd <= 0 || totalDuration <= 0) return 0;
+  return totalDuration * Math.sqrt(val / maxTimeEnd);
+}
+
+function fmtTime(s) {
+  if (!s || isNaN(s) || s < 0) return '0:00';
+  return Math.floor(s/60) + ':' + String(Math.floor(s%60)).padStart(2,'0');
+}
+
+// ==========================================================
+// DEBUG
+// ==========================================================
+function toggleDebug() {
+  debugMode = !debugMode;
+  document.getElementById('debugPanel').classList.toggle('show', debugMode);
+  document.getElementById('dbgBtn').classList.toggle('active', debugMode);
+}
+function dbg(m) {
+  console.log('[QP]', m);
+  if (!debugMode) return;
+  const el = document.getElementById('dbgLog');
+  const d = document.createElement('div');
+  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + m;
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+  if (el.children.length > 300) el.removeChild(el.firstChild);
+}
+
+// ==========================================================
+// DATABASE INIT
+// ----------------------------------------------------------
+// Load qurantxtdb.db with sql.js (SQLite compiled to WASM).
+// No API calls needed - everything is in the local DB file.
+// ==========================================================
+async function initDB() {
+  try {
+    document.getElementById('loading').textContent = 'جاري تحميل قاعدة البيانات...';
+
+    // Init sql.js with WASM
+    const SQL = await initSqlJs({
+      locateFile: f => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/' + f
+    });
+
+    // Fetch the DB file
+    const resp = await fetch('qurantxtdb.db');
+    const buf = await resp.arrayBuffer();
+    DB = new SQL.Database(new Uint8Array(buf));
+
+    dbg('DB loaded, size: ' + (buf.byteLength / 1024 / 1024).toFixed(2) + ' MB');
+
+    // Load recitors
+    loadRecitors();
+    // Build sura list from DB
+    buildSuraList();
+    // Build page index
+    buildPageIndex();
+
+    document.getElementById('loading').textContent = 'اختر صفحة واضغط "تحميل"';
+  } catch (e) {
+    document.getElementById('loading').textContent = 'خطأ في تحميل قاعدة البيانات: ' + e.message;
+    console.error(e);
+  }
+}
+
+// ==========================================================
+// LOAD RECITORS FROM DB (no API)
+// ==========================================================
+function loadRecitors() {
+  const rows = DB.exec("SELECT recitorID, name, description, folder FROM recitor_audio");
+  if (!rows.length) return;
+  const sel = document.getElementById('recitorSel');
+  sel.innerHTML = '';
+  rows[0].values.forEach(r => {
+    const opt = document.createElement('option');
+    opt.value = r[0]; // recitorID
+    opt.dataset.folder = r[3]; // folder name for audio URL
+    opt.textContent = r[2] || r[1]; // description or name
+    sel.appendChild(opt);
+  });
+  currentRecitorFolder = rows[0].values[0][3];
+  sel.addEventListener('change', function() {
+    currentRecitorFolder = this.selectedOptions[0].dataset.folder;
+  });
+}
+
+// ==========================================================
+// BUILD SURA LIST FROM DB
+// ==========================================================
+function buildSuraList() {
+  // Sura names in Arabic (114 suras)
+  const names = [
+    'الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال',
+    'التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء',
+    'الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء',
+    'النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر',
+    'يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان',
+    'الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم',
+    'القمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف',
+    'الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة',
+    'المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات',
+    'النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج',
+    'الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى',
+    'الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة',
+    'التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون',
+    'النصر','المسد','الإخلاص','الفلق','الناس'
+  ];
+
+  // Get first page of each sura from DB
+  const rows = DB.exec(`
+    SELECT DISTINCT a.suraID, MIN(x.pageNum) as firstPage
+    FROM aya_audio a JOIN ayaXYP x ON a.ayaID = x.idAya
+    GROUP BY a.suraID ORDER BY a.suraID
+  `);
+
+  const sel = document.getElementById('suraSel');
+  sel.innerHTML = '';
+  if (rows.length) {
+    rows[0].values.forEach(r => {
+      const sId = r[0], pg = r[1];
+      const opt = document.createElement('option');
+      opt.value = pg; // page number
+      opt.textContent = sId + '. ' + (names[sId - 1] || 'سورة ' + sId);
+      sel.appendChild(opt);
+    });
+  }
+}
+
+function goToSura() {
+  const pg = document.getElementById('suraSel').value;
+  if (pg) loadPage(parseInt(pg));
+}
+
+// ==========================================================
+// BUILD PAGE INDEX - for prev/next navigation
+// ==========================================================
+function buildPageIndex() {
+  const rows = DB.exec("SELECT DISTINCT pageNum FROM ayaXYP ORDER BY pageNum");
+  allPages = rows.length ? rows[0].values.map(r => r[0]) : [];
+  dbg('Total pages in DB: ' + allPages.length);
+}
+
+function prevPage() {
+  const cur = parseInt(document.getElementById('pageIn').value);
+  // Find the file's first page, then go to previous file
+  if (versesData.length > 0) {
+    const firstPage = Math.min(...versesData.map(v => v.pageNum));
+    return Math.max(1, firstPage - 1);
+  }
+  return Math.max(1, cur - 5);
+}
+
+function nextPage() {
+  if (versesData.length > 0) {
+    const lastPage = Math.max(...versesData.map(v => v.pageNum));
+    return Math.min(604, lastPage + 1);
+  }
+  return Math.min(604, parseInt(document.getElementById('pageIn').value) + 5);
+}
+
+// ==========================================================
+// LOAD PAGE
+// ----------------------------------------------------------
+// Query the DB to find which audio file contains the given page,
+// then load all verses for that file.
+// ==========================================================
+function loadPage(pg) {
+  if (!DB) return;
+  if (pg !== undefined) {
+    document.getElementById('pageIn').value = Math.max(1, Math.min(604, pg));
+  }
+  const pageNum = parseInt(document.getElementById('pageIn').value) || 2;
+  const recitorId = parseInt(document.getElementById('recitorSel').value) || 1;
+
+  // Step 1: Find which file contains this page
+  // ----------------------------------------------------------
+  // Join ayaTiming_audio with ayaXYP to find the fileTitle
+  // for the given page and recitor
+  const fileRows = DB.exec(`
+    SELECT DISTINCT t.fileTitle
+    FROM ayaTiming_audio t
+    JOIN ayaXYP x ON t.idAya = x.idAya
+    WHERE t.idRecitor = ${recitorId} AND x.pageNum = ${pageNum}
+    LIMIT 1
+  `);
+
+  if (!fileRows.length || !fileRows[0].values.length) {
+    document.getElementById('loading').style.display = 'flex';
+    document.getElementById('loading').textContent = 'لا توجد بيانات لهذه الصفحة';
+    return;
+  }
+
+  const fileName = fileRows[0].values[0][0];
+
+  // Step 2: Load ALL verses for this file
+  // ----------------------------------------------------------
+  const rows = DB.exec(`
+    SELECT t.idAya, a.ayaNum, a.suraID, t.timeStart, t.timeEnd, t.fileTitle, x.pageNum,
+           a.content, a.content_plain
+    FROM ayaTiming_audio t
+    JOIN aya_audio a ON t.idAya = a.ayaID
+    JOIN ayaXYP x ON t.idAya = x.idAya
+    WHERE t.idRecitor = ${recitorId} AND t.fileTitle = '${fileName}'
+    ORDER BY t.idAya
+  `);
+
+  if (!rows.length) return;
+
+  versesData = rows[0].values.map(r => ({
+    idAya: r[0], ayaNum: r[1], suraID: r[2],
+    timeStart: r[3], timeEnd: r[4],
+    fileTitle: r[5], pageNum: r[6],
+    content: r[7],        // tashkeel text from DB
+    contentPlain: r[8]    // plain text from DB
+  }));
+
+  // maxTimeEnd for the quadratic timing formula
+  maxTimeEnd = Math.max(...versesData.map(v => v.timeEnd));
+  currentFile = fileName;
+
+  const pages = [...new Set(versesData.map(v => v.pageNum))].sort((a,b) => a-b);
+  document.getElementById('fileInfo').textContent =
+    fileName + ' | pg ' + pages[0] + '-' + pages[pages.length-1] +
+    ' | ' + versesData.length + ' ayat';
+
+  dbg('Loaded ' + fileName + ': ' + versesData.length + ' verses, pages ' +
+    pages.join(',') + ', maxEnd=' + maxTimeEnd);
+
+  // Step 3: Load audio via proxy (only audio needs proxy for CORS)
+  loadAudio(fileName);
+  renderVerses();
+}
+
+// ==========================================================
+// AUDIO (via proxy for CORS)
+// ==========================================================
+function loadAudio(fileName) {
+  if (sound) { sound.unload(); sound = null; }
+  stopPosTimer();
+  totalDuration = 0; currentVerseIdx = -1; isPlaying = false;
+  updPP();
+
+  // Audio URL: /audio/folder/filename.mp3 (proxied by Express)
+  const audioUrl = AUDIO_BASE + currentRecitorFolder + '/' + fileName;
+  dbg('Audio: ' + audioUrl);
+  document.getElementById('statusDisplay').textContent = 'Loading...';
+
+  sound = new Howl({
+    src: [audioUrl],
+    html5: true,
+    format: ['mp3'],
+    onload: function() {
+      totalDuration = sound.duration();
+      // k = maxTimeEnd / duration²  (the quadratic constant)
+      const k = maxTimeEnd / (totalDuration * totalDuration);
+      dbg('Duration: ' + totalDuration.toFixed(2) + 's | k=' + k.toFixed(2));
+      document.getElementById('statusDisplay').textContent = fileName + ' - ' + fmtTime(totalDuration);
+      document.getElementById('timeDisplay').textContent = '0:00 / ' + fmtTime(totalDuration);
+      updateTimingDisplay();
+      addVerseMarkers();
+    },
+    onplay: function() { isPlaying = true; updPP(); startPosTimer(); },
+    onpause: function() { isPlaying = false; updPP(); stopPosTimer(); },
+    onstop: function() { isPlaying = false; updPP(); stopPosTimer(); },
+    onend: function() { isPlaying = false; updPP(); stopPosTimer(); dbg('Audio ended'); },
+    onloaderror: function(id, e) {
+      dbg('Audio load error: ' + e);
+      document.getElementById('statusDisplay').textContent = 'Error loading audio';
+    }
+  });
+}
+
+function updPP() {
+  document.getElementById('ppBtn').textContent = isPlaying ? '\u23F8' : '\u25B6\uFE0E';
+}
+
+// ==========================================================
+// POSITION TRACKING
+// ----------------------------------------------------------
+// Every 60ms, check the audio position and highlight
+// the current verse using the quadratic timing model.
+// ==========================================================
+function startPosTimer() { stopPosTimer(); posTimer = setInterval(updatePos, 60); }
+function stopPosTimer() { if (posTimer) { clearInterval(posTimer); posTimer = null; } }
+
+function updatePos() {
+  if (!sound || !isPlaying) return;
+  const pos = sound.seek();
+  if (typeof pos !== 'number' || isNaN(pos)) return;
+
+  const pct = totalDuration > 0 ? (pos / totalDuration * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('timeDisplay').textContent = fmtTime(pos) + ' / ' + fmtTime(totalDuration);
+
+  // Find current verse using quadratic timing
+  let found = -1;
+  for (let i = 0; i < versesData.length; i++) {
+    const s = apiToSec(versesData[i].timeStart);
+    const e = (i + 1 < versesData.length)
+      ? apiToSec(versesData[i + 1].timeStart)
+      : apiToSec(versesData[i].timeEnd);
+    if (pos >= s - 0.1 && pos < e) { found = i; break; }
+  }
+  if (found === -1 && versesData.length > 0) {
+    if (pos >= apiToSec(versesData[versesData.length - 1].timeStart))
+      found = versesData.length - 1;
+  }
+  if (found !== currentVerseIdx) setCurVerse(found);
+}
+
+function setCurVerse(idx) {
+  document.querySelectorAll('.verse-row.playing').forEach(el => el.classList.remove('playing'));
+  currentVerseIdx = idx;
+  if (idx >= 0 && idx < versesData.length) {
+    const el = document.getElementById('v-' + idx);
+    if (el) { el.classList.add('playing'); el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }
+    const v = versesData[idx];
+    const ss = apiToSec(v.timeStart);
+    const ee = (idx+1 < versesData.length) ? apiToSec(versesData[idx+1].timeStart) : apiToSec(v.timeEnd);
+    document.getElementById('curInfo').textContent =
+      'سورة ' + v.suraID + ' آية ' + v.ayaNum + ' | ' + ss.toFixed(2) + 's → ' + ee.toFixed(2) + 's';
+  } else {
+    document.getElementById('curInfo').textContent = '';
+  }
+}
+
+// ==========================================================
+// RENDER VERSES
+// ==========================================================
+function renderVerses() {
+  const c = document.getElementById('versesContainer');
+  // Clear old
+  c.querySelectorAll('.verse-row, .surah-header').forEach(el => el.remove());
+  document.getElementById('loading').style.display = 'none';
+
+  let lastSura = -1;
+  const suraNames = [
+    '','الفاتحة','البقرة','آل عمران','النساء','المائدة','الأنعام','الأعراف','الأنفال',
+    'التوبة','يونس','هود','يوسف','الرعد','إبراهيم','الحجر','النحل','الإسراء',
+    'الكهف','مريم','طه','الأنبياء','الحج','المؤمنون','النور','الفرقان','الشعراء',
+    'النمل','القصص','العنكبوت','الروم','لقمان','السجدة','الأحزاب','سبأ','فاطر',
+    'يس','الصافات','ص','الزمر','غافر','فصلت','الشورى','الزخرف','الدخان',
+    'الجاثية','الأحقاف','محمد','الفتح','الحجرات','ق','الذاريات','الطور','النجم',
+    'القمر','الرحمن','الواقعة','الحديد','المجادلة','الحشر','الممتحنة','الصف',
+    'الجمعة','المنافقون','التغابن','الطلاق','التحريم','الملك','القلم','الحاقة',
+    'المعارج','نوح','الجن','المزمل','المدثر','القيامة','الإنسان','المرسلات',
+    'النبأ','النازعات','عبس','التكوير','الانفطار','المطففين','الانشقاق','البروج',
+    'الطارق','الأعلى','الغاشية','الفجر','البلد','الشمس','الليل','الضحى',
+    'الشرح','التين','العلق','القدر','البينة','الزلزلة','العاديات','القارعة',
+    'التكاثر','العصر','الهمزة','الفيل','قريش','الماعون','الكوثر','الكافرون',
+    'النصر','المسد','الإخلاص','الفلق','الناس'
+  ];
+
+  versesData.forEach((v, i) => {
+    // Surah separator
+    if (v.suraID !== lastSura) {
+      lastSura = v.suraID;
+      const h = document.createElement('div');
+      h.className = 'surah-header';
+      h.textContent = 'سورة ' + (suraNames[v.suraID] || v.suraID);
+      c.appendChild(h);
+    }
+
+    const row = document.createElement('div');
+    row.className = 'verse-row';
+    row.id = 'v-' + i;
+    row.onclick = () => playVerse(i);
+
+    // Verse number badge
+    const num = document.createElement('div');
+    num.className = 'verse-num';
+    num.textContent = v.ayaNum;
+
+    // Verse text from DB (aya_audio.content)
+    const txt = document.createElement('div');
+    txt.className = 'verse-text';
+    txt.textContent = v.content || ('آية ' + v.ayaNum);
+
+    // Timing info
+    const tm = document.createElement('div');
+    tm.className = 'verse-timing';
+    tm.id = 'tm-' + i;
+    tm.innerHTML = '<span class="ct">...</span>';
+
+    row.appendChild(num);
+    row.appendChild(txt);
+    row.appendChild(tm);
+    c.appendChild(row);
+  });
+
+  updateTimingDisplay();
+}
+
+function updateTimingDisplay() {
+  versesData.forEach((v, i) => {
+    const el = document.getElementById('tm-' + i);
+    if (!el) return;
+    const ss = apiToSec(v.timeStart);
+    const ee = (i+1 < versesData.length) ? apiToSec(versesData[i+1].timeStart) : apiToSec(v.timeEnd);
+    const dur = ee - ss;
+    el.innerHTML =
+      '<span class="ct">' + fmtTime(ss) + ' → ' + fmtTime(ee) + ' (' + dur.toFixed(1) + 's)</span>' +
+      '<br><span class="rw">pg' + v.pageNum + ' | ' + ss.toFixed(2) + 's</span>';
+    el.title =
+      'idAya: ' + v.idAya + ' | sura ' + v.suraID + ' aya ' + v.ayaNum +
+      '\nRaw timeStart: ' + v.timeStart +
+      '\nRaw timeEnd: ' + v.timeEnd +
+      '\nComputed: ' + ss.toFixed(3) + 's → ' + ee.toFixed(3) + 's' +
+      '\nDuration: ' + dur.toFixed(3) + 's' +
+      '\nPage: ' + v.pageNum +
+      '\n--- Quadratic formula ---' +
+      '\ntime = duration × √(raw / maxEnd)' +
+      '\nk = ' + (totalDuration > 0 ? (maxTimeEnd/(totalDuration*totalDuration)).toFixed(2) : '?');
+  });
+}
+
+function addVerseMarkers() {
+  document.querySelectorAll('.vm').forEach(el => el.remove());
+  if (totalDuration <= 0) return;
+  const w = document.getElementById('progressWrap');
+  versesData.forEach(v => {
+    const pct = (apiToSec(v.timeStart) / totalDuration) * 100;
+    const m = document.createElement('div');
+    m.className = 'vm';
+    m.style.left = pct + '%';
+    m.title = 'سورة ' + v.suraID + ' آية ' + v.ayaNum;
+    w.appendChild(m);
+  });
+}
+
+// ==========================================================
+// PLAYBACK
+// ==========================================================
+function playVerse(idx) {
+  if (!sound || idx < 0 || idx >= versesData.length) return;
+  const v = versesData[idx];
+  const ss = apiToSec(v.timeStart);
+  // Seek slightly before (0.1s) to catch the start
+  const seekTo = Math.max(0, ss - 0.1);
+
+  dbg('▶ aya ' + v.ayaNum + ' (sura ' + v.suraID + ') seek=' + seekTo.toFixed(3) +
+    's raw=' + v.timeStart + ' computed=' + ss.toFixed(3) + 's');
+
+  document.querySelectorAll('.verse-row.active').forEach(el => el.classList.remove('active'));
+  const el = document.getElementById('v-' + idx);
+  if (el) el.classList.add('active');
+  setCurVerse(idx);
+
+  if (!sound.playing()) sound.play();
+  sound.seek(seekTo);
+  isPlaying = true; updPP(); startPosTimer();
+}
+
+function playPause() {
+  if (!sound) return;
+  if (sound.playing()) { sound.pause(); }
+  else {
+    if (currentVerseIdx < 0 && versesData.length > 0) playVerse(0);
+    else sound.play();
+  }
+}
+
+function stopAudio() {
+  if (!sound) return;
+  sound.stop();
+  currentVerseIdx = -1;
+  document.querySelectorAll('.verse-row.playing,.verse-row.active').forEach(el =>
+    el.classList.remove('playing', 'active'));
+  document.getElementById('progressFill').style.width = '0%';
+  document.getElementById('timeDisplay').textContent = '0:00 / ' + fmtTime(totalDuration);
+  document.getElementById('curInfo').textContent = '';
+}
+
+function playPrev() {
+  if (currentVerseIdx > 0) playVerse(currentVerseIdx - 1);
+  else if (versesData.length > 0) playVerse(0);
+}
+
+function playNext() {
+  if (currentVerseIdx < versesData.length - 1) playVerse(currentVerseIdx + 1);
+}
+
+function seekProg(e) {
+  if (!sound || totalDuration <= 0) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  const p = (e.clientX - r.left) / r.width;
+  sound.seek(p * totalDuration);
+  if (!sound.playing()) sound.play();
+}
+
+// Keyboard shortcuts: Space=play/pause, arrows=prev/next, Esc=stop
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); playPause(); }
+  else if (e.code === 'ArrowLeft') { e.preventDefault(); playNext(); }
+  else if (e.code === 'ArrowRight') { e.preventDefault(); playPrev(); }
+  else if (e.code === 'Escape') stopAudio();
+});
+
+document.getElementById('pageIn').addEventListener('keydown', e => {
+  if (e.code === 'Enter') { e.preventDefault(); loadPage(); }
+});
+
+// ==========================================================
+// START
+// ==========================================================
+initDB();
+</script>
+</body>
+</html>

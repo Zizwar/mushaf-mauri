@@ -22,7 +22,11 @@
       "adaptiveIcon": {
         "backgroundColor": "#046f98"
       },
-      "package": "com.mushaf.mauri.v3"
+      "package": "com.mushaf.mauri.v3",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "plugins": [
       "expo-sqlite",
@@ -36,9 +40,23 @@
       "expo-font",
       "expo-asset"
     ],
+    "owner": "2600ma",
     "extra": {
       "eas": {
-        "projectId": "86d37205-c483-46ec-af9f-a874727f0c87"
+        "build": {
+          "experimental": {
+            "ios": {
+              "appExtensions": [
+                {
+                  "targetName": "expo-sharing-extension",
+                  "bundleIdentifier": "com.mushaf.mauri.v3.expo-sharing-extension",
+                  "entitlements": []
+                }
+              ]
+            }
+          }
+        },
+        "projectId": "cec190b5-ff5e-4987-9c08-c3afe77511a5"
       }
     }
   }
