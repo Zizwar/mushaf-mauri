@@ -99,7 +99,7 @@ export default function App() {
       ) : screen === "recitation" ? (
         <RecitingScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "khatma" ? (
-        <KhatmaScreen onGoBack={() => setScreen("mushaf")} />
+        <KhatmaScreen onGoBack={() => setScreen("mushaf")} onNavigateToPage={handleNavigateToPage} />
       ) : screen === "about" ? (
         <AboutScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "tasbih" ? (

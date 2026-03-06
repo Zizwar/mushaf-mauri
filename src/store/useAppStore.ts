@@ -63,13 +63,18 @@ export interface TekrarConfig {
 }
 
 export interface KhatmaState {
-  juz: number;
-  day: number;
+  unit: "rob3" | "hizb" | "juz";
+  startJuz: number;
   startRob3: number;
-  endRob3: number;
   rob3Day: number;
   selection: number;
+  totalDays: number;
+  startDate: number; // timestamp ms
   ok: boolean;
+  // legacy compat
+  juz?: number;
+  day?: number;
+  endRob3?: number;
 }
 
 export interface RecordingProfile {
@@ -194,12 +199,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     active: false,
   },
   khatma: {
-    juz: 1,
-    day: 30,
+    unit: "hizb",
+    startJuz: 1,
     startRob3: 0,
-    endRob3: 8,
-    rob3Day: 8,
+    rob3Day: 4,
     selection: 0,
+    totalDays: 60,
+    startDate: Date.now(),
     ok: false,
   },
 
