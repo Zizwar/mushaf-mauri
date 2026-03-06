@@ -196,7 +196,8 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
   const [startAya, setStartAya] = useState(1);
   const [endSura, setEndSura] = useState(1);
   const [endAya, setEndAya] = useState(7);
-  const [repeatCount, setRepeatCount] = useState(3);
+  const [repeatCount, setRepeatCount] = useState(3);   // full-range repeat
+  const [ayahRepeat, setAyahRepeat] = useState(1);     // per-ayah repeat
 
   const [modal, setModal] = useState<"startSura" | "startAya" | "endSura" | "endAya" | "reciter" | null>(null);
 
@@ -252,11 +253,11 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
       setMoqriId(selectedMadinaReciter);
     }
     const page = getPageBySuraAya(startSura, startAya, effectiveQuira);
-    setTekrar({ startSura, startAya, endSura, endAya, repeatCount, currentRepeat: 0, active: true });
+    setTekrar({ startSura, startAya, endSura, endAya, repeatCount, currentRepeat: 0, ayahRepeat, currentAyahRepeat: 0, active: true });
     setSelectedAya({ sura: startSura, aya: startAya, page, id: `s${startSura}a${startAya}z` });
     setPendingPlayAya({ sura: startSura, aya: startAya, page });
     onGoBack();
-  }, [startSura, startAya, endSura, endAya, repeatCount, lang, quira,
+  }, [startSura, startAya, endSura, endAya, repeatCount, ayahRepeat, lang, quira,
     selectedMadinaReciter, setQuira, setMoqriId,
     setTekrar, setSelectedAya, setPendingPlayAya, onGoBack]);
 
@@ -390,11 +391,55 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
           ) : null}
         </View>
 
-        {/* Repeat count */}
+        {/* Repeat card */}
         <View style={[styles.repeatCard, { backgroundColor: cardBg, borderColor }]}>
+
+          {/* Per-ayah repeat */}
           <View style={styles.repeatHeader}>
-            <Ionicons name="repeat" size={18} color={ACCENT} />
-            <Text style={[styles.repeatLabel, { color: textColor }]}>{t("repeat_count", lang)}</Text>
+            <Ionicons name="return-down-forward" size={17} color={ACCENT} />
+            <Text style={[styles.repeatLabel, { color: textColor }]}>{t("ayah_repeat", lang)}</Text>
+          </View>
+          <View style={styles.repeatControls}>
+            <Pressable
+              style={[styles.repeatArrow, { backgroundColor: isDark ? "#222" : "#f0f0f0" }]}
+              onPress={() => setAyahRepeat((c) => Math.max(1, c - 1))}
+            >
+              <Ionicons name="remove" size={20} color={textColor} />
+            </Pressable>
+            <View style={[styles.repeatCountBox, { borderColor: ACCENT + "40" }]}>
+              <Text style={[styles.repeatCountNum, { color: ACCENT }]}>{ayahRepeat}</Text>
+              <Text style={[styles.repeatCountSub, { color: mutedColor }]}>{t("times", lang)}</Text>
+            </View>
+            <Pressable
+              style={[styles.repeatArrow, { backgroundColor: isDark ? "#222" : "#f0f0f0" }]}
+              onPress={() => setAyahRepeat((c) => Math.min(20, c + 1))}
+            >
+              <Ionicons name="add" size={20} color={textColor} />
+            </Pressable>
+          </View>
+          <View style={styles.repeatQuick}>
+            {REPEATS.map((n) => (
+              <Pressable
+                key={n}
+                style={[styles.repeatQuickChip,
+                  ayahRepeat === n && { backgroundColor: ACCENT, borderColor: ACCENT },
+                  ayahRepeat !== n && { borderColor }
+                ]}
+                onPress={() => setAyahRepeat(n)}
+              >
+                <Text style={[styles.repeatQuickText,
+                  { color: ayahRepeat === n ? "#fff" : mutedColor }
+                ]}>{n}</Text>
+              </Pressable>
+            ))}
+          </View>
+
+          <View style={[styles.rangeDivider, { backgroundColor: borderColor, marginVertical: 4 }]} />
+
+          {/* Full-range repeat */}
+          <View style={styles.repeatHeader}>
+            <Ionicons name="repeat" size={17} color="#4285f4" />
+            <Text style={[styles.repeatLabel, { color: textColor }]}>{t("range_repeat", lang)}</Text>
           </View>
           <View style={styles.repeatControls}>
             <Pressable
@@ -403,8 +448,8 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
             >
               <Ionicons name="remove" size={20} color={textColor} />
             </Pressable>
-            <View style={[styles.repeatCountBox, { borderColor: ACCENT + "40" }]}>
-              <Text style={[styles.repeatCountNum, { color: ACCENT }]}>{repeatCount}</Text>
+            <View style={[styles.repeatCountBox, { borderColor: "#4285f440" }]}>
+              <Text style={[styles.repeatCountNum, { color: "#4285f4" }]}>{repeatCount}</Text>
               <Text style={[styles.repeatCountSub, { color: mutedColor }]}>{t("times", lang)}</Text>
             </View>
             <Pressable
@@ -414,13 +459,12 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
               <Ionicons name="add" size={20} color={textColor} />
             </Pressable>
           </View>
-          {/* Quick select */}
           <View style={styles.repeatQuick}>
             {REPEATS.map((n) => (
               <Pressable
                 key={n}
                 style={[styles.repeatQuickChip,
-                  repeatCount === n && { backgroundColor: ACCENT, borderColor: ACCENT },
+                  repeatCount === n && { backgroundColor: "#4285f4", borderColor: "#4285f4" },
                   repeatCount !== n && { borderColor }
                 ]}
                 onPress={() => setRepeatCount(n)}
@@ -431,6 +475,7 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
               </Pressable>
             ))}
           </View>
+
         </View>
 
         {/* Start button */}

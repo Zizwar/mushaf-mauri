@@ -339,4 +339,7 @@ export default {
   today_portion: "Today's Portion",
   warsh_tekrar_notice: "Repetition only works with Madina recitation. The app will switch automatically when you start.",
   choose_reciter: "Choose Reciter",
+  tekrar_mode: "Repeat Mode",
+  ayah_repeat: "Per-Ayah Repeat",
+  range_repeat: "Range Repeat",
 };

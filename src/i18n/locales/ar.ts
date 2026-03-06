@@ -341,4 +341,7 @@ export default {
   today_portion: "حصتك اليوم",
   warsh_tekrar_notice: "التكرار يعمل فقط مع رواية المدينة. سيتم التحويل تلقائياً عند البدء.",
   choose_reciter: "اختر المقرئ",
+  tekrar_mode: "وضع التكرار",
+  ayah_repeat: "تكرار كل آية",
+  range_repeat: "تكرار النطاق",
 };

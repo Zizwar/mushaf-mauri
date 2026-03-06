@@ -57,8 +57,10 @@ export interface TekrarConfig {
   startAya: number;
   endSura: number;
   endAya: number;
-  repeatCount: number;
-  currentRepeat: number;
+  repeatCount: number;     // times to repeat the full range
+  currentRepeat: number;   // current full-range repeat index
+  ayahRepeat: number;      // times each individual ayah repeats
+  currentAyahRepeat: number; // current ayah-level repeat index
   active: boolean;
 }
 
@@ -196,6 +198,8 @@ export const useAppStore = create<AppState>((set, get) => ({
     endAya: 7,
     repeatCount: 3,
     currentRepeat: 0,
+    ayahRepeat: 1,
+    currentAyahRepeat: 0,
     active: false,
   },
   khatma: {

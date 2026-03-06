@@ -315,4 +315,7 @@ export default {
   today_portion: "החלק שלך היום",
   warsh_tekrar_notice: "החזרה פועלת רק עם קריאת מדינה. האפליקציה תעבור אוטומטית בהתחלה.",
   choose_reciter: "בחר קורא",
+  tekrar_mode: "מצב חזרה",
+  ayah_repeat: "חזרה לכל פסוק",
+  range_repeat: "חזרה על הטווח",
 };

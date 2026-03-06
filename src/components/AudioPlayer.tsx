@@ -465,20 +465,29 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
 
       // -- Tekrar (repetition) mode --
       if (tk.active) {
+        // 1. Per-ayah repeat: replay the current aya if more ayah-repeats remain
+        const nextAyahRepeat = tk.currentAyahRepeat + 1;
+        if (nextAyahRepeat < tk.ayahRepeat) {
+          useAppStore.getState().setTekrar({ ...tk, currentAyahRepeat: nextAyahRepeat });
+          playAyaFromRef(current.sura, current.aya, current.page);
+          return;
+        }
+
+        // Ayah repeats exhausted - reset ayah counter and check range progress
         const atEnd =
           current.sura === tk.endSura && current.aya === tk.endAya;
 
         if (atEnd) {
           const nextRepeat = tk.currentRepeat + 1;
           if (nextRepeat < tk.repeatCount) {
-            // More repeats to go - go back to start aya
-            useAppStore.getState().setTekrar({ ...tk, currentRepeat: nextRepeat });
+            // More full-range repeats - go back to start aya
+            useAppStore.getState().setTekrar({ ...tk, currentRepeat: nextRepeat, currentAyahRepeat: 0 });
             const startPage = getPageBySuraAya(tk.startSura, tk.startAya, q);
             playAyaFromRef(tk.startSura, tk.startAya, startPage);
             return;
           } else {
             // All repeats done - stop
-            useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, active: false });
+            useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, currentAyahRepeat: 0, active: false });
             useAppStore.getState().setIsPlaying(false);
             try { player.clearLockScreenControls(); } catch {}
             return;
@@ -488,9 +497,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         // Not at end aya yet - advance to next aya within range
         const next = getNextAya(current.sura, current.aya, q);
         if (next) {
+          useAppStore.getState().setTekrar({ ...tk, currentAyahRepeat: 0 });
           playAyaFromRef(next.sura, next.aya, next.page);
         } else {
-          useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, active: false });
+          useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, currentAyahRepeat: 0, active: false });
           useAppStore.getState().setIsPlaying(false);
           try { player.clearLockScreenControls(); } catch {}
         }
@@ -897,6 +907,34 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // ===========================================================================
   const renderMiniPlayer = () => (
     <View style={[styles.miniContainer, { backgroundColor: colors.miniBar }]}>
+      {/* Tekrar mode indicator bar */}
+      {tekrar.active && (
+        <View style={styles.tekrarBar}>
+          <Ionicons name="repeat" size={14} color="#fff" />
+          <Text style={styles.tekrarBarText}>
+            {t("tekrar_mode", lang)}
+            {"  "}
+            <Text style={styles.tekrarBarCounter}>
+              {tekrar.ayahRepeat > 1 ? `×${tekrar.ayahRepeat} ` : ""}
+              {tekrar.repeatCount > 1 ? `(${tekrar.currentRepeat + 1}/${tekrar.repeatCount})` : ""}
+            </Text>
+          </Text>
+          <Pressable
+            onPress={() => {
+              useAppStore.getState().setTekrar({
+                ...tekrar,
+                active: false,
+                currentRepeat: 0,
+                currentAyahRepeat: 0,
+              });
+            }}
+            hitSlop={8}
+            style={styles.tekrarBarClose}
+          >
+            <Ionicons name="close-circle" size={16} color="#fff" />
+          </Pressable>
+        </View>
+      )}
       {/* Progress bar at very top of mini player */}
       <View style={[styles.miniProgressTrack, { backgroundColor: colors.progressTrack }]}>
         <View
@@ -1032,8 +1070,28 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
 const styles = StyleSheet.create({
   // ---------- Mini Player ----------
   miniContainer: {
-    height: MINI_HEIGHT + PROGRESS_HEIGHT,
     paddingBottom: Platform.OS === "ios" ? 16 : 0,
+  },
+  tekrarBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1a5c2e",
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    gap: 6,
+  },
+  tekrarBarText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  tekrarBarCounter: {
+    color: "#a5d6b0",
+    fontWeight: "700",
+  },
+  tekrarBarClose: {
+    padding: 2,
   },
   miniProgressTrack: {
     height: PROGRESS_HEIGHT,
@@ -1044,7 +1102,7 @@ const styles = StyleSheet.create({
     borderRadius: PROGRESS_HEIGHT / 2,
   },
   miniContent: {
-    flex: 1,
+    height: MINI_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,

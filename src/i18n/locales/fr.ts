@@ -339,4 +339,7 @@ export default {
   today_portion: "Votre portion du jour",
   warsh_tekrar_notice: "La répétition fonctionne uniquement avec la récitation Madina. L'app basculera automatiquement au démarrage.",
   choose_reciter: "Choisir le récitant",
+  tekrar_mode: "Mode répétition",
+  ayah_repeat: "Répétition par verset",
+  range_repeat: "Répétition de plage",
 };
