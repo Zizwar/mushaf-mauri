@@ -703,7 +703,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
         {/* Header */}
         <View style={styles.setupHeader}>
           <Pressable onPress={onGoBack} style={styles.setupBackBtn}>
-            <Ionicons name="arrow-forward" size={24} color="#1a5c2e" />
+            <Ionicons name="arrow-back" size={24} color="#1a5c2e" />
           </Pressable>
           <Text style={styles.setupTitle}>{t("prayer_mode", lang)}</Text>
           <View style={{ width: 32 }} />
@@ -1208,7 +1208,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
   setupHeader: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 16,
@@ -1240,19 +1240,17 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#666",
     marginBottom: 8,
-    textAlign: "right",
-    writingDirection: "rtl",
+    textAlign: "center",
   },
   setupSubLabel: {
     fontSize: 12,
     fontWeight: "600",
     color: "#999",
     marginBottom: 8,
-    textAlign: "right",
-    writingDirection: "rtl",
+    textAlign: "center",
   },
   toHeaderRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 8,
@@ -1275,12 +1273,12 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
   pickerRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 12,
   },
   suraChip: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 4,
     backgroundColor: "#e8f4ed",
@@ -1398,7 +1396,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   fontRow: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     gap: 8,
     flexWrap: "wrap",
     marginBottom: 12,
@@ -1437,7 +1435,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   setupBottomBar: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 12,
     paddingHorizontal: 16,
@@ -1448,7 +1446,7 @@ const styles = StyleSheet.create({
   },
   startBtn: {
     flex: 1,
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
@@ -1462,7 +1460,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   resumeBtn: {
-    flexDirection: "row-reverse",
+    flexDirection: "row",
     alignItems: "center",
     gap: 6,
     paddingHorizontal: 16,
