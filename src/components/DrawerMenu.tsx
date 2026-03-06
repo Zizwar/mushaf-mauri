@@ -8,6 +8,8 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -39,6 +41,11 @@ const MUSHAFS: { key: Quira; labelKey: string }[] = [
 
 export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuProps) {
   const insets = useSafeAreaInsets();
+  // On Android, StatusBar.currentHeight is more reliable inside a statusBarTranslucent Modal
+  const statusBarHeight = Platform.OS === "android"
+    ? (StatusBar.currentHeight ?? insets.top)
+    : insets.top;
+  const navBarHeight = Platform.OS === "android" ? insets.bottom : insets.bottom;
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
@@ -76,7 +83,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
         <View style={[styles.drawer, { width: DRAWER_WIDTH, backgroundColor: bgColor }]}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: navBarHeight + 24 }]}
           >
             {/* Cover Image */}
             <View style={styles.coverWrapper}>
@@ -86,7 +93,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 resizeMode="cover"
               />
               {/* Close button on cover - respects status bar */}
-              <Pressable style={[styles.closeBtn, { top: insets.top + 8 }]} onPress={onClose}>
+              <Pressable style={[styles.closeBtn, { top: statusBarHeight + 8 }]} onPress={onClose}>
                 <Ionicons name="close" size={24} color="#fff" />
               </Pressable>
             </View>
@@ -396,7 +403,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   drawer: {
-    flex: 1,
+    height: SCREEN_HEIGHT,
     shadowColor: "#000",
     shadowOffset: { width: -4, height: 0 },
     shadowOpacity: 0.25,
