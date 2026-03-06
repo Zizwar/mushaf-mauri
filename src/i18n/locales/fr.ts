@@ -337,4 +337,6 @@ export default {
   go_to_page: "Aller à la page",
   khatma_position: "Position",
   today_portion: "Votre portion du jour",
+  warsh_tekrar_notice: "La répétition fonctionne uniquement avec la récitation Madina. L'app basculera automatiquement au démarrage.",
+  choose_reciter: "Choisir le récitant",
 };

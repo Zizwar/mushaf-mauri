@@ -14,7 +14,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
-import { t } from "../i18n";
+import { t, type LangKey } from "../i18n";
 import {
   allSuwar,
   getAyahsForSura,
@@ -22,6 +22,8 @@ import {
   getPageBySuraAya,
 } from "../utils/quranHelpers";
 import { getAyahText } from "../utils/ayahText";
+// @ts-ignore
+import { listVoiceMoqri } from "../data/listAuthor";
 
 const ACCENT = "#1a5c2e";
 const ACCENT_LIGHT = "#e8f5e9";
@@ -128,6 +130,49 @@ function AyaModal({
   );
 }
 
+// ── Reciter picker modal ──────────────────────────────────────────
+function ReciterPickerModal({
+  visible, onClose, onSelect, selectedId, lang, isDark, reciters,
+}: {
+  visible: boolean; onClose: () => void;
+  onSelect: (id: string) => void; selectedId: string;
+  lang: LangKey; isDark: boolean;
+  reciters: { id: string; voice: string }[];
+}) {
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
+      <Pressable style={ms.overlay} onPress={onClose}>
+        <Pressable style={[ms.sheet, { backgroundColor: isDark ? "#1a1a2e" : "#fff" }]}>
+          <View style={ms.handle} />
+          <Text style={[ms.title, { color: isDark ? "#eee" : "#222" }]}>{t("choose_reciter", lang)}</Text>
+          <FlatList
+            data={reciters}
+            keyExtractor={(r) => r.id}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item: r }) => {
+              const active = selectedId === r.id;
+              return (
+                <Pressable
+                  style={[ms.item, active && ms.itemActive, { borderBottomColor: isDark ? "#333" : "#f0f0f0" }]}
+                  onPress={() => { onSelect(r.id); onClose(); }}
+                >
+                  <Ionicons name="mic-outline" size={16} color={active ? ACCENT : "#aaa"} />
+                  <Text style={[ms.itemText, { flex: 1, textAlign: "right" }, active && ms.itemTextActive,
+                    !active && { color: isDark ? "#ccc" : "#333" }]}>
+                    {r.voice}
+                  </Text>
+                  {active && <Ionicons name="checkmark-circle" size={18} color={ACCENT} />}
+                </Pressable>
+              );
+            }}
+          />
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
 // ── Main screen ──────────────────────────────────────────────────
 export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
   const lang = useAppStore((s) => s.lang);
@@ -137,6 +182,8 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
   const setPendingPlayAya = useAppStore((s) => s.setPendingPlayAya);
   const setTekrar = useAppStore((s) => s.setTekrar);
   const quira = useAppStore((s) => s.quira);
+  const setQuira = useAppStore((s) => s.setQuira);
+  const setMoqriId = useAppStore((s) => s.setMoqriId);
 
   const isDark = !!theme.night;
   const bgColor = theme.backgroundColor;
@@ -151,7 +198,28 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
   const [endAya, setEndAya] = useState(7);
   const [repeatCount, setRepeatCount] = useState(3);
 
-  const [modal, setModal] = useState<"startSura" | "startAya" | "endSura" | "endAya" | null>(null);
+  const [modal, setModal] = useState<"startSura" | "startAya" | "endSura" | "endAya" | "reciter" | null>(null);
+
+  // For warsh mode: pick a madina-compatible reciter to use when auto-switching
+  const madinaReciters = useMemo(() => {
+    const loc: Record<string, string> = {};
+    const keys = [
+      "recite_hudhaify","recite_husary","recite_basfar","recite_ayyoub",
+      "recite_minshawy","recite_abdul_basit","recite_banna","recite_tablawy",
+      "recite_jaber","recite_afasy","recite_shaatree","recite_qatami",
+      "recite_khaleefa","recite_salamah","recite_jibreel","recite_ghamadi",
+      "recite_sudais","recite_shuraym","recite_maher","recite_ajamy",
+      "recite_juhanee","recite_muhsin","recite_abbad","recite_yaser",
+      "recite_rifai","recite_ayman","recite_moalim","recite_mujawwad",
+      "recite_warsh","recite_ibrahim_dosary","recite_yassin","recite_user",
+    ];
+    for (const k of keys) loc[k] = t(k as any, lang);
+    const all = listVoiceMoqri(loc) as { id: string; voice: string; type?: string }[];
+    return all.filter((r) => !r.type && r.id !== "__user_recording__");
+  }, [lang]);
+  const defaultMadinaId = madinaReciters[0]?.id ?? "Husary_64kbps";
+  const [selectedMadinaReciter, setSelectedMadinaReciter] = useState(defaultMadinaId);
+  const selectedMadinaVoice = madinaReciters.find((r) => r.id === selectedMadinaReciter)?.voice ?? "";
 
   const startAyahs = useMemo(() => getAyahsForSura(startSura), [startSura]);
   const endAyahs = useMemo(() => getAyahsForSura(endSura), [endSura]);
@@ -177,12 +245,19 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
       Alert.alert(t("recitation", lang), t("search_err_length", lang));
       return;
     }
-    const page = getPageBySuraAya(startSura, startAya, quira);
+    // If user is on Warsh Muhammadi, auto-switch to Madina for tekrar compatibility
+    const effectiveQuira = quira === "warsh" ? "madina" : quira;
+    if (quira === "warsh") {
+      setQuira("madina");
+      setMoqriId(selectedMadinaReciter);
+    }
+    const page = getPageBySuraAya(startSura, startAya, effectiveQuira);
     setTekrar({ startSura, startAya, endSura, endAya, repeatCount, currentRepeat: 0, active: true });
     setSelectedAya({ sura: startSura, aya: startAya, page, id: `s${startSura}a${startAya}z` });
     setPendingPlayAya({ sura: startSura, aya: startAya, page });
     onGoBack();
   }, [startSura, startAya, endSura, endAya, repeatCount, lang, quira,
+    selectedMadinaReciter, setQuira, setMoqriId,
     setTekrar, setSelectedAya, setPendingPlayAya, onGoBack]);
 
   const REPEATS = [1, 2, 3, 5, 7, 10];
@@ -220,6 +295,24 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
             {getSuraName(startSura)} → {getSuraName(endSura)}
           </Text>
         </View>
+
+        {/* Warsh notice */}
+        {quira === "warsh" && (
+          <View style={styles.warshNotice}>
+            <View style={styles.warshNoticeTop}>
+              <Ionicons name="information-circle" size={20} color="#b45309" />
+              <Text style={styles.warshNoticeText}>{t("warsh_tekrar_notice", lang)}</Text>
+            </View>
+            <Pressable
+              style={styles.warshReciterRow}
+              onPress={() => setModal("reciter")}
+            >
+              <Ionicons name="mic-outline" size={16} color="#92400e" />
+              <Text style={styles.warshReciterName} numberOfLines={1}>{selectedMadinaVoice}</Text>
+              <Ionicons name="chevron-down" size={15} color="#92400e" />
+            </Pressable>
+          </View>
+        )}
 
         {/* FROM / TO card */}
         <View style={[styles.rangeCard, { backgroundColor: cardBg, borderColor }]}>
@@ -357,6 +450,15 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
         selected={startAya} onSelect={setStartAya} ayahs={startAyahs} onClose={() => setModal(null)} />
       <AyaModal visible={modal === "endAya"} title={t("end_aya", lang)}
         selected={endAya} onSelect={setEndAya} ayahs={endAyahs} onClose={() => setModal(null)} />
+      <ReciterPickerModal
+        visible={modal === "reciter"}
+        lang={lang}
+        isDark={isDark}
+        reciters={madinaReciters}
+        selectedId={selectedMadinaReciter}
+        onSelect={setSelectedMadinaReciter}
+        onClose={() => setModal(null)}
+      />
     </SafeAreaView>
   );
 }
@@ -431,6 +533,45 @@ const styles = StyleSheet.create({
     alignItems: "center", justifyContent: "center", borderWidth: 1.5,
   },
   repeatQuickText: { fontSize: 13, fontWeight: "600" },
+
+  // Warsh notice
+  warshNotice: {
+    backgroundColor: "#fef3c7",
+    borderRadius: 14,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#f59e0b55",
+    gap: 10,
+  },
+  warshNoticeTop: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  warshNoticeText: {
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
+    color: "#92400e",
+    textAlign: "right",
+    writingDirection: "rtl",
+  },
+  warshReciterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#fde68a",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  warshReciterName: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#78350f",
+    textAlign: "right",
+  },
 
   // Start button
   startBtn: {

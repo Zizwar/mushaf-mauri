@@ -313,4 +313,6 @@ export default {
   go_to_page: "עבור לעמוד",
   khatma_position: "מיקום",
   today_portion: "החלק שלך היום",
+  warsh_tekrar_notice: "החזרה פועלת רק עם קריאת מדינה. האפליקציה תעבור אוטומטית בהתחלה.",
+  choose_reciter: "בחר קורא",
 };

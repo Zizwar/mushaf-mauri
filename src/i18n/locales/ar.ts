@@ -339,4 +339,6 @@ export default {
   go_to_page: "الذهاب للصفحة",
   khatma_position: "الموقع",
   today_portion: "حصتك اليوم",
+  warsh_tekrar_notice: "التكرار يعمل فقط مع رواية المدينة. سيتم التحويل تلقائياً عند البدء.",
+  choose_reciter: "اختر المقرئ",
 };

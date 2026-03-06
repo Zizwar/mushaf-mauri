@@ -327,4 +327,6 @@ export default {
   go_to_page: "ⴰⴷⴷⵓ ⵍ ⵓⵙⵏⴼⵍⵓⵍ",
   khatma_position: "ⴰⵏⴰⵡ",
   today_portion: "ⵜⴰⵣⵡⴰⵔⵜ ⵏ ⵓⴰⵙⵙ",
+  warsh_tekrar_notice: "التكرار يعمل فقط مع رواية المدينة. سيتم التحويل تلقائياً عند البدء.",
+  choose_reciter: "اختر المقرئ",
 };
