@@ -177,15 +177,15 @@ const WARSH_EXCEPTIONS: Record<
     ],
   },
 
-  // Maryam (19): W=99, H=98 (diff=-1). Warsh merges كهيعص (H1+H2 → W1),
-  // but splits Hafs aya 42 → W41+W42. Offset returns to 0 from W43 onward.
-  // TODO: verify second split (Warsh total 99 > Hafs 98).
+  // Maryam (19): W=99, H=98 (diff=-1).
+  // W1=[H1,H2] (merge, off→+1); H41→W40+W41 (split, off→0); H75→W75+W76 (split, off→-1).
   19: {
     type: "advanced",
-    explicit_map: { 1: [1, 2], 41: [42], 42: [42] },
+    explicit_map: { 1: [1, 2], 40: [41], 41: [41], 75: [75], 76: [75] },
     ranges: [
-      { warshStart: 2,  warshEnd: 40, hafsOffset: 1 },
-      { warshStart: 43, warshEnd: 99, hafsOffset: 0 },
+      { warshStart: 2,  warshEnd: 39, hafsOffset:  1 },
+      { warshStart: 42, warshEnd: 74, hafsOffset:  0 },
+      { warshStart: 77, warshEnd: 99, hafsOffset: -1 },
     ],
   },
 
