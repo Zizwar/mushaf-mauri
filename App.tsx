@@ -40,8 +40,7 @@ export default function App() {
     Maghribi: require("./assets/fonts/maghribi.otf"),
   });
 
-  const hasCompletedSetup = useAppStore((s) => s.hasCompletedSetup);
-  const [screen, setScreen] = useState<Screen>(hasCompletedSetup ? "mushaf" : "home");
+  const [screen, setScreen] = useState<Screen>("home");
 
   // Auto dark mode: follow system color scheme
   const colorScheme = useColorScheme();
@@ -126,7 +125,7 @@ export default function App() {
         <PrayerModeScreen onGoBack={() => setScreen("mushaf")} />
       ) : (
         <MushafViewer
-          onGoBack={hasCompletedSetup ? undefined : () => setScreen("home")}
+          onGoBack={() => setScreen("home")}
           onNavigate={(s) => setScreen(s as Screen)}
         />
       )}

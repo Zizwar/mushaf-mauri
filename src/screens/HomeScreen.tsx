@@ -27,7 +27,15 @@ const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const ACCENT = "#1a5c2e";
 const ACCENT_LIGHT = "#e8f5e9";
 const GOLD = "#c9a96e";
-const TOTAL_STEPS = 4; // welcome, language, mushaf, theme
+const TOTAL_STEPS = 4; // welcome, language, mushaf, theme+font
+
+const FONT_OPTIONS = [
+  { key: "default",   labelKey: "standard_font",  sample: "بِسْمِ اللَّهِ" },
+  { key: "Maghribi",  labelKey: "maghribi_font",   sample: "بِسْمِ اللَّهِ" },
+  { key: "hafs",      labelKey: "hafs_font",       sample: "بِسْمِ اللَّهِ" },
+  { key: "rustam",    labelKey: "rustam_font",     sample: "بِسْمِ اللَّهِ" },
+  { key: "uthmanic",  labelKey: "uthmanic_font",   sample: "بِسْمِ اللَّهِ" },
+];
 
 interface HomeScreenProps {
   onOpenMushaf: () => void;
@@ -44,6 +52,8 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   const setQuira = useAppStore((s) => s.setQuira);
   const setTheme = useAppStore((s) => s.setTheme);
   const setHasCompletedSetup = useAppStore((s) => s.setHasCompletedSetup);
+  const quranFont = useAppStore((s) => s.quranFont);
+  const setQuranFont = useAppStore((s) => s.setQuranFont);
 
   const [step, setStep] = useState(0);
 
@@ -171,9 +181,6 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
     },
   ];
 
-  // Split themes into light and dark
-  const lightThemes = THEMES.filter((th) => !th.night);
-  const darkThemes = THEMES.filter((th) => th.night);
 
   // =========================================================================
   // Step 0: Welcome
@@ -385,106 +392,104 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   );
 
   // =========================================================================
-  // Step 3: Theme Selection
+  // Step 3: Theme + Font Selection
   // =========================================================================
-  const renderThemeStep = () => {
-    const renderThemeCircle = (th: Theme, idx: number) => {
-      const isActive = theme.name === th.name;
-      return (
-        <Pressable
-          key={idx}
-          style={({ pressed }) => [
-            styles.themeCircle,
-            {
-              backgroundColor: th.backgroundColor,
-              borderColor: isActive ? ACCENT : th.night ? "#555" : "#ddd",
-              borderWidth: isActive ? 3 : 1.5,
-            },
-            pressed && { transform: [{ scale: 0.9 }] },
-          ]}
-          onPress={() => setTheme(th)}
-        >
-          {th.night && !isActive && (
-            <Ionicons name="moon" size={16} color="#aaa" />
-          )}
-          {isActive && (
-            <Ionicons
-              name="checkmark-circle"
-              size={22}
-              color={th.night ? "#4285f4" : ACCENT}
-            />
-          )}
-        </Pressable>
-      );
-    };
-
-    return (
-      <View style={styles.stepContent}>
-        <View style={styles.stepIconWrap}>
-          <View
-            style={[
-              styles.stepIconCircle,
-              { backgroundColor: isDark ? "#2a2a1e" : "#fff3e0" },
-            ]}
-          >
-            <Ionicons name="color-palette" size={36} color="#ff9800" />
-          </View>
-        </View>
-        <Text style={[styles.stepTitle, { color: textColor }]}>
-          {t("step_theme", lang)}
-        </Text>
-        <Text style={[styles.stepDesc, { color: mutedColor }]}>
-          {t("step_theme_desc", lang)}
-        </Text>
-
-        {/* Preview Card */}
-        <View
-          style={[
-            styles.themePreview,
-            {
-              backgroundColor: theme.backgroundColor,
-              borderColor: borderColor,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.themePreviewText,
-              { color: theme.color },
-            ]}
-          >
-            بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
-          </Text>
-          <Text
-            style={[
-              styles.themePreviewVerse,
-              { color: theme.color, opacity: 0.7 },
-            ]}
-          >
-            الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
-          </Text>
-        </View>
-
-        {/* Light Themes */}
-        <Text style={[styles.themeGroupLabel, { color: mutedColor }]}>
-          {t("light_themes", lang)}
-        </Text>
-        <View style={styles.themeGrid}>
-          {lightThemes.map((th, idx) => renderThemeCircle(th, idx))}
-        </View>
-
-        {/* Dark Themes */}
-        <Text style={[styles.themeGroupLabel, { color: mutedColor }]}>
-          {t("dark_themes", lang)}
-        </Text>
-        <View style={styles.themeGrid}>
-          {darkThemes.map((th, idx) =>
-            renderThemeCircle(th, idx + lightThemes.length)
-          )}
+  const renderThemeStep = () => (
+    <View style={styles.stepContent}>
+      <View style={styles.stepIconWrap}>
+        <View style={[styles.stepIconCircle, { backgroundColor: isDark ? "#2a2a1e" : "#fff3e0" }]}>
+          <Ionicons name="color-palette" size={36} color="#ff9800" />
         </View>
       </View>
-    );
-  };
+      <Text style={[styles.stepTitle, { color: textColor }]}>{t("step_theme", lang)}</Text>
+      <Text style={[styles.stepDesc, { color: mutedColor }]}>{t("step_theme_desc", lang)}</Text>
+
+      {/* Preview Card — shows selected theme + font live */}
+      <View style={[styles.themePreview, { backgroundColor: theme.backgroundColor, borderColor }]}>
+        <Text
+          style={[
+            styles.themePreviewText,
+            { color: theme.color },
+            quranFont !== "default" && { fontFamily: quranFont },
+          ]}
+        >
+          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+        </Text>
+        <Text
+          style={[
+            styles.themePreviewVerse,
+            { color: theme.color, opacity: 0.7 },
+            quranFont !== "default" && { fontFamily: quranFont },
+          ]}
+        >
+          الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+        </Text>
+
+        {/* Font selector — below Basmala inside preview card */}
+        <View style={[styles.fontDivider, { borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }]} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fontRow}>
+          {FONT_OPTIONS.map((f) => {
+            const active = quranFont === f.key;
+            return (
+              <Pressable
+                key={f.key}
+                style={[
+                  styles.fontChip,
+                  {
+                    backgroundColor: active ? ACCENT : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    borderColor: active ? ACCENT : "transparent",
+                  },
+                ]}
+                onPress={() => setQuranFont(f.key)}
+              >
+                <Text style={[
+                  styles.fontChipText,
+                  { color: active ? "#fff" : theme.color },
+                  f.key !== "default" && { fontFamily: f.key },
+                ]}>
+                  {t(f.labelKey, lang)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* All themes — single horizontal scroll like DrawerMenu */}
+      <Text style={[styles.themeGroupLabel, { color: mutedColor }]}>
+        {t("choose_theme", lang)}
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.themeScrollRow}
+      >
+        {THEMES.map((th, idx) => {
+          const isActive = theme.name === th.name;
+          return (
+            <Pressable
+              key={idx}
+              style={({ pressed }) => [
+                styles.themeCircle,
+                {
+                  backgroundColor: th.backgroundColor,
+                  borderColor: isActive ? ACCENT : th.night ? "#555" : "#ccc",
+                  borderWidth: isActive ? 3 : 1.5,
+                },
+                pressed && { transform: [{ scale: 0.9 }] },
+              ]}
+              onPress={() => setTheme(th)}
+            >
+              {th.night && !isActive && <Ionicons name="moon" size={14} color="#aaa" />}
+              {isActive && (
+                <Ionicons name="checkmark-circle" size={22} color={th.night ? "#4285f4" : ACCENT} />
+              )}
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
 
   // =========================================================================
   // Progress Indicator
@@ -835,15 +840,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ---- Theme Selection ----
+  // ---- Theme + Font Selection ----
   themePreview: {
     width: "100%",
     borderRadius: 16,
-    paddingVertical: 24,
+    paddingTop: 20,
     paddingHorizontal: 20,
+    paddingBottom: 12,
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 20,
     borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -856,14 +861,34 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 8,
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
     lineHeight: 36,
   },
   themePreviewVerse: {
     fontSize: 18,
     textAlign: "center",
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
     lineHeight: 30,
+  },
+  fontDivider: {
+    width: "100%",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: 14,
+    marginBottom: 10,
+  },
+  fontRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 4,
+    paddingBottom: 4,
+  },
+  fontChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  fontChipText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   themeGroupLabel: {
     fontSize: 13,
@@ -873,18 +898,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignSelf: "flex-start",
   },
-  themeGrid: {
+  themeScrollRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 14,
-    justifyContent: "center",
-    marginBottom: 20,
-    width: "100%",
+    gap: 12,
+    paddingHorizontal: 4,
+    paddingBottom: 8,
   },
   themeCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
