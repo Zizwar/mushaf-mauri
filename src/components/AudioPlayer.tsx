@@ -4,15 +4,13 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  Modal,
-  FlatList,
   Animated,
-  ScrollView,
-  Dimensions,
   Platform,
   Alert,
   Image,
 } from "react-native";
+import FullPlayerModal from "./player/FullPlayerModal";
+import ReciterModal from "./player/ReciterModal";
 import {
   useAudioPlayer,
   useAudioPlayerStatus,
@@ -35,8 +33,6 @@ import { getAyahText } from "../utils/ayahText";
 import { warshToHafsAyahs } from "../utils/tafsir";
 import { saveRecording, getRecordingUri, createProfile, loadProfiles } from "../utils/recordings";
 import * as WarshEngine from "../utils/warshAudioEngine";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -137,23 +133,23 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const isDark = !!theme.night;
   const colors = useMemo(
     () => ({
-      miniBar: isDark ? "#0d0d1a" : theme.backgroundColor || "#f5f5f0",
-      miniText: isDark ? "#ffffff" : theme.color || "#1a1a2e",
+      miniBar: theme.backgroundColor,
+      miniText: isDark ? "#ffffff" : theme.color,
       miniSecondary: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
-      fullBg: isDark ? "#0d0d1a" : "#f8f9fa",
-      fullText: isDark ? "#e8e8e8" : "#1a1a2e",
+      fullBg: theme.backgroundColor,
+      fullText: isDark ? "#e8e8e8" : theme.color,
       fullSecondary: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
-      fullCard: isDark ? "#1a1a2e" : "#ffffff",
-      modalBg: isDark ? "#1a1a2e" : "#ffffff",
-      modalText: isDark ? "#e8e8e8" : "#333333",
-      modalBorder: isDark ? "rgba(255,255,255,0.08)" : "#eeeeee",
+      fullCard: isDark ? "#1a1a2e" : theme.backgroundColor,
+      modalBg: isDark ? "#1a1a2e" : theme.backgroundColor,
+      modalText: isDark ? "#e8e8e8" : theme.color,
+      modalBorder: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
       accent: ACCENT,
       accentLight: isDark ? "rgba(66,133,244,0.2)" : ACCENT_LIGHT,
       progressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
       fullProgressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
       sliderThumb: ACCENT,
     }),
-    [isDark],
+    [isDark, theme],
   );
 
   // -- Translations & reciters --
@@ -892,16 +888,6 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   }, [slideAnim]);
 
   // ===========================================================================
-  // Time formatting (seconds input)
-  // ===========================================================================
-  const formatTime = (sec: number): string => {
-    const totalSec = Math.floor(sec);
-    const min = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    return `${min}:${s < 10 ? "0" : ""}${s}`;
-  };
-
-  // ===========================================================================
   // Render nothing if no aya selected
   // ===========================================================================
   if (!selectedAya) return null;
@@ -995,431 +981,47 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   );
 
   // ===========================================================================
-  // Full Player (Modal)
-  // ===========================================================================
-  const renderFullPlayer = () => {
-    const translateY = slideAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [SCREEN_HEIGHT, 0],
-    });
-
-    return (
-      <Modal
-        visible={showFullPlayer}
-        animationType="none"
-        transparent
-        statusBarTranslucent
-        onRequestClose={closeFullPlayer}
-      >
-        <Animated.View
-          style={[
-            styles.fullContainer,
-            {
-              backgroundColor: colors.fullBg,
-              transform: [{ translateY }],
-            },
-          ]}
-        >
-          {/* Header */}
-          <View style={styles.fullHeader}>
-            <Pressable
-              onPress={closeFullPlayer}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullHeaderBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="chevron-down" size={28} color={colors.fullText} />
-            </Pressable>
-            <Text style={[styles.fullHeaderTitle, { color: colors.fullSecondary }]}>
-              {t("telawa", lang)}
-            </Text>
-            <Pressable
-              onPress={handleStop}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullHeaderBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="stop-circle" size={28} color={colors.fullSecondary} />
-            </Pressable>
-          </View>
-
-          {/* Sura Display Card */}
-          <View style={styles.fullSuraSection}>
-            <View
-              style={[
-                styles.fullSuraCard,
-                {
-                  backgroundColor: colors.fullCard,
-                  shadowColor: isDark ? "transparent" : "#000",
-                  borderColor: isDark ? "rgba(255,255,255,0.06)" : "transparent",
-                  borderWidth: isDark ? 1 : 0,
-                },
-              ]}
-            >
-              <Text style={[styles.fullSuraName, { color: colors.fullText }]}>
-                {suraNameAr}
-              </Text>
-              <Text style={[styles.fullSuraNameEn, { color: colors.fullSecondary }]}>
-                {suraNameEn}
-              </Text>
-              <View style={styles.fullAyaBadge}>
-                <Text style={styles.fullAyaBadgeText}>
-                  {t("aya_s", lang)} {selectedAya.aya}
-                </Text>
-              </View>
-              <Text
-                style={[styles.fullPageInfo, { color: colors.fullSecondary }]}
-              >
-                {t("page", lang)} {selectedAya.page}
-              </Text>
-              {ayahText ? (
-                <ScrollView style={styles.fullAyahScroll} nestedScrollEnabled>
-                  <Text
-                    style={[
-                      styles.fullAyahText,
-                      { color: colors.fullText },
-                      quranFont !== "default" && { fontFamily: quranFont },
-                    ]}
-                  >
-                    {ayahText}
-                  </Text>
-                </ScrollView>
-              ) : null}
-            </View>
-          </View>
-
-          {/* Reciter name (tappable) */}
-          <Pressable
-            onPress={() => setShowReciterModal(true)}
-            style={({ pressed }) => [
-              styles.fullReciterRow,
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <Ionicons name="mic-outline" size={18} color={colors.accent} />
-            <Text
-              style={[styles.fullReciterName, { color: colors.fullText }]}
-              numberOfLines={1}
-            >
-              {currentReciterName}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.fullSecondary} />
-          </Pressable>
-
-          {/* Progress Slider */}
-          <View style={styles.fullProgressSection}>
-            <Pressable
-              style={[
-                styles.fullProgressTrack,
-                { backgroundColor: colors.fullProgressTrack },
-              ]}
-              onPress={(e) => {
-                const fraction = e.nativeEvent.locationX / (SCREEN_WIDTH - 48);
-                handleSeek(Math.max(0, Math.min(1, fraction)));
-              }}
-            >
-              <View
-                style={[
-                  styles.fullProgressFill,
-                  {
-                    backgroundColor: colors.accent,
-                    width: `${Math.min(progress * 100, 100)}%` as any,
-                  },
-                ]}
-              />
-              <View
-                style={[
-                  styles.fullProgressThumb,
-                  {
-                    backgroundColor: colors.sliderThumb,
-                    left: `${Math.min(progress * 100, 100)}%` as any,
-                  },
-                ]}
-              />
-            </Pressable>
-            <View style={styles.fullTimeRow}>
-              <Text style={[styles.fullTimeText, { color: colors.fullSecondary }]}>
-                {formatTime(status.currentTime)}
-              </Text>
-              <Text style={[styles.fullTimeText, { color: colors.fullSecondary }]}>
-                {formatTime(status.duration)}
-              </Text>
-            </View>
-          </View>
-
-          {/* Transport Controls */}
-          <View style={styles.fullControls}>
-            <Pressable
-              onPress={handlePrev}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullSideBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="play-skip-back" size={32} color={colors.fullText} />
-            </Pressable>
-
-            <Pressable
-              onPress={handlePlayPause}
-              style={({ pressed }) => [
-                styles.fullPlayBtn,
-                { backgroundColor: colors.accent },
-                pressed && { opacity: 0.85 },
-              ]}
-            >
-              {status.isBuffering ? (
-                <Ionicons name="hourglass-outline" size={38} color="#ffffff" />
-              ) : (
-                <Ionicons
-                  name={isPlaying ? "pause-circle" : "play-circle"}
-                  size={60}
-                  color="#ffffff"
-                />
-              )}
-            </Pressable>
-
-            <Pressable
-              onPress={handleNext}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullSideBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="play-skip-forward" size={32} color={colors.fullText} />
-            </Pressable>
-          </View>
-
-          {/* Recording buttons in full player */}
-          <View style={styles.recordSection}>
-            <View style={styles.recordButtonRow}>
-              {/* Standard record button */}
-              <Pressable
-                onPress={handleMicPress}
-                style={({ pressed }) => [
-                  styles.recordBtn,
-                  {
-                    backgroundColor:
-                      recordingState === "recording" && !listenThenRecord
-                        ? RECORDING_COLOR
-                        : isDark
-                        ? "#2a2a3e"
-                        : "#f0f0f0",
-                  },
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Ionicons
-                  name={
-                    recordingState === "recording"
-                      ? "stop"
-                      : recordingState === "saving"
-                      ? "hourglass-outline"
-                      : "mic"
-                  }
-                  size={22}
-                  color={recordingState === "recording" ? "#fff" : RECORDING_COLOR}
-                />
-                <Text
-                  style={[
-                    styles.recordBtnText,
-                    {
-                      color:
-                        recordingState === "recording"
-                          ? "#fff"
-                          : colors.fullText,
-                    },
-                  ]}
-                >
-                  {recordingState === "recording"
-                    ? t("stop_recording", lang)
-                    : recordingState === "saving"
-                    ? t("recording_saved", lang)
-                    : t("start_recording", lang)}
-                </Text>
-              </Pressable>
-
-              {/* Listen-then-record button */}
-              <Pressable
-                onPress={handleListenThenRecord}
-                style={({ pressed }) => [
-                  styles.recordBtn,
-                  {
-                    backgroundColor: listenThenRecord
-                      ? "#ff9800"
-                      : isDark
-                      ? "#2a2a3e"
-                      : "#f0f0f0",
-                  },
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Ionicons
-                  name={listenThenRecord ? "stop" : "ear"}
-                  size={20}
-                  color={listenThenRecord ? "#fff" : "#ff9800"}
-                />
-                <Text
-                  style={[
-                    styles.recordBtnText,
-                    {
-                      color: listenThenRecord ? "#fff" : colors.fullText,
-                      fontSize: 12,
-                    },
-                  ]}
-                >
-                  {t("listen_then_record", lang)}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </Animated.View>
-      </Modal>
-    );
-  };
-
-  // ===========================================================================
-  // Reciter Selection Modal
-  // ===========================================================================
-  const renderReciterModal = () => (
-    <Modal
-      visible={showReciterModal}
-      animationType="slide"
-      transparent
-      statusBarTranslucent
-      onRequestClose={() => setShowReciterModal(false)}
-    >
-      <View style={styles.reciterModalOverlay}>
-        <View
-          style={[
-            styles.reciterModalContent,
-            {
-              backgroundColor: colors.modalBg,
-            },
-          ]}
-        >
-          {/* Handle bar */}
-          <View style={styles.reciterModalHandle}>
-            <View
-              style={[
-                styles.reciterModalHandleBar,
-                { backgroundColor: colors.modalBorder },
-              ]}
-            />
-          </View>
-
-          {/* Title */}
-          <Text style={[styles.reciterModalTitle, { color: colors.modalText }]}>
-            {t("chooseQaree", lang)}
-          </Text>
-
-          {/* Reciter list */}
-          <FlatList
-            data={reciters}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.reciterListContent}
-            renderItem={({ item }) => {
-              // Render separator as a horizontal line
-              if (item.type === "separator") {
-                return (
-                  <View style={{ paddingVertical: 8, paddingHorizontal: 20 }}>
-                    <View style={{ height: 1, backgroundColor: colors.modalBorder }} />
-                  </View>
-                );
-              }
-              const isActive = moqriId === item.id;
-              const isUser = item.id === USER_RECORDING_ID;
-              const isProfile = !!(item as any).isProfile;
-              return (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.reciterItem,
-                    {
-                      borderBottomColor: colors.modalBorder,
-                      backgroundColor: isActive
-                        ? colors.accentLight
-                        : pressed
-                        ? colors.accentLight
-                        : "transparent",
-                    },
-                    isProfile && {
-                      borderLeftWidth: 3,
-                      borderLeftColor: "#e91e63",
-                    },
-                  ]}
-                  onPress={() => handleReciterChange(item.id)}
-                >
-                  <View style={styles.reciterItemContent}>
-                    {isActive && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={colors.accent}
-                        style={styles.reciterCheckIcon}
-                      />
-                    )}
-                    {isUser && !isActive && (
-                      <Ionicons
-                        name="mic"
-                        size={18}
-                        color={RECORDING_COLOR}
-                        style={styles.reciterCheckIcon}
-                      />
-                    )}
-                    {isProfile && !isActive && (
-                      <Ionicons
-                        name="person-circle-outline"
-                        size={18}
-                        color="#e91e63"
-                        style={styles.reciterCheckIcon}
-                      />
-                    )}
-                    <Text
-                      style={[
-                        styles.reciterItemText,
-                        { color: colors.modalText },
-                        isActive && {
-                          color: colors.accent,
-                          fontWeight: "700",
-                        },
-                        isUser && !isActive && {
-                          color: RECORDING_COLOR,
-                          fontWeight: "600",
-                        },
-                        isProfile && !isActive && {
-                          color: "#e91e63",
-                          fontWeight: "600",
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.voice}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            }}
-          />
-
-          {/* Close button */}
-          <Pressable
-            style={[
-              styles.reciterModalClose,
-              { borderTopColor: colors.modalBorder },
-            ]}
-            onPress={() => setShowReciterModal(false)}
-          >
-            <Text style={[styles.reciterModalCloseText, { color: colors.accent }]}>
-              {t("close", lang)}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  // ===========================================================================
   // Main render
   // ===========================================================================
   return (
     <>
       {renderMiniPlayer()}
-      {renderFullPlayer()}
-      {renderReciterModal()}
+      <FullPlayerModal
+        visible={showFullPlayer}
+        slideAnim={slideAnim}
+        colors={colors}
+        isDark={isDark}
+        lang={lang}
+        suraNameAr={suraNameAr}
+        suraNameEn={suraNameEn}
+        quranFont={quranFont}
+        ayahText={ayahText}
+        selectedAya={selectedAya}
+        currentReciterName={currentReciterName}
+        status={status}
+        isPlaying={isPlaying}
+        recordingState={recordingState}
+        listenThenRecord={listenThenRecord}
+        progress={progress}
+        onClose={closeFullPlayer}
+        onStop={handleStop}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onMicPress={handleMicPress}
+        onListenThenRecord={handleListenThenRecord}
+        onReciterPress={() => setShowReciterModal(true)}
+      />
+      <ReciterModal
+        visible={showReciterModal}
+        colors={colors}
+        lang={lang}
+        reciters={reciters}
+        moqriId={moqriId}
+        onClose={() => setShowReciterModal(false)}
+        onSelect={handleReciterChange}
+      />
     </>
   );
 }
@@ -1487,256 +1089,5 @@ const styles = StyleSheet.create({
   },
   btnPressed: {
     opacity: 0.5,
-  },
-
-  // ---------- Full Player ----------
-  fullContainer: {
-    flex: 1,
-    paddingTop: Platform.OS === "ios" ? 56 : 40,
-    paddingHorizontal: 24,
-  },
-  fullHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  fullHeaderBtn: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
-  },
-  fullHeaderTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
-  },
-
-  // Sura display
-  fullSuraSection: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 16,
-  },
-  fullSuraCard: {
-    width: SCREEN_WIDTH - 64,
-    borderRadius: 24,
-    paddingVertical: 40,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 6,
-  },
-  fullSuraName: {
-    fontSize: 36,
-    fontWeight: "800",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  fullSuraNameEn: {
-    fontSize: 16,
-    fontWeight: "400",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  fullAyaBadge: {
-    backgroundColor: ACCENT,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  fullAyaBadgeText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  fullPageInfo: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  fullAyahScroll: {
-    maxHeight: 130,
-    marginTop: 12,
-  },
-  fullAyahText: {
-    fontSize: 18,
-    lineHeight: 32,
-    textAlign: "center",
-    writingDirection: "rtl",
-    paddingHorizontal: 12,
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
-  },
-
-  // Reciter row
-  fullReciterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    gap: 8,
-  },
-  fullReciterName: {
-    fontSize: 15,
-    fontWeight: "600",
-    maxWidth: SCREEN_WIDTH * 0.6,
-  },
-
-  // Progress
-  fullProgressSection: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  fullProgressTrack: {
-    height: 6,
-    borderRadius: 3,
-    position: "relative",
-    justifyContent: "center",
-  },
-  fullProgressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  fullProgressThumb: {
-    position: "absolute",
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginLeft: -8,
-    top: -5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  fullTimeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  fullTimeText: {
-    fontSize: 12,
-    fontWeight: "500",
-    fontVariant: ["tabular-nums"],
-  },
-
-  // Transport controls
-  fullControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 32,
-    paddingVertical: 16,
-  },
-  fullSideBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullPlayBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: ACCENT,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-
-  // Record section
-  recordSection: {
-    alignItems: "center",
-    paddingBottom: Platform.OS === "ios" ? 48 : 32,
-    paddingHorizontal: 16,
-  },
-  recordButtonRow: {
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "center",
-    width: "100%",
-  },
-  recordBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    gap: 6,
-  },
-  recordBtnText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
-  // ---------- Reciter Modal ----------
-  reciterModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  reciterModalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.7,
-    paddingTop: 8,
-  },
-  reciterModalHandle: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  reciterModalHandleBar: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-  },
-  reciterModalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 8,
-    paddingHorizontal: 20,
-  },
-  reciterListContent: {
-    paddingBottom: 8,
-  },
-  reciterItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  reciterItemContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  reciterCheckIcon: {
-    marginRight: 10,
-  },
-  reciterItemText: {
-    fontSize: 16,
-    flex: 1,
-    textAlign: "right",
-  },
-  reciterModalClose: {
-    padding: 18,
-    alignItems: "center",
-    borderTopWidth: 1,
-  },
-  reciterModalCloseText: {
-    fontSize: 16,
-    fontWeight: "700",
   },
 });
