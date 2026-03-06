@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { ActivityIndicator, BackHandler, View } from "react-native";
+import { ActivityIndicator, BackHandler, View, useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import { initWarshDB } from "./src/utils/warshAudioDB";
@@ -16,6 +16,7 @@ import TasbihScreen from "./src/screens/TasbihScreen";
 import AutoScrollScreen from "./src/screens/AutoScrollScreen";
 import PrayerModeScreen from "./src/screens/PrayerModeScreen";
 import { useAppStore } from "./src/store/useAppStore";
+import { THEMES } from "./src/theme/themes";
 
 type Screen =
   | "home"
@@ -41,6 +42,21 @@ export default function App() {
 
   const hasCompletedSetup = useAppStore((s) => s.hasCompletedSetup);
   const [screen, setScreen] = useState<Screen>(hasCompletedSetup ? "mushaf" : "home");
+
+  // Auto dark mode: follow system color scheme
+  const colorScheme = useColorScheme();
+  useEffect(() => {
+    const theme = useAppStore.getState().theme;
+    const isCurrentlyNight = !!theme.night;
+    const systemIsDark = colorScheme === "dark";
+    if (systemIsDark && !isCurrentlyNight) {
+      const nightTheme = THEMES.find((t) => t.night);
+      if (nightTheme) useAppStore.getState().setTheme(nightTheme);
+    } else if (!systemIsDark && isCurrentlyNight) {
+      const lightTheme = THEMES.find((t) => !t.night);
+      if (lightTheme) useAppStore.getState().setTheme(lightTheme);
+    }
+  }, [colorScheme]);
 
   // Initialize Warsh DB early so warsh index is available synchronously
   useEffect(() => { initWarshDB().catch((e) => console.warn("[App] initWarshDB failed:", e)); }, []);
