@@ -4,6 +4,9 @@ import {
   Text,
   Pressable,
   ScrollView,
+  FlatList,
+  TextInput,
+  Modal,
   StyleSheet,
   StatusBar,
   Alert,
@@ -131,6 +134,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
 
   // ── Sura picker state ────────────────────────────────
   const [showSuraPicker, setShowSuraPicker] = useState<"start" | "end" | null>(null);
+  const [suraFilter, setSuraFilter] = useState("");
 
   // ── Saved state ──────────────────────────────────────
   const [hasSavedState, setHasSavedState] = useState(false);
@@ -715,9 +719,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
             <View style={styles.pickerRow}>
               <Pressable
                 style={styles.suraChip}
-                onPress={() =>
-                  setShowSuraPicker(showSuraPicker === "start" ? null : "start")
-                }
+                onPress={() => { setSuraFilter(""); setShowSuraPicker("start"); }}
               >
                 <Text style={styles.suraChipText}>
                   {getSuraName(startSura)}
@@ -775,11 +777,7 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
                 <View style={styles.pickerRow}>
                   <Pressable
                     style={styles.suraChip}
-                    onPress={() =>
-                      setShowSuraPicker(
-                        showSuraPicker === "end" ? null : "end"
-                      )
-                    }
+                    onPress={() => { setSuraFilter(""); setShowSuraPicker("end"); }}
                   >
                     <Text style={styles.suraChipText}>
                       {getSuraName(endSura)}
@@ -813,49 +811,6 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
             )}
           </View>
 
-          {/* Sura dropdown */}
-          {showSuraPicker && (
-            <View style={styles.suraDropdownContainer}>
-              <ScrollView
-                style={styles.suraDropdown}
-                contentContainerStyle={styles.suraDropdownContent}
-              >
-                {suwarList
-                  .filter((s) =>
-                    showSuraPicker === "end" ? s.value >= startSura : true
-                  )
-                  .map((s) => {
-                    const isActive =
-                      showSuraPicker === "start"
-                        ? startSura === s.value
-                        : endSura === s.value;
-                    return (
-                      <Pressable
-                        key={s.value}
-                        style={[
-                          styles.suraDropdownItem,
-                          isActive && styles.suraDropdownItemActive,
-                        ]}
-                        onPress={() =>
-                          showSuraPicker === "start"
-                            ? handleStartSuraSelect(s.value)
-                            : handleEndSuraSelect(s.value)
-                        }
-                      >
-                        <Text
-                          style={[
-                            styles.suraDropdownText,
-                            isActive && styles.suraDropdownTextActive,
-                          ]}
-                        >
-                          {s.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-              </ScrollView>
-            </View>
-          )}
 
           {/* Font family + size */}
           <View style={styles.setupSection}>
@@ -1009,6 +964,71 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
             <Ionicons name="book" size={18} color="#fff" />
           </Pressable>
         </View>
+
+        {/* Sura Picker Modal */}
+        <Modal
+          visible={!!showSuraPicker}
+          transparent
+          animationType="slide"
+          statusBarTranslucent
+          onRequestClose={() => { setShowSuraPicker(null); setSuraFilter(""); }}
+        >
+          <Pressable
+            style={styles.suraModalOverlay}
+            onPress={() => { setShowSuraPicker(null); setSuraFilter(""); }}
+          >
+            <Pressable style={styles.suraModalSheet}>
+              {/* Filter input */}
+              <View style={styles.suraModalHeader}>
+                <TextInput
+                  style={styles.suraFilterInput}
+                  placeholder="ابحث عن سورة..."
+                  placeholderTextColor="#999"
+                  value={suraFilter}
+                  onChangeText={setSuraFilter}
+                  autoFocus
+                  textAlign="right"
+                />
+                <Pressable
+                  onPress={() => { setShowSuraPicker(null); setSuraFilter(""); }}
+                  style={styles.suraModalCloseBtn}
+                >
+                  <Ionicons name="close" size={22} color="#555" />
+                </Pressable>
+              </View>
+              {/* Sura list */}
+              <FlatList
+                data={suwarList.filter((s) => {
+                  if (showSuraPicker === "end" && s.value < startSura) return false;
+                  if (!suraFilter) return true;
+                  return s.label.includes(suraFilter);
+                })}
+                keyExtractor={(s) => String(s.value)}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item: s }) => {
+                  const isActive = showSuraPicker === "start"
+                    ? startSura === s.value
+                    : endSura === s.value;
+                  return (
+                    <Pressable
+                      style={[styles.suraModalItem, isActive && styles.suraModalItemActive]}
+                      onPress={() => {
+                        if (showSuraPicker === "start") handleStartSuraSelect(s.value);
+                        else handleEndSuraSelect(s.value);
+                        setSuraFilter("");
+                      }}
+                    >
+                      <Text style={[styles.suraModalItemText, isActive && styles.suraModalItemTextActive]}>
+                        {s.label}
+                      </Text>
+                      {isActive && <Ionicons name="checkmark-circle" size={18} color="#1a5c2e" />}
+                    </Pressable>
+                  );
+                }}
+              />
+            </Pressable>
+          </Pressable>
+        </Modal>
       </SafeAreaView>
     );
   }
@@ -1301,37 +1321,58 @@ const styles = StyleSheet.create({
     textAlign: "right",
     writingDirection: "rtl",
   },
-  suraDropdownContainer: {
-    marginBottom: 16,
+  suraModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
   },
-  suraDropdown: {
-    maxHeight: 250,
+  suraModalSheet: {
     backgroundColor: "#fff",
-    borderRadius: 8,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: SCREEN_HEIGHT * 0.7,
+    paddingBottom: 24,
   },
-  suraDropdownContent: {
+  suraModalHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#eee",
+    gap: 8,
+  },
+  suraFilterInput: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    fontSize: 15,
+    color: "#333",
+    writingDirection: "rtl",
+  },
+  suraModalCloseBtn: {
     padding: 4,
   },
-  suraDropdownItem: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
+  suraModalItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: "#f0f0f0",
   },
-  suraDropdownItemActive: {
+  suraModalItemActive: {
     backgroundColor: "#e8f4ed",
   },
-  suraDropdownText: {
+  suraModalItemText: {
     fontSize: 16,
     color: "#333",
     textAlign: "right",
+    flex: 1,
   },
-  suraDropdownTextActive: {
+  suraModalItemTextActive: {
     fontWeight: "700",
     color: "#1a5c2e",
   },
