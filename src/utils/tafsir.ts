@@ -189,14 +189,13 @@ const WARSH_EXCEPTIONS: Record<
     ],
   },
 
-  // Muhammad (47): W=39, H=38 (diff=-1). Warsh splits Hafs A15 at
-  // {لذة للشاربين} → W15+W16 both map to H15; W17+ → offset -1.
+  // Muhammad (47): W=39, H=38 (diff=-1). Warsh splits H4 into W4+W5; W6+ at off-1.
   47: {
     type: "advanced",
-    explicit_map: { 15: [15], 16: [15] },
+    explicit_map: { 4: [4], 5: [4] },
     ranges: [
-      { warshStart: 1,  warshEnd: 14, hafsOffset: 0  },
-      { warshStart: 17, warshEnd: 39, hafsOffset: -1 },
+      { warshStart: 1,  warshEnd: 3,  hafsOffset:  0 },
+      { warshStart: 6,  warshEnd: 39, hafsOffset: -1 },
     ],
   },
 
