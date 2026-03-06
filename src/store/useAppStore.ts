@@ -225,10 +225,26 @@ export const useAppStore = create<AppState>((set, get) => ({
       const mid = wrid === 2 ? "__warsh_db_2__" : "__warsh_db_1__";
       set({ moqriId: mid });
       saveSettings({ moqriId: mid });
+    } else {
+      // Restore last-used madina recitor (never a warsh_db id)
+      const currentMoqri = get().moqriId;
+      if (currentMoqri.startsWith("__warsh_db_")) {
+        const lastMadina = (_persisted as any).lastMadinaRecitorId || "Husary_64kbps";
+        set({ moqriId: lastMadina });
+        saveSettings({ moqriId: lastMadina });
+      }
     }
   },
   setTheme: (theme) => { set({ theme }); saveSettings({ themeName: theme.name }); },
-  setMoqriId: (moqriId) => { set({ moqriId }); saveSettings({ moqriId }); },
+  setMoqriId: (moqriId) => {
+    set({ moqriId });
+    saveSettings({ moqriId });
+    // Track last non-warsh recitor for restoring after warsh mode
+    if (!moqriId.startsWith("__warsh_db_")) {
+      (_persisted as any).lastMadinaRecitorId = moqriId;
+      saveSettings({ lastMadinaRecitorId: moqriId } as any);
+    }
+  },
   setCurrentPage: (currentPage) => { set({ currentPage }); saveSettings({ currentPage }); },
   setSelectedAya: (selectedAya) => { set({ selectedAya }); saveSettings({ selectedAya }); },
   setIsPlaying: (isPlaying) => set({ isPlaying }),

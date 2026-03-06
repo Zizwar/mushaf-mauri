@@ -15,6 +15,7 @@ interface PersistedSettings {
   quira: Quira;
   themeName: string;
   moqriId: string;
+  lastMadinaRecitorId: string;
   currentPage: number;
   quranFont: string;
   warshRecitorId: number;
