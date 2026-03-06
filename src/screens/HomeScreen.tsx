@@ -138,8 +138,8 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   }, [setHasCompletedSetup, onOpenMushaf]);
 
   const isDark = !!theme.night;
-  const bgColor = isDark ? "#0a0a1a" : "#f5f7f3";
-  const cardBg = isDark ? "#151528" : "#ffffff";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#151528" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#888";
   const borderColor = isDark ? "#2a2a3e" : "#e8e8e8";

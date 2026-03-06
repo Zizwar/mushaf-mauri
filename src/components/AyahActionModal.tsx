@@ -64,7 +64,7 @@ export default function AyahActionModal({
   }, [visible]);
 
   const isNight = !!theme.night;
-  const cardBg = isNight ? "#262640" : "#ffffff";
+  const cardBg = isNight ? "#262640" : theme.backgroundColor;
   const textColor = isNight ? "#e8e8f0" : "#1a1a2e";
   const subtitleColor = isNight ? "#a0a0c0" : "#666680";
   const iconColor = isNight ? "#8cacff" : "#4285f4";

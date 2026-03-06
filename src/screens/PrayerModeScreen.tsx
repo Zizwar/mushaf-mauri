@@ -92,6 +92,7 @@ interface Props {
 export default function PrayerModeScreen({ onGoBack }: Props) {
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
+  const theme = useAppStore((s) => s.theme);
 
   // ── Mode ─────────────────────────────────────────────
   const [mode, setMode] = useState<ScreenMode>("setup");
@@ -692,8 +693,8 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
   // =====================================================
   if (mode === "setup") {
     return (
-      <SafeAreaView style={styles.setupContainer}>
-        <StatusBar barStyle="dark-content" />
+      <SafeAreaView style={[styles.setupContainer, { backgroundColor: theme.backgroundColor }]}>
+        <StatusBar barStyle={theme.night ? "light-content" : "dark-content"} backgroundColor={theme.backgroundColor} />
 
         {/* Header */}
         <View style={styles.setupHeader}>
@@ -1057,7 +1058,10 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
               >
                 {group.verses.map((v) => (
                   <React.Fragment key={`${v.sura}_${v.aya}`}>
-                    {v.text}{" "}
+                    {v.text}
+                    <Text style={{ color: colorTheme.textColor, opacity: 0.5, fontSize: fontSize * 0.75 }}>
+                      {" "}﴿{v.aya}﴾{" "}
+                    </Text>
                   </React.Fragment>
                 ))}
               </Text>

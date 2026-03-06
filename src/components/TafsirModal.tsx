@@ -19,7 +19,13 @@ import { t } from "../i18n";
 import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listAuthorTafsir, listAuthorTarajem } from "../data/listAuthor";
-import { fetchTafsirOnline, fetchTarjamaOnline, warshToHafsAyahs } from "../utils/tafsir";
+import {
+  fetchTafsirOnline,
+  fetchTarjamaOnline,
+  fetchTafsirOffline,
+  fetchTarjamaOffline,
+  warshToHafsAyahs,
+} from "../utils/tafsir";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.85;
@@ -82,8 +88,8 @@ export default function TafsirModal({
 
   // Theme computations
   const isNight = !!theme.night;
-  const bgColor = isNight ? "#111122" : "#ffffff";
-  const cardBg = isNight ? "#1a1a2e" : "#f7f8fa";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isNight ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isNight ? "#e8e8f0" : "#1a1a2e";
   const mutedColor = isNight ? "#888899" : "#888899";
   const borderColor = isNight ? "#2a2a3e" : "#e8ecf0";
@@ -155,15 +161,27 @@ export default function TafsirModal({
         let result: string;
 
         if (activeTab === "tafsir") {
+          // Try offline DB first, fall back to online for each Hafs ayah
           const parts = await Promise.all(
-            hafsAyahs.map((aya) => fetchTafsirOnline(selectedTafsir, currentSura, aya))
+            hafsAyahs.map(async (aya) => {
+              const offline = await fetchTafsirOffline(selectedTafsir, currentSura, aya);
+              return offline ?? fetchTafsirOnline(selectedTafsir, currentSura, aya);
+            })
           );
-          result = parts.join("\n\n---\n\n");
+          if (hafsAyahs.length === 1) {
+            // Single ayah: keep the "ayahText|||tafsirText" format for the styled box
+            result = parts[0];
+          } else {
+            // Merged Warsh ayah (multiple Hafs ayahs): strip the "ayahText|||" prefix
+            // from each part so they can be joined cleanly without breaking the renderer
+            result = parts
+              .map((p) => (p.includes("|||") ? p.split("|||")[1].trim() : p))
+              .join("\n\n—\n\n");
+          }
         } else {
-          const parts = await Promise.all(
-            hafsAyahs.map((aya) => fetchTarjamaOnline(selectedTarjama, currentSura, aya))
-          );
-          result = parts.join("\n\n---\n\n");
+          // Try offline DB first (single range query), fall back to online range API
+          const offline = await fetchTarjamaOffline(selectedTarjama, currentSura, hafsAyahs);
+          result = offline ?? await fetchTarjamaOnline(selectedTarjama, currentSura, hafsAyahs);
         }
 
         if (!cancelled) {

@@ -28,6 +28,9 @@ import {
 } from "../utils/warshAudioDB";
 import { getWarshAudioUri } from "../utils/api";
 import { File, Directory, Paths } from "expo-file-system";
+import { isDBAvailable, downloadTafsirDB } from "../utils/tafsir";
+// @ts-ignore
+import { listAuthorTafsir, listAuthorTarajem } from "../data/listAuthor";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ACCENT = "#1a5c2e";
@@ -338,6 +341,177 @@ function WarshAudioDownloader() {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Tafsir / Tarjama DB Downloader
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface DBItem {
+  id: string;
+  name: string;
+  type: "tafsir" | "tarajem";
+}
+
+function TafsirDBDownloader() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const isDark = !!theme.night;
+  const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+
+  const [activeTab, setActiveTab] = useState<"tafsir" | "tarajem">("tafsir");
+  // Map of dbId → true if downloaded
+  const [available, setAvailable] = useState<Record<string, boolean>>({});
+  // Map of dbId → true if currently downloading
+  const [loading, setLoading] = useState<Record<string, boolean>>({});
+
+  // Build combined list
+  const tafsirItems: DBItem[] = (listAuthorTafsir({
+    tafsir_sa3dy: t("tafsir_sa3dy", lang),
+    tafsir_ba3awy: t("tafsir_ba3awy", lang),
+    tafsir_katheer: t("tafsir_katheer", lang),
+    tafsir_kortoby: t("tafsir_kortoby", lang),
+    tafsir_tabary: t("tafsir_tabary", lang),
+    tafsir_indonesian: t("tafsir_indonesian", lang),
+    tafsir_russian: t("tafsir_russian", lang),
+  }) as { id: string; name: string }[]).map((item) => ({ ...item, type: "tafsir" as const }));
+
+  const tarjamItems: DBItem[] = (listAuthorTarajem as { id: string; name: string }[])
+    .filter((item) => item.id !== "ayat") // ayat is text-only, no DB
+    .map((item) => ({ ...item, type: "tarajem" as const }));
+
+  const items = activeTab === "tafsir" ? tafsirItems : tarjamItems;
+
+  // Check availability on mount and tab switch
+  useEffect(() => {
+    const allItems = [...tafsirItems, ...tarjamItems];
+    const map: Record<string, boolean> = {};
+    for (const item of allItems) {
+      map[item.id] = isDBAvailable(item.id);
+    }
+    setAvailable(map);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleDownload = useCallback(async (item: DBItem) => {
+    setLoading((prev) => ({ ...prev, [item.id]: true }));
+    try {
+      const ok = await downloadTafsirDB(item.id, item.type);
+      setAvailable((prev) => ({ ...prev, [item.id]: ok }));
+      if (!ok) Alert.alert(t("download", lang), "فشل التحميل، تحقق من الاتصال.");
+    } finally {
+      setLoading((prev) => ({ ...prev, [item.id]: false }));
+    }
+  }, [lang]);
+
+  const handleDelete = useCallback((item: DBItem) => {
+    Alert.alert(
+      t("delete_db", lang),
+      t("confirm_delete_db", lang),
+      [
+        { text: t("cancel", lang) ?? "إلغاء", style: "cancel" },
+        {
+          text: t("delete_db", lang),
+          style: "destructive",
+          onPress: () => {
+            try {
+              const dir = new Directory(Paths.document, "SQLite");
+              const file = new File(dir, `${item.id}.db`);
+              if (file.exists) file.delete();
+              setAvailable((prev) => ({ ...prev, [item.id]: false }));
+            } catch {
+              // ignore
+            }
+          },
+        },
+      ]
+    );
+  }, [lang]);
+
+  return (
+    <View style={{ gap: 10 }}>
+      {/* Tab row */}
+      <View style={{ flexDirection: "row", borderRadius: 8, overflow: "hidden", borderWidth: 1, borderColor }}>
+        {(["tafsir", "tarajem"] as const).map((tab) => (
+          <Pressable
+            key={tab}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              alignItems: "center",
+              backgroundColor: activeTab === tab ? ACCENT : "transparent",
+            }}
+            onPress={() => setActiveTab(tab)}
+          >
+            <Text style={{ color: activeTab === tab ? "#fff" : mutedColor, fontWeight: "600", fontSize: 13 }}>
+              {tab === "tafsir" ? t("tafasir", lang) : t("tarajem", lang)}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Items list */}
+      {items.map((item) => {
+        const isAvail = available[item.id] ?? false;
+        const isLoading = loading[item.id] ?? false;
+        return (
+          <View
+            key={item.id}
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              paddingVertical: 8,
+              paddingHorizontal: 4,
+              borderBottomWidth: StyleSheet.hairlineWidth,
+              borderBottomColor: borderColor,
+              gap: 8,
+            }}
+          >
+            {/* Status icon */}
+            <Ionicons
+              name={isAvail ? "cloud-done-outline" : "cloud-download-outline"}
+              size={20}
+              color={isAvail ? ACCENT : mutedColor}
+            />
+
+            {/* Name */}
+            <Text style={{ flex: 1, color: textColor, fontSize: 13 }} numberOfLines={1}>
+              {item.name}
+            </Text>
+
+            {/* Action button */}
+            {isLoading ? (
+              <Ionicons name="hourglass-outline" size={20} color={mutedColor} />
+            ) : isAvail ? (
+              <Pressable
+                onPress={() => handleDelete(item)}
+                hitSlop={8}
+              >
+                <Ionicons name="trash-outline" size={18} color="#c0392b" />
+              </Pressable>
+            ) : (
+              <Pressable
+                onPress={() => handleDownload(item)}
+                hitSlop={8}
+                style={{
+                  backgroundColor: ACCENT,
+                  borderRadius: 6,
+                  paddingHorizontal: 10,
+                  paddingVertical: 4,
+                }}
+              >
+                <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>
+                  {t("download", lang)}
+                </Text>
+              </Pressable>
+            )}
+          </View>
+        );
+      })}
+    </View>
+  );
+}
+
 export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
@@ -352,8 +526,8 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
   const [toPage, setToPage] = useState(String(TOTAL_PAGES));
 
   const isDark = !!theme.night;
-  const bgColor = isDark ? "#0d0d1a" : "#f5f5f5";
-  const cardBg = isDark ? "#1a1a2e" : "#ffffff";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
   const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
@@ -642,6 +816,17 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
             </View>
           </>
         )}
+
+        {/* Tafsir / Tarjama DB Download Section */}
+        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+          {t("download_tafsir_db", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <Text style={[styles.statusText, { color: mutedColor, marginBottom: 10, fontSize: 12 }]}>
+            {t("tafsir_db_desc", lang)}
+          </Text>
+          <TafsirDBDownloader />
+        </View>
 
         {/* Recordings Section */}
         <Text style={[styles.sectionTitle, { color: mutedColor }]}>

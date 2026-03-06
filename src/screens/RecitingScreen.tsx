@@ -33,8 +33,8 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
   const quira = useAppStore((s) => s.quira);
 
   const isDark = !!theme.night;
-  const bgColor = isDark ? "#0d0d1a" : "#f5f5f5";
-  const cardBg = isDark ? "#1a1a2e" : "#ffffff";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
   const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";

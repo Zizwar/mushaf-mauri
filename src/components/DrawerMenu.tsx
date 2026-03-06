@@ -48,8 +48,8 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
   const isRTL = lang === "ar" || lang === "amz" || lang === "he";
   const textColor = theme.color;
   const mutedColor = isNight ? "#888" : "#999";
-  const bgColor = isNight ? "#111122" : "#fafafa";
-  const cardBg = isNight ? "#1a1a2e" : "#fff";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isNight ? "#1a1a2e" : theme.backgroundColor;
   const borderColor = isNight ? "#2a2a3e" : "#eee";
   const accentColor = "#1a5c2e";
 

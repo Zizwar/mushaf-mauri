@@ -110,6 +110,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const setTekrar = useAppStore((s) => s.setTekrar);
 
   const warshRecitorId = useAppStore((s) => s.warshRecitorId);
+  const quranFont = useAppStore((s) => s.quranFont);
   const warshRecitorIdRef = useRef(warshRecitorId);
 
   const isUserRecording = moqriId === USER_RECORDING_ID;
@@ -1072,7 +1073,11 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
               {ayahText ? (
                 <ScrollView style={styles.fullAyahScroll} nestedScrollEnabled>
                   <Text
-                    style={[styles.fullAyahText, { color: colors.fullText }]}
+                    style={[
+                      styles.fullAyahText,
+                      { color: colors.fullText },
+                      quranFont !== "default" && { fontFamily: quranFont },
+                    ]}
                   >
                     {ayahText}
                   </Text>

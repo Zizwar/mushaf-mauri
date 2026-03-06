@@ -108,7 +108,14 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
     >
       <Image
         source={{ uri: imageUri }}
-        style={[styles.pageImage, theme.night && styles.nightImage] as any}
+        style={[
+          styles.pageImage,
+          theme.night
+            ? styles.nightImage
+            : quira === "warsh" && theme.imageFilter
+            ? { filter: theme.imageFilter }
+            : null,
+        ] as any}
         resizeMode="stretch"
       />
       {isVisible &&
