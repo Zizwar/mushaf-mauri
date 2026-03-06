@@ -316,4 +316,15 @@ export default {
   resume_reading: "Resume",
   free_continuation: "Free Continuation",
   open_ended: "Open-ended",
+  // Tafsir/Tarjama offline databases
+  download_tafsir_db: "Download Tafsir & Translations",
+  tafsir_db_desc: "Download tafsir and translation databases for offline reading",
+  tafasir: "Tafsir",
+  tarajem: "Translations",
+  db_available: "Downloaded",
+  db_not_available: "Not downloaded",
+  delete_db: "Delete",
+  confirm_delete_db: "Delete this database?",
+  offline_source: "Source: Offline",
+  fahres: "Index",
 };

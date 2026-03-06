@@ -318,4 +318,15 @@ export default {
   resume_reading: "استئناف",
   free_continuation: "متابعة حرة",
   open_ended: "مفتوحة",
+  // Tafsir/Tarjama offline databases
+  download_tafsir_db: "تنزيل التفاسير والترجمات",
+  tafsir_db_desc: "حمّل التفاسير والترجمات للقراءة بدون إنترنت",
+  tafasir: "التفاسير",
+  tarajem: "الترجمات",
+  db_available: "محمّل",
+  db_not_available: "غير محمّل",
+  delete_db: "حذف",
+  confirm_delete_db: "هل تريد حذف هذه القاعدة؟",
+  offline_source: "مصدر: أوف‌لاين",
+  fahres: "فهرس",
 };

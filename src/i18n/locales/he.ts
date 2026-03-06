@@ -292,4 +292,15 @@ export default {
   resume_reading: "המשך",
   free_continuation: "המשך חופשי",
   open_ended: "פתוח",
+  // Tafsir/Tarjama offline databases
+  download_tafsir_db: "הורדת תפסיר ותרגומים",
+  tafsir_db_desc: "הורד מסדי נתונים לקריאה ללא אינטרנט",
+  tafasir: "תפסיר",
+  tarajem: "תרגומים",
+  db_available: "הורד",
+  db_not_available: "לא הורד",
+  delete_db: "מחק",
+  confirm_delete_db: "למחוק את מסד הנתונים הזה?",
+  offline_source: "מקור: לא מקוון",
+  fahres: "אינדקס",
 };

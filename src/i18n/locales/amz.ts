@@ -306,4 +306,15 @@ export default {
   resume_reading: "ⴽⵎⵍ",
   free_continuation: "ⴰⵙⵎⴷⵢⴰ ⵉⵍⴻⵍⵍⵉ",
   open_ended: "ⵜⵉⵍⴻⵍⵍⵉⵜ",
+  // Tafsir/Tarjama offline databases
+  download_tafsir_db: "ⴰⵙⵙⵉⵡⴹ ⵏ ⵉⴼⵙⵙⴰⵔⵏ ⴷ ⵉⵙⵓⵖⵍⵏ",
+  tafsir_db_desc: "ⵙⵙⵉⵡⴹ ⵉⴼⵙⵙⴰⵔⵏ ⴷ ⵉⵙⵓⵖⵍⵏ ⵎⴰⵔ ⴰⴷ ⵜⵖⵔⴷ ⴱⵍⴰ ⵜⴰⵏⵏⴰⵢⵜ",
+  tafasir: "ⵉⴼⵙⵙⴰⵔⵏ",
+  tarajem: "ⵉⵙⵓⵖⵍⵏ",
+  db_available: "ⵉⵜⵜⵓⵙⵙⵉⵡⴹ",
+  db_not_available: "ⵓⵔ ⵉⵜⵜⵓⵙⵙⵉⵡⴹ",
+  delete_db: "ⴽⴽⵙ",
+  confirm_delete_db: "ⵜⵅⵛⵛⴰⵎ ⴰⴷ ⵜⴽⴽⵙⴷ ⵜⴰⵖⵓⵔⵉ ⴰ?",
+  offline_source: "ⴰⵎⴰⵔⴰ: ⵉⵖⴼ ⵏ ⵓⵙⵖⴰⵏ",
+  fahres: "ⴰⵎⵙⵙⴰⵔ",
 };

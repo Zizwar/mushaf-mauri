@@ -10,11 +10,12 @@ import {
   Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppStore, type Quira } from "../store/useAppStore";
 import { t, type LangKey } from "../i18n";
 import { THEMES, type Theme } from "../theme/themes";
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.82;
 
 interface DrawerMenuProps {
@@ -37,6 +38,7 @@ const MUSHAFS: { key: Quira; labelKey: string }[] = [
 ];
 
 export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuProps) {
+  const insets = useSafeAreaInsets();
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
@@ -74,7 +76,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
         <View style={[styles.drawer, { width: DRAWER_WIDTH, backgroundColor: bgColor }]}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 24 }]}
           >
             {/* Cover Image */}
             <View style={styles.coverWrapper}>
@@ -83,14 +85,26 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 style={styles.coverImage}
                 resizeMode="cover"
               />
-              {/* Close button on cover */}
-              <Pressable style={styles.closeBtn} onPress={onClose}>
+              {/* Close button on cover - respects status bar */}
+              <Pressable style={[styles.closeBtn, { top: insets.top + 8 }]} onPress={onClose}>
                 <Ionicons name="close" size={24} color="#fff" />
               </Pressable>
             </View>
 
             {/* Menu Items */}
             <View style={styles.menuSection}>
+              {/* 0. Fahres (Index / Search) */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("search")}
+              >
+                <Ionicons name="list-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("fahres", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
               {/* 1. Mushaf Type */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
@@ -284,7 +298,12 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                   </Text>
                   <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
                 </Pressable>
-                <View style={[styles.langRow, { borderTopColor: borderColor }]}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.langRow}
+                  style={[styles.langScrollView, { borderTopColor: borderColor }]}
+                >
                   {LANGUAGES.map((l) => (
                     <Pressable
                       key={l.key}
@@ -321,7 +340,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                       </Text>
                     </Pressable>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               {/* 7. Settings */}
@@ -377,7 +396,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(0,0,0,0.45)",
   },
   drawer: {
-    height: SCREEN_HEIGHT,
+    flex: 1,
     shadowColor: "#000",
     shadowOffset: { width: -4, height: 0 },
     shadowOpacity: 0.25,
@@ -399,7 +418,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: "absolute",
-    top: 48,
+    top: 16,
     left: 16,
     width: 36,
     height: 36,
@@ -483,14 +502,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   // Language chips
+  langScrollView: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   langRow: {
     flexDirection: "row",
-    justifyContent: "center",
     paddingHorizontal: 14,
     paddingBottom: 12,
     paddingTop: 10,
     gap: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   langChip: {
     paddingVertical: 6,
