@@ -70,7 +70,6 @@ const RADIO_CATEGORIES = [
   "روايات اخرى",
   "قراء",
   "تفسير",
-  "فتاوى",
   "منوعات",
   "أذكار",
   "الرقية الشرعية",
@@ -231,6 +230,7 @@ function VideoTab({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
         {VIDEO_FILTERS.map((f) => {
@@ -276,6 +276,7 @@ function VideoTab({
         data={sortedAndFiltered}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
+        style={styles.listFlex}
         contentContainerStyle={styles.videoListContent}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={
@@ -317,6 +318,7 @@ function RadioTab({
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return QURAN_STATIONS.filter((s) => {
+      if (s.category === "فتاوى") return false;
       const matchCat =
         selectedCategory === "الكل" || s.category === selectedCategory;
       const matchSearch =
@@ -355,8 +357,6 @@ function RadioTab({
       ? "#6a1b9a"
       : cat === "تفسير"
       ? "#0277bd"
-      : cat === "فتاوى"
-      ? "#e65100"
       : "#555";
 
   const renderStation = useCallback(
@@ -449,6 +449,7 @@ function RadioTab({
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.chipsScroll}
         contentContainerStyle={styles.chipsRow}
       >
         {RADIO_CATEGORIES.map((cat) => {
@@ -460,8 +461,6 @@ function RadioTab({
               ? "#6a1b9a"
               : cat === "تفسير"
               ? "#0277bd"
-              : cat === "فتاوى"
-              ? "#e65100"
               : "#1a5c2e";
           return (
             <Pressable
@@ -488,6 +487,7 @@ function RadioTab({
         data={filtered}
         keyExtractor={(s) => s.id}
         renderItem={renderStation}
+        style={styles.listFlex}
         contentContainerStyle={[
           styles.radioListContent,
           currentStation && { paddingBottom: 90 },
@@ -673,9 +673,19 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14, padding: 0 },
 
+  // List
+  listFlex: { flex: 1 },
+
   // Chips
-  chipsRow: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
-  chip: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
+  chipsScroll: { height: 46, flexShrink: 0 },
+  chipsRow: { paddingHorizontal: 16, paddingVertical: 4, gap: 8, alignItems: "center" },
+  chip: {
+    paddingHorizontal: 14,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   chipText: { fontSize: 13, fontWeight: "600" },
 
   resultCount: {
