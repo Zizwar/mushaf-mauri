@@ -15,7 +15,7 @@ import { useAppStore, type Quira } from "../store/useAppStore";
 import { t, type LangKey } from "../i18n";
 import { THEMES, type Theme } from "../theme/themes";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 const DRAWER_WIDTH = SCREEN_WIDTH * 0.82;
 
 interface DrawerMenuProps {
