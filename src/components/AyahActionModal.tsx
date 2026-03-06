@@ -9,7 +9,9 @@ import {
   Alert,
   Platform,
   TextInput,
+  ToastAndroid,
 } from "react-native";
+import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
 import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
@@ -73,11 +75,16 @@ export default function AyahActionModal({
   const headerBg = isNight ? "#4285f4" : "#4285f4";
   const dividerColor = isNight ? "#3a3a5c" : "#e8ecf0";
 
-  const handleCopy = useCallback(() => {
+  const handleCopy = useCallback(async () => {
     const copyText = ayahText
       ? `${ayahText}\n\n${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}`
       : `${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}`;
-    Alert.alert(t("copy", lang), copyText);
+    await Clipboard.setStringAsync(copyText);
+    if (Platform.OS === "android") {
+      ToastAndroid.show(t("copied", lang), ToastAndroid.SHORT);
+    } else {
+      Alert.alert("", t("copied", lang));
+    }
     onClose();
   }, [suraName, aya, ayahText, lang, onClose]);
 

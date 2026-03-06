@@ -96,6 +96,7 @@ export default {
   no: "Non",
   bookmark: "Signet",
   copy: "Copier",
+  copied: "Copié ✓",
   share: "Partager",
   favs: "Favoris",
   fnf_audio: "Fichier audio introuvable - v\u00e9rifiez votre connexion",

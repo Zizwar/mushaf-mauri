@@ -96,6 +96,7 @@ export default {
   no: "ⵓⵀⵓ",
   bookmark: "ⴰⵙⵎⴽⵜⵉ",
   copy: "ⵙⵏⵖⵍ",
+  copied: "ⵜⵙⵏⵖⵍ ✓",
   share: "ⴱⴹⵓ",
   favs: "ⵉⵙⵎⴽⵜⴰⵢⵏ",
   fnf_audio: "ⵓⵔ ⵉⵜⵜⵓⴼⴰ ⵓⴼⴰⵢⵍⵓ ⵏ ⵉⵎⵙⵍⵉ",

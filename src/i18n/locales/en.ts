@@ -96,6 +96,7 @@ export default {
   no: "No",
   bookmark: "Bookmark",
   copy: "Copy",
+  copied: "Copied ✓",
   share: "Share",
   favs: "Bookmarks",
   fnf_audio: "Audio file not found - check internet connection",

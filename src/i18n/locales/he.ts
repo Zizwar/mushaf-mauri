@@ -97,6 +97,7 @@ export default {
   no: "לא",
   bookmark: "סימנייה",
   copy: "העתק",
+  copied: "הועתק ✓",
   share: "שתף",
   favs: "סימניות",
   fnf_audio: "קובץ שמע לא נמצא - בדוק חיבור לאינטרנט",
