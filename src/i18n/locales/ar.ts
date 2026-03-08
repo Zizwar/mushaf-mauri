@@ -114,6 +114,8 @@ export default {
   download_complete: "اكتمل التحميل",
   delete_downloads: "حذف التحميلات",
   offline_ready: "جاهز للعمل بدون إنترنت",
+  offline: "أوفلاين",
+  offline_desc: "حمّل صفحات المصحف والصوتيات والتفاسير مسبقاً للاستمتاع بتجربة كاملة بدون الحاجة إلى الإنترنت",
   from_page: "من صفحة",
   to_page: "إلى صفحة",
   downloaded_pages: "صفحات محملة",

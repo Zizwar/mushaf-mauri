@@ -45,6 +45,7 @@ export default function AyahActionModal({
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
   const quira = useAppStore((s) => s.quira);
+  const quranFont = useAppStore((s) => s.quranFont);
 
   const suraData = QuranData.Sura[sura];
   const suraName = suraData?.[0] ?? `${sura}`;
@@ -66,14 +67,15 @@ export default function AyahActionModal({
   }, [visible]);
 
   const isNight = !!theme.night;
-  const cardBg = isNight ? "#262640" : theme.backgroundColor;
+  const cardBg = theme.backgroundColor;
   const textColor = isNight ? "#e8e8f0" : "#1a1a2e";
-  const subtitleColor = isNight ? "#a0a0c0" : "#666680";
+  const subtitleColor = isNight ? "#a0a0c0" : "#666";
   const iconColor = isNight ? "#8cacff" : "#4285f4";
-  const btnBg = isNight ? "#1e1e36" : "#f5f7fa";
-  const btnPressedBg = isNight ? "#32325a" : "#e2e8f0";
-  const headerBg = isNight ? "#4285f4" : "#4285f4";
-  const dividerColor = isNight ? "#3a3a5c" : "#e8ecf0";
+  const btnBg = theme.borderColor;
+  const btnPressedBg = isNight ? "#32325a" : "#d0d8e0";
+  const headerBg = "#4285f4";
+  const dividerColor = theme.borderColor;
+  const fontFamily = quranFont !== "default" ? quranFont : undefined;
 
   const handleCopy = useCallback(async () => {
     const copyText = ayahText
@@ -192,7 +194,10 @@ export default function AyahActionModal({
               {t("page", lang)} {page}
             </Text>
             {ayahText ? (
-              <Text style={styles.headerAyahText} numberOfLines={3}>
+              <Text
+                style={[styles.headerAyahText, fontFamily ? { fontFamily } : undefined]}
+                numberOfLines={3}
+              >
                 {ayahText}
               </Text>
             ) : null}

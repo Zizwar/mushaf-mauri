@@ -1,7 +1,13 @@
 import React, { useState, useCallback, useEffect } from "react";
-import { ActivityIndicator, BackHandler, View, useColorScheme } from "react-native";
+import { BackHandler, View, useColorScheme } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import * as SplashScreen from "expo-splash-screen";
+
+const APP_START = Date.now();
+const SPLASH_MIN_MS = 2000;
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
 import { initWarshDB } from "./src/utils/warshAudioDB";
 import HomeScreen from "./src/screens/HomeScreen";
 import MushafViewer from "./src/screens/MushafViewer";
@@ -16,6 +22,7 @@ import TasbihScreen from "./src/screens/TasbihScreen";
 import AutoScrollScreen from "./src/screens/AutoScrollScreen";
 import PrayerModeScreen from "./src/screens/PrayerModeScreen";
 import MediaScreen from "./src/screens/MediaScreen";
+import OfflineScreen from "./src/screens/OfflineScreen";
 import { useAppStore } from "./src/store/useAppStore";
 import { THEMES } from "./src/theme/themes";
 
@@ -32,7 +39,8 @@ type Screen =
   | "tasbih"
   | "autoscroll"
   | "prayerMode"
-  | "media";
+  | "media"
+  | "offline";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -44,19 +52,19 @@ export default function App() {
 
   // Wait for Zustand persist to hydrate from AsyncStorage before deciding the initial screen
   const [hydrated, setHydrated] = useState(false);
+  const [splashReady, setSplashReady] = useState(false);
   const [screen, setScreen] = useState<Screen>("home");
 
   useEffect(() => {
-    // If already hydrated (unlikely on first render but safe to check)
-    if (useAppStore.persist.hasHydrated()) {
-      setScreen(useAppStore.getState().hasCompletedSetup ? "mushaf" : "home");
-      setHydrated(true);
-      return;
-    }
-    const unsub = useAppStore.persist.onFinishHydration((state) => {
+    const onHydrated = (state: ReturnType<typeof useAppStore.getState>) => {
       setScreen(state.hasCompletedSetup ? "mushaf" : "home");
       setHydrated(true);
-    });
+    };
+    if (useAppStore.persist.hasHydrated()) {
+      onHydrated(useAppStore.getState());
+      return;
+    }
+    const unsub = useAppStore.persist.onFinishHydration(onHydrated);
     return unsub;
   }, []);
 
@@ -99,12 +107,21 @@ export default function App() {
     setScreen("mushaf");
   }, []);
 
-  if (!fontsLoaded || !hydrated) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator size="large" color="#1a5c2e" />
-      </View>
-    );
+  // Once fonts + hydration are ready, wait for the 2-second minimum then hide the native splash
+  useEffect(() => {
+    if (!fontsLoaded || !hydrated) return;
+    const elapsed = Date.now() - APP_START;
+    const remaining = Math.max(0, SPLASH_MIN_MS - elapsed);
+    const timer = setTimeout(async () => {
+      await SplashScreen.hideAsync().catch(() => {});
+      setSplashReady(true);
+    }, remaining);
+    return () => clearTimeout(timer);
+  }, [fontsLoaded, hydrated]);
+
+  if (!splashReady) {
+    // Keep rendering nothing — native splash is still covering the screen
+    return <View style={{ flex: 1 }} />;
   }
 
   return (
@@ -139,6 +156,8 @@ export default function App() {
         <PrayerModeScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "media" ? (
         <MediaScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "offline" ? (
+        <OfflineScreen onGoBack={() => setScreen("settings")} />
       ) : (
         <MushafViewer
           onGoBack={() => setScreen("home")}

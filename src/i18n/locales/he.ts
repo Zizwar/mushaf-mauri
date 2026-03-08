@@ -114,6 +114,8 @@ export default {
   download_complete: "ההורדה הושלמה",
   delete_downloads: "מחק הורדות",
   offline_ready: "מוכן לעבודה ללא רשת",
+  offline: "לא מקוון",
+  offline_desc: "הורד דפי קוראן, שמע ותפסיר מראש לשימוש ללא חיבור לאינטרנט.",
   from_page: "מעמוד",
   to_page: "עד עמוד",
   downloaded_pages: "עמודים שהורדו",

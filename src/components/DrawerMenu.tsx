@@ -268,7 +268,19 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
-              {/* 5. Theme */}
+              {/* 5. Offline */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("offline")}
+              >
+                <Ionicons name="cloud-download-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("offline", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* 6. Theme */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
                   style={[styles.menuItem, isRTL && styles.menuItemRTL]}

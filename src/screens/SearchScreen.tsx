@@ -16,10 +16,12 @@ import {
   allSuwar,
   searchAyatByText,
   getSuraName,
+  getAyahCount,
   type SearchResult,
 } from "../utils/quranHelpers";
 import { getPageBySuraAya } from "../utils/coordinates";
 import { getTotalPages } from "../utils/coordinates";
+import { QuranData } from "../data/quranData";
 
 const ACCENT = "#1a5c2e";
 const HIGHLIGHT_BG = "#fff3cd";
@@ -127,13 +129,33 @@ export default function SearchScreen({ onGoBack, onNavigateToPage }: SearchScree
   const fontFamily = quranFont !== "default" ? quranFont : undefined;
   const totalPages = useMemo(() => getTotalPages(quira), [quira]);
 
-  const [activeTab, setActiveTab] = useState<TabKey>("text");
+  const [activeTab, setActiveTab] = useState<TabKey>("sura");
   const [searchQuery, setSearchQuery] = useState("");
   const [pageInput, setPageInput] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
+  const [pageFilter, setPageFilter] = useState<"juz" | "hizb" | "thumn">("juz");
 
   const suwar = useMemo(() => allSuwar(), []);
+
+  const juzData = useMemo(() =>
+    Array.from({ length: 30 }, (_, i) => {
+      const n = i + 1;
+      const [sura, aya] = QuranData.Juz[n];
+      return { n, sura, aya };
+    }), []);
+
+  const hizbData = useMemo(() =>
+    Array.from({ length: 60 }, (_, i) => {
+      const [sura, aya] = QuranData.HizbQaurter[i * 4 + 1];
+      return { n: i + 1, sura, aya };
+    }), []);
+
+  const thumnData = useMemo(() =>
+    Array.from({ length: 240 }, (_, i) => {
+      const [sura, aya] = QuranData.HizbQaurter[i + 1];
+      return { n: i + 1, sura, aya };
+    }), []);
 
   const handleTextSearch = useCallback(async () => {
     Keyboard.dismiss();
@@ -206,22 +228,39 @@ export default function SearchScreen({ onGoBack, onNavigateToPage }: SearchScree
     </Pressable>
   );
 
-  const renderSuraItem = ({ item }: { item: { value: number; label: string } }) => (
-    <Pressable
-      style={[styles.suraItem, { borderBottomColor: borderColor }]}
-      onPress={() => handleSuraPress(item.value)}
-    >
-      <View style={styles.suraNumber}>
-        <Text style={[styles.suraNumberText, { color: ACCENT }]}>
-          {item.value}
-        </Text>
-      </View>
-      <Text style={[styles.suraLabel, { color: textColor, fontFamily }]}>
-        {getSuraName(item.value)}
-      </Text>
-      <Ionicons name="chevron-back" size={16} color={mutedColor} />
-    </Pressable>
-  );
+  const renderSuraItem = ({ item }: { item: { value: number; label: string } }) => {
+    const suraData = QuranData.Sura[item.value];
+    const isMeccan = suraData?.[3] === "Meccan";
+    const ayahCount = getAyahCount(item.value);
+    return (
+      <Pressable
+        style={[styles.suraItem, { borderBottomColor: borderColor }]}
+        onPress={() => handleSuraPress(item.value)}
+      >
+        <View style={styles.suraNumber}>
+          <Text style={[styles.suraNumberText, { color: ACCENT }]}>
+            {item.value}
+          </Text>
+        </View>
+        <View style={styles.suraInfo}>
+          <Text style={[styles.suraLabel, { color: textColor, fontFamily }]}>
+            {getSuraName(item.value)}
+          </Text>
+          <View style={styles.suraMeta}>
+            <View style={[styles.suraBadge, { backgroundColor: isMeccan ? "#fff3e0" : "#e3f2fd" }]}>
+              <Text style={[styles.suraBadgeText, { color: isMeccan ? "#e65100" : "#1565c0" }]}>
+                {isMeccan ? "مكية" : "مدنية"}
+              </Text>
+            </View>
+            <Text style={[styles.suraAyahCount, { color: mutedColor }]}>
+              {ayahCount} آية
+            </Text>
+          </View>
+        </View>
+        <Ionicons name="chevron-back" size={16} color={mutedColor} />
+      </Pressable>
+    );
+  };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
@@ -310,26 +349,61 @@ export default function SearchScreen({ onGoBack, onNavigateToPage }: SearchScree
 
       {activeTab === "page" && (
         <View style={styles.content}>
-          <View style={styles.pageSection}>
-            <Text style={[styles.pageLabel, { color: textColor }]}>
-              {t("enter_page_number", lang)}
-            </Text>
-            <View style={[styles.searchRow, { backgroundColor: inputBg, borderColor }]}>
-              <TextInput
-                style={[styles.searchInput, { color: textColor, textAlign: "center" }]}
-                placeholder={`1 - ${totalPages}`}
-                placeholderTextColor={mutedColor}
-                value={pageInput}
-                onChangeText={setPageInput}
-                keyboardType="number-pad"
-                onSubmitEditing={handlePageSearch}
-                returnKeyType="go"
-              />
-              <Pressable onPress={handlePageSearch} style={styles.searchBtn}>
-                <Ionicons name="arrow-back" size={20} color="#fff" />
-              </Pressable>
-            </View>
+          {/* Page number input */}
+          <View style={[styles.searchRow, { backgroundColor: inputBg, borderColor, margin: 16 }]}>
+            <TextInput
+              style={[styles.searchInput, { color: textColor, textAlign: "center" }]}
+              placeholder={`${t("enter_page_number", lang)} (1 - ${totalPages})`}
+              placeholderTextColor={mutedColor}
+              value={pageInput}
+              onChangeText={setPageInput}
+              keyboardType="number-pad"
+              onSubmitEditing={handlePageSearch}
+              returnKeyType="go"
+            />
+            <Pressable onPress={handlePageSearch} style={styles.searchBtn}>
+              <Ionicons name="arrow-back" size={20} color="#fff" />
+            </Pressable>
           </View>
+
+          {/* Sub-filter selector */}
+          <View style={[styles.pageFilterRow, { borderBottomColor: borderColor }]}>
+            {(["juz", "hizb", "thumn"] as const).map((f) => (
+              <Pressable
+                key={f}
+                style={[
+                  styles.pageFilterBtn,
+                  pageFilter === f && { borderBottomColor: ACCENT, borderBottomWidth: 2 },
+                ]}
+                onPress={() => setPageFilter(f)}
+              >
+                <Text style={[styles.pageFilterText, { color: pageFilter === f ? ACCENT : mutedColor }]}>
+                  {f === "juz" ? "جزء" : f === "hizb" ? "حزب" : "ثمن"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Navigation grid */}
+          <FlatList
+            key={pageFilter}
+            data={pageFilter === "juz" ? juzData : pageFilter === "hizb" ? hizbData : thumnData}
+            keyExtractor={(item) => `${pageFilter}_${item.n}`}
+            numColumns={pageFilter === "thumn" ? 6 : 5}
+            contentContainerStyle={styles.pageGrid}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <Pressable
+                style={[styles.pageGridItem, { backgroundColor: isDark ? "#1a1a2e" : "#f5f5f5", borderColor }]}
+                onPress={() => {
+                  const page = getPageBySuraAya(item.sura, item.aya, quira);
+                  handleGoToPage(page, item.sura, item.aya);
+                }}
+              >
+                <Text style={[styles.pageGridText, { color: textColor }]}>{item.n}</Text>
+              </Pressable>
+            )}
+          />
         </View>
       )}
     </SafeAreaView>
@@ -459,7 +533,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
     gap: 12,
   },
@@ -475,11 +549,66 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
   },
-  suraLabel: {
+  suraInfo: {
     flex: 1,
+    gap: 4,
+  },
+  suraLabel: {
     fontSize: 16,
-    fontWeight: "500",
-    textAlign: "left",
+    fontWeight: "600",
+    textAlign: "right",
+  },
+  suraMeta: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    justifyContent: "flex-end",
+  },
+  suraBadge: {
+    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+  },
+  suraBadgeText: {
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  suraAyahCount: {
+    fontSize: 12,
+  },
+  pageFilterRow: {
+    flexDirection: "row",
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  pageFilterBtn: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  pageFilterText: {
+    fontSize: 15,
+    fontWeight: "600",
+  },
+  pageGrid: {
+    padding: 12,
+    gap: 8,
+  },
+  pageGridItem: {
+    flex: 1,
+    margin: 4,
+    aspectRatio: 1,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  pageGridText: {
+    fontSize: 14,
+    fontWeight: "600",
   },
   empty: {
     flex: 1,
@@ -489,14 +618,5 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-  },
-  pageSection: {
-    padding: 16,
-    gap: 12,
-  },
-  pageLabel: {
-    fontSize: 16,
-    fontWeight: "600",
-    textAlign: "center",
   },
 });

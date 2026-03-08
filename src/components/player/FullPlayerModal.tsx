@@ -25,6 +25,7 @@ export interface FullPlayerColors {
   fullProgressTrack: string;
   accent: string;
   sliderThumb: string;
+  buttonBg: string;
 }
 
 export interface SelectedAya {
@@ -59,7 +60,6 @@ interface FullPlayerModalProps {
   listenThenRecord: boolean;
   progress: number;
   onClose: () => void;
-  onStop: () => void;
   onPrev: () => void;
   onNext: () => void;
   onPlayPause: () => void;
@@ -95,7 +95,6 @@ export default function FullPlayerModal({
   listenThenRecord,
   progress,
   onClose,
-  onStop,
   onPrev,
   onNext,
   onPlayPause,
@@ -138,13 +137,7 @@ export default function FullPlayerModal({
           <Text style={[styles.fullHeaderTitle, { color: colors.fullSecondary }]}>
             {t("telawa", lang)}
           </Text>
-          <Pressable
-            onPress={onStop}
-            hitSlop={12}
-            style={({ pressed }) => [styles.fullHeaderBtn, pressed && styles.btnPressed]}
-          >
-            <Ionicons name="stop-circle" size={28} color={colors.fullSecondary} />
-          </Pressable>
+          <View style={styles.fullHeaderBtn} />
         </View>
 
         {/* Sura Display Card */}
@@ -300,9 +293,7 @@ export default function FullPlayerModal({
                   backgroundColor:
                     recordingState === "recording" && !listenThenRecord
                       ? RECORDING_COLOR
-                      : isDark
-                      ? "#2a2a3e"
-                      : "#f0f0f0",
+                      : colors.buttonBg,
                 },
                 pressed && { opacity: 0.7 },
               ]}
@@ -340,9 +331,7 @@ export default function FullPlayerModal({
                 {
                   backgroundColor: listenThenRecord
                     ? "#ff9800"
-                    : isDark
-                    ? "#2a2a3e"
-                    : "#f0f0f0",
+                    : colors.buttonBg,
                 },
                 pressed && { opacity: 0.7 },
               ]}
@@ -458,7 +447,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
     writingDirection: "rtl",
     paddingHorizontal: 12,
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
   },
   fullReciterRow: {
     flexDirection: "row",

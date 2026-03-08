@@ -114,6 +114,8 @@ export default {
   download_complete: "ⵉⴽⵎⵎⵍ ⵓⴳⵯⵎ",
   delete_downloads: "ⴽⴽⵙ ⵉⴳⵯⵎⴰⵏ",
   offline_ready: "ⵉⵙⵡⵓⵔⵉ ⴱⵍⴰ ⵉⵏⵜⵔⵏⵜ",
+  offline: "Offline",
+  offline_desc: "ⴰⵔⴰ ⵉⵙⵓⵏ ⵏ ⴰⵎⴰⴹⴰⵍ ⵙ ⵓⵙⵉⵏⴰⴳ",
   from_page: "ⵙⴳ ⵜⴰⵙⵏⴰ",
   to_page: "ⴰⵔ ⵜⴰⵙⵏⴰ",
   downloaded_pages: "ⵜⵉⵙⵏⵉⵡⵉⵏ ⵉⵜⵜⵓⴳⵯⵎⵏ",

@@ -148,6 +148,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       progressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
       fullProgressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
       sliderThumb: ACCENT,
+      buttonBg: theme.borderColor,
     }),
     [isDark, theme],
   );
@@ -1042,7 +1043,6 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         listenThenRecord={listenThenRecord}
         progress={progress}
         onClose={closeFullPlayer}
-        onStop={handleStop}
         onPrev={handlePrev}
         onNext={handleNext}
         onPlayPause={handlePlayPause}

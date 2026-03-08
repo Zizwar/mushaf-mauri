@@ -114,6 +114,8 @@ export default {
   download_complete: "Download Complete",
   delete_downloads: "Delete Downloads",
   offline_ready: "Ready for Offline",
+  offline: "Offline",
+  offline_desc: "Download Quran pages, audio, and tafsir in advance to use the app fully without an internet connection.",
   from_page: "From Page",
   to_page: "To Page",
   downloaded_pages: "Downloaded Pages",
