@@ -677,12 +677,12 @@ const styles = StyleSheet.create({
   listFlex: { flex: 1 },
 
   // Chips
-  chipsScroll: { height: 46, flexShrink: 0 },
-  chipsRow: { paddingHorizontal: 16, paddingVertical: 4, gap: 8, alignItems: "center" },
+  chipsScroll: { flexGrow: 0, flexShrink: 0 },
+  chipsRow: { paddingHorizontal: 16, paddingVertical: 8, gap: 8, flexDirection: "row", alignItems: "center" },
   chip: {
     paddingHorizontal: 14,
-    height: 34,
-    borderRadius: 17,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
     justifyContent: "center",
   },

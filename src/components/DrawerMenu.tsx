@@ -107,19 +107,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
 
             {/* Menu Items */}
             <View style={styles.menuSection}>
-              {/* 0. Fahres (Index / Search) */}
-              <Pressable
-                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
-                onPress={() => handleMenuPress("search")}
-              >
-                <Ionicons name="list-outline" size={22} color={accentColor} />
-                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
-                  {t("fahres", lang)}
-                </Text>
-                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
-              </Pressable>
-
-              {/* 1. Mushaf Type */}
+              {/* 1. Mushaf Type + Fahres */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
                   style={[styles.menuItem, isRTL && styles.menuItemRTL]}
@@ -171,6 +159,17 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                     </Pressable>
                   ))}
                 </View>
+                {/* Fahres below mushaf chips */}
+                <Pressable
+                  style={[styles.menuItem, isRTL && styles.menuItemRTL, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: borderColor }]}
+                  onPress={() => handleMenuPress("search")}
+                >
+                  <Ionicons name="list-outline" size={22} color={accentColor} />
+                  <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                    {t("fahres", lang)}
+                  </Text>
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+                </Pressable>
               </View>
 
               {/* 2. Bookmarks */}
