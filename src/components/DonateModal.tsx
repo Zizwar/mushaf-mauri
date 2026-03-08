@@ -6,7 +6,6 @@ import {
   Modal,
   StyleSheet,
   ScrollView,
-  Alert,
   Platform,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -19,10 +18,10 @@ interface DonateModalProps {
 }
 
 const TIERS = [
-  { emoji: "☕", amount: 20, label: "قهوة" },
-  { emoji: "🍕", amount: 60, label: "بيتزا" },
-  { emoji: "🫕", amount: 180, label: "طاجين" },
-  { emoji: "📿", amount: 420, label: "صدقة جارية" },
+  { emoji: "☕", amount: 20 },
+  { emoji: "🍕", amount: 60 },
+  { emoji: "🫕", amount: 180 },
+  { emoji: "📿", amount: 420 },
 ];
 
 export default function DonateModal({ visible, onClose }: DonateModalProps) {
@@ -31,7 +30,6 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
   const [thanked, setThanked] = useState(false);
 
   const isDark = !!theme.night;
-  const bgColor = theme.backgroundColor;
   const cardBg = isDark ? "#1a1a2e" : "#ffffff";
   const textColor = isDark ? "#e8e8f0" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#777";
@@ -39,7 +37,7 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
   const accentGreen = "#1a5c2e";
   const accentBlue = "#336699";
 
-  const handleTierPress = (tier: typeof TIERS[0]) => {
+  const handleTierPress = () => {
     // Placeholder — real payment integration goes here
     setThanked(true);
     setTimeout(() => {
@@ -69,7 +67,7 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
           >
             {/* Header icon */}
             <View style={[styles.iconCircle, { backgroundColor: isDark ? "#1a2e1a" : "#e8f5e9" }]}>
-              <Ionicons name="heart-circle" size={48} color={accentGreen} />
+              <Ionicons name="heart-circle" size={52} color={accentGreen} />
             </View>
 
             {/* Title */}
@@ -77,10 +75,10 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
               {t("donate_title", lang)}
             </Text>
 
-            {/* Free badge */}
+            {/* Free badge — icon only, no emoji */}
             <View style={[styles.freeBadge, { backgroundColor: isDark ? "#1a3a1a" : "#e8f5e9", borderColor: isDark ? "#2a5a2a" : "#c8e6c9" }]}>
-              <Ionicons name="checkmark-circle" size={18} color={accentGreen} />
-              <View style={{ flex: 1 }}>
+              <Ionicons name="shield-checkmark" size={22} color={accentGreen} />
+              <View style={styles.freeBadgeTexts}>
                 <Text style={[styles.freeBadgeTitle, { color: accentGreen }]}>
                   {t("donate_free_badge", lang)}
                 </Text>
@@ -90,7 +88,7 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
               </View>
             </View>
 
-            {/* Message */}
+            {/* Message — centered, avoids LTR/RTL conflict */}
             <Text style={[styles.message, { color: mutedColor }]}>
               {t("donate_msg", lang)}
             </Text>
@@ -98,6 +96,7 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
             {/* Tiers */}
             {thanked ? (
               <View style={[styles.thanksBox, { backgroundColor: isDark ? "#1a2e1a" : "#e8f5e9" }]}>
+                <Ionicons name="heart" size={32} color={accentGreen} style={{ marginBottom: 8 }} />
                 <Text style={[styles.thanksText, { color: accentGreen }]}>
                   {t("donate_thanks", lang)}
                 </Text>
@@ -110,20 +109,20 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
                     style={({ pressed }) => [
                       styles.tierCard,
                       {
-                        backgroundColor: isDark ? "#1e1e36" : "#f8f8f8",
+                        backgroundColor: isDark ? "#1e1e36" : "#f5f7fa",
                         borderColor: pressed ? accentBlue : borderColor,
                         borderWidth: pressed ? 2 : StyleSheet.hairlineWidth,
                         opacity: pressed ? 0.85 : 1,
                       },
                     ]}
-                    onPress={() => handleTierPress(tier)}
+                    onPress={handleTierPress}
                   >
                     <Text style={styles.tierEmoji}>{tier.emoji}</Text>
                     <Text style={[styles.tierAmount, { color: accentBlue }]}>
-                      {tier.amount} درهم
+                      {tier.amount}
                     </Text>
-                    <Text style={[styles.tierLabel, { color: mutedColor }]}>
-                      {tier.label}
+                    <Text style={[styles.tierCurrency, { color: mutedColor }]}>
+                      MAD
                     </Text>
                   </Pressable>
                 ))}
@@ -180,9 +179,9 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 48 : 32,
   },
   iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 16,
@@ -198,18 +197,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     borderWidth: 1,
-    borderRadius: 12,
-    padding: 12,
+    borderRadius: 14,
+    padding: 14,
     width: "100%",
     marginBottom: 16,
+  },
+  freeBadgeTexts: {
+    flex: 1,
+    alignItems: "center",
   },
   freeBadgeTitle: {
     fontSize: 14,
     fontWeight: "700",
+    textAlign: "center",
     marginBottom: 2,
   },
   freeBadgeSub: {
     fontSize: 11,
+    textAlign: "center",
   },
   message: {
     fontSize: 13,
@@ -227,33 +232,35 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   tierCard: {
-    width: "45%",
+    width: "44%",
     borderRadius: 16,
     alignItems: "center",
-    paddingVertical: 16,
+    paddingVertical: 18,
     paddingHorizontal: 8,
-    gap: 6,
+    gap: 4,
   },
   tierEmoji: {
-    fontSize: 32,
+    fontSize: 34,
+    marginBottom: 4,
   },
   tierAmount: {
-    fontSize: 16,
+    fontSize: 20,
     fontWeight: "800",
   },
-  tierLabel: {
-    fontSize: 12,
-    fontWeight: "500",
+  tierCurrency: {
+    fontSize: 11,
+    fontWeight: "600",
+    letterSpacing: 1,
   },
   thanksBox: {
     borderRadius: 16,
-    padding: 20,
+    padding: 24,
     width: "100%",
     alignItems: "center",
     marginBottom: 20,
   },
   thanksText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: "700",
     textAlign: "center",
   },
@@ -264,5 +271,6 @@ const styles = StyleSheet.create({
   laterText: {
     fontSize: 14,
     fontWeight: "500",
+    textAlign: "center",
   },
 });

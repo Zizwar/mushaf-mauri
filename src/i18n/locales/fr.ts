@@ -243,7 +243,7 @@ export default {
   donate: "Faire un Don",
   donate_title: "Soutenir Mushaf Mauri",
   donate_msg: "Mushaf Mauri est entièrement gratuit — toutes les fonctionnalités avancées sont disponibles pour tous, sans aucune restriction, maintenant et pour toujours. Vous ne serez jamais invité à payer pour accéder à une fonctionnalité.\n\nSi l'application vous est utile et que vous souhaitez encourager le développeur, un don de tout montant lui ferait énormément plaisir.",
-  donate_free_badge: "100% Gratuit 🎉",
+  donate_free_badge: "100% Gratuit",
   donate_free_sub: "Toutes les fonctionnalités · Pour tous · Pour toujours",
   donate_later: "Peut-être plus tard",
   donate_thanks: "Merci infiniment ! Votre soutien compte beaucoup 🤍",

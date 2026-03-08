@@ -243,7 +243,7 @@ export default {
   donate: "Donate",
   donate_title: "Support Mushaf Mauri",
   donate_msg: "Mushaf Mauri is completely free — every advanced feature is available to everyone, with zero restrictions, now and forever. You will never be asked to pay to access any feature.\n\nIf the app benefits you and you'd like to encourage the developer to keep going, a donation of any amount would mean a lot.",
-  donate_free_badge: "100% Free 🎉",
+  donate_free_badge: "100% Free",
   donate_free_sub: "All features · For everyone · Forever · No limits",
   donate_later: "Maybe Later",
   donate_thanks: "Thank you so much! Your support means the world 🤍",
