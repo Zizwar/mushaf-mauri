@@ -31,6 +31,9 @@ import { File, Directory, Paths } from "expo-file-system";
 import { isDBAvailable, downloadTafsirDB } from "../utils/tafsir";
 // @ts-ignore
 import { listAuthorTafsir, listAuthorTarajem } from "../data/listAuthor";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ACCENT = "#1a5c2e";
@@ -57,7 +60,7 @@ function FontSelector() {
 
   const isDark = !!theme.night;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const borderColor = theme.borderColor;
 
   return (
     <View style={{ gap: 8 }}>
@@ -129,7 +132,7 @@ function WarshAudioDownloader() {
   const isDark = !!theme.night;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const borderColor = theme.borderColor;
   const inputBg = isDark ? "#2a2a3e" : "#f0f0f0";
 
   const [recitors, setRecitors] = useState<WarshRecitor[]>([]);
@@ -357,7 +360,7 @@ function TafsirDBDownloader() {
   const isDark = !!theme.night;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const borderColor = theme.borderColor;
 
   const [activeTab, setActiveTab] = useState<"tafsir" | "tarajem">("tafsir");
   // Map of dbId → true if downloaded
@@ -512,6 +515,103 @@ function TafsirDBDownloader() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Backup / Restore
+// ---------------------------------------------------------------------------
+function BackupSection() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const isDark = !!theme.night;
+  const textColor = isDark ? "#e8e8e8" : theme.color;
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = theme.borderColor;
+  const [busy, setBusy] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setBusy(true);
+      const keys = await AsyncStorage.getAllKeys();
+      const pairs = await AsyncStorage.multiGet(keys);
+      const data: Record<string, string | null> = {};
+      pairs.forEach(([k, v]) => { data[k] = v; });
+      const json = JSON.stringify(data, null, 2);
+
+      // Write to a temp file then share
+      const tempFile = new File(Paths.cache, "mushaf-backup.json");
+      if (!tempFile.exists) tempFile.create();
+      tempFile.write(json);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(tempFile.uri, {
+          mimeType: "application/json",
+          dialogTitle: t("backup_export", lang),
+        });
+      }
+    } catch (e) {
+      Alert.alert(t("backup_export", lang), String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/json",
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled) return;
+
+      setBusy(true);
+      const file = new File(result.assets[0].uri);
+      const json = file.textSync();
+      const data: Record<string, string> = JSON.parse(json);
+
+      // Validate: must be an object with string values
+      if (typeof data !== "object" || Array.isArray(data)) throw new Error("invalid");
+
+      const pairs: [string, string][] = Object.entries(data).map(([k, v]) => [k, String(v)]);
+      await AsyncStorage.multiSet(pairs);
+
+      Alert.alert(t("backup_import", lang), t("backup_import_success", lang));
+    } catch {
+      Alert.alert(t("backup_import", lang), t("backup_import_error", lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={{ gap: 8 }}>
+      <Pressable
+        style={[styles.backupBtn, { borderColor }]}
+        onPress={handleExport}
+        disabled={busy}
+      >
+        <Ionicons name="cloud-upload-outline" size={20} color={ACCENT} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.backupBtnTitle, { color: textColor }]}>{t("backup_export", lang)}</Text>
+          <Text style={[styles.backupBtnDesc, { color: mutedColor }]}>{t("backup_export_desc", lang)}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+      </Pressable>
+
+      <Pressable
+        style={[styles.backupBtn, { borderColor }]}
+        onPress={handleImport}
+        disabled={busy}
+      >
+        <Ionicons name="cloud-download-outline" size={20} color={ACCENT} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.backupBtnTitle, { color: textColor }]}>{t("backup_import", lang)}</Text>
+          <Text style={[styles.backupBtnDesc, { color: mutedColor }]}>{t("backup_import_desc", lang)}</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+      </Pressable>
+    </View>
+  );
+}
+
 export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
@@ -530,7 +630,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const borderColor = theme.borderColor;
   const inputBg = isDark ? "#2a2a3e" : "#f0f0f0";
 
   const progress = imageDownloadProgress[quira];
@@ -852,6 +952,14 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
           <FontSelector />
         </View>
+
+        {/* Backup & Restore */}
+        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+          {t("backup_data", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <BackupSection />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
@@ -986,5 +1094,21 @@ const styles = StyleSheet.create({
   },
   btnDanger: {
     backgroundColor: "#d32f2f",
+  },
+  backupBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  backupBtnTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    marginBottom: 2,
+  },
+  backupBtnDesc: {
+    fontSize: 12,
   },
 });

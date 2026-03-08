@@ -105,7 +105,7 @@ export default function AutoScrollScreen({ onGoBack }: AutoScrollScreenProps) {
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";
+  const borderColor = theme.borderColor;
   const isRtl = RTL_LANGS.includes(lang);
 
   // ── Setup state ──────────────────────────────────────────

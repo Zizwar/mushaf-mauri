@@ -185,7 +185,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       screen === "about" ||
       screen === "tasbih" ||
       screen === "autoscroll" ||
-      screen === "prayerMode"
+      screen === "prayerMode" ||
+      screen === "media"
     ) {
       if (onNavigate) onNavigate(screen);
     }

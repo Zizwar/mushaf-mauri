@@ -59,8 +59,15 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
   const mutedColor = isNight ? "#888" : "#999";
   const bgColor = theme.backgroundColor;
   const cardBg = isNight ? "#1a1a2e" : theme.backgroundColor;
-  const borderColor = isNight ? "#2a2a3e" : "#eee";
+  const borderColor = theme.borderColor;
   const accentColor = "#1a5c2e";
+
+  // White first, night second, then the rest
+  const sortedThemes = [
+    ...THEMES.filter((t) => t.name === "white"),
+    ...THEMES.filter((t) => t.name === "night"),
+    ...THEMES.filter((t) => t.name !== "white" && t.name !== "night"),
+  ];
 
   const handleMenuPress = (screen: string) => {
     onNavigate(screen);
@@ -250,6 +257,18 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
+              {/* Media (video + radio) */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("media")}
+              >
+                <Ionicons name="play-circle-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("media", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
               {/* 5. Theme */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
@@ -268,15 +287,14 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                   contentContainerStyle={styles.themeRow}
                   style={[styles.themeScrollView, { borderTopColor: borderColor }]}
                 >
-                  {THEMES.map((th, idx) => (
+                  {sortedThemes.map((th, idx) => (
                     <Pressable
                       key={idx}
                       style={[
                         styles.themeCircle,
                         {
                           backgroundColor: th.backgroundColor,
-                          borderColor:
-                            theme.name === th.name ? accentColor : th.night ? "#555" : "#ccc",
+                          borderColor: theme.name === th.name ? accentColor : th.borderColor,
                           borderWidth: theme.name === th.name ? 3 : 1.5,
                         },
                       ]}

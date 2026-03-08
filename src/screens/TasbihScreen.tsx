@@ -109,7 +109,7 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";
+  const borderColor = theme.borderColor;
 
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [count, setCount] = useState(0);

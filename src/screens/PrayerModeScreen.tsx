@@ -24,7 +24,9 @@ import {
   getSuraName,
 } from "../utils/quranHelpers";
 import { getSuraVerses, getAyahText } from "../utils/ayahText";
-import { loadSettings, saveSettings } from "../utils/settings";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+const PRAYER_STATE_KEY = "prayer-mode-state";
 import type { Quira } from "../store/useAppStore";
 
 // ==================== CONSTANTS ====================
@@ -164,22 +166,25 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
 
   // ── Load saved state on mount ─────────────────────────
   useEffect(() => {
-    const saved = loadSettings().prayerModeState;
-    if (saved) {
-      setHasSavedState(true);
-      setStartSura(saved.startSura);
-      setStartAya(saved.startAya);
-      setEndSura(saved.endSura);
-      setEndAya(saved.endAya);
-      setIsOpenEnded(saved.isOpenEnded);
-      setFontSize(saved.fontSize);
-      setFontFamily(saved.fontFamily);
-      if (saved.speed) setSpeed(saved.speed);
-      if (saved.lastReadingSura) setLastReadingSura(saved.lastReadingSura);
-      if (saved.lastReadingAya) setLastReadingAya(saved.lastReadingAya);
-      const theme = COLOR_THEMES.find((ct) => ct.id === saved.colorThemeId);
-      if (theme) setColorTheme(theme);
-    }
+    AsyncStorage.getItem(PRAYER_STATE_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        const saved = JSON.parse(raw);
+        setHasSavedState(true);
+        setStartSura(saved.startSura);
+        setStartAya(saved.startAya);
+        setEndSura(saved.endSura);
+        setEndAya(saved.endAya);
+        setIsOpenEnded(saved.isOpenEnded);
+        setFontSize(saved.fontSize);
+        setFontFamily(saved.fontFamily);
+        if (saved.speed) setSpeed(saved.speed);
+        if (saved.lastReadingSura) setLastReadingSura(saved.lastReadingSura);
+        if (saved.lastReadingAya) setLastReadingAya(saved.lastReadingAya);
+        const theme = COLOR_THEMES.find((ct) => ct.id === saved.colorThemeId);
+        if (theme) setColorTheme(theme);
+      } catch {}
+    });
   }, []);
 
   // ── Ayah previews ─────────────────────────────────────
@@ -240,19 +245,11 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
 
   // ── Save state periodically ────────────────────────────
   const savePrayerState = useCallback(() => {
-    saveSettings({
-      prayerModeState: {
-        startSura,
-        startAya,
-        endSura,
-        endAya,
-        isOpenEnded,
-        fontSize,
-        fontFamily,
-        colorThemeId: colorTheme.id,
-        speed,
-      },
-    });
+    AsyncStorage.setItem(PRAYER_STATE_KEY, JSON.stringify({
+      startSura, startAya, endSura, endAya,
+      isOpenEnded, fontSize, fontFamily,
+      colorThemeId: colorTheme.id, speed,
+    }));
   }, [startSura, startAya, endSura, endAya, isOpenEnded, fontSize, fontFamily, colorTheme.id, speed]);
 
   // ── Auto-scroll engine ─────────────────────────────────
@@ -488,21 +485,13 @@ export default function PrayerModeScreen({ onGoBack }: Props) {
       if (currentVerse) {
         setLastReadingSura(currentVerse.sura);
         setLastReadingAya(currentVerse.aya);
-        saveSettings({
-          prayerModeState: {
-            startSura,
-            startAya,
-            endSura,
-            endAya,
-            isOpenEnded,
-            fontSize,
-            fontFamily,
-            colorThemeId: colorTheme.id,
-            speed,
-            lastReadingSura: currentVerse.sura,
-            lastReadingAya: currentVerse.aya,
-          },
-        });
+        AsyncStorage.setItem(PRAYER_STATE_KEY, JSON.stringify({
+          startSura, startAya, endSura, endAya,
+          isOpenEnded, fontSize, fontFamily,
+          colorThemeId: colorTheme.id, speed,
+          lastReadingSura: currentVerse.sura,
+          lastReadingAya: currentVerse.aya,
+        }));
       }
     }
   }, [verses, startSura, startAya, endSura, endAya, isOpenEnded, fontSize, fontFamily, colorTheme.id, speed]);

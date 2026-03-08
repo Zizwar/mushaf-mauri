@@ -15,6 +15,7 @@ import AboutScreen from "./src/screens/AboutScreen";
 import TasbihScreen from "./src/screens/TasbihScreen";
 import AutoScrollScreen from "./src/screens/AutoScrollScreen";
 import PrayerModeScreen from "./src/screens/PrayerModeScreen";
+import MediaScreen from "./src/screens/MediaScreen";
 import { useAppStore } from "./src/store/useAppStore";
 import { THEMES } from "./src/theme/themes";
 
@@ -30,7 +31,8 @@ type Screen =
   | "about"
   | "tasbih"
   | "autoscroll"
-  | "prayerMode";
+  | "prayerMode"
+  | "media";
 
 export default function App() {
   const [fontsLoaded] = useFonts({
@@ -40,11 +42,28 @@ export default function App() {
     Maghribi: require("./assets/fonts/maghribi.otf"),
   });
 
+  // Wait for Zustand persist to hydrate from AsyncStorage before deciding the initial screen
+  const [hydrated, setHydrated] = useState(false);
   const [screen, setScreen] = useState<Screen>("home");
+
+  useEffect(() => {
+    // If already hydrated (unlikely on first render but safe to check)
+    if (useAppStore.persist.hasHydrated()) {
+      setScreen(useAppStore.getState().hasCompletedSetup ? "mushaf" : "home");
+      setHydrated(true);
+      return;
+    }
+    const unsub = useAppStore.persist.onFinishHydration((state) => {
+      setScreen(state.hasCompletedSetup ? "mushaf" : "home");
+      setHydrated(true);
+    });
+    return unsub;
+  }, []);
 
   // Auto dark mode: follow system color scheme
   const colorScheme = useColorScheme();
   useEffect(() => {
+    if (!hydrated) return;
     const theme = useAppStore.getState().theme;
     const isCurrentlyNight = !!theme.night;
     const systemIsDark = colorScheme === "dark";
@@ -55,12 +74,12 @@ export default function App() {
       const lightTheme = THEMES.find((t) => !t.night);
       if (lightTheme) useAppStore.getState().setTheme(lightTheme);
     }
-  }, [colorScheme]);
+  }, [colorScheme, hydrated]);
 
-  // Initialize Warsh DB early so warsh index is available synchronously
+  // Initialize Warsh DB early
   useEffect(() => { initWarshDB().catch((e) => console.warn("[App] initWarshDB failed:", e)); }, []);
 
-  // Android back button: close sub-screens instead of minimizing app
+  // Android back button
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
       if (screen !== "mushaf" && screen !== "home") {
@@ -75,17 +94,12 @@ export default function App() {
   const handleNavigateToPage = useCallback((page: number, sura?: number, aya?: number) => {
     useAppStore.getState().setCurrentPage(page);
     if (sura && aya) {
-      useAppStore.getState().setSelectedAya({
-        sura,
-        aya,
-        page,
-        id: `s${sura}a${aya}z`,
-      });
+      useAppStore.getState().setSelectedAya({ sura, aya, page, id: `s${sura}a${aya}z` });
     }
     setScreen("mushaf");
   }, []);
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || !hydrated) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <ActivityIndicator size="large" color="#1a5c2e" />
@@ -123,6 +137,8 @@ export default function App() {
         <AutoScrollScreen onGoBack={() => setScreen("mushaf")} />
       ) : screen === "prayerMode" ? (
         <PrayerModeScreen onGoBack={() => setScreen("mushaf")} />
+      ) : screen === "media" ? (
+        <MediaScreen onGoBack={() => setScreen("mushaf")} />
       ) : (
         <MushafViewer
           onGoBack={() => setScreen("home")}

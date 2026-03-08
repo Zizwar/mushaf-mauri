@@ -35,7 +35,7 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";
+  const borderColor = theme.borderColor;
 
   // Note editing modal state
   const [noteModalVisible, setNoteModalVisible] = useState(false);

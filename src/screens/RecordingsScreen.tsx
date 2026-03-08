@@ -145,7 +145,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const borderColor = theme.borderColor;
   const inputBg = isDark ? "#2a2a3e" : "#f0f0f0";
 
   // -- Reciters list --

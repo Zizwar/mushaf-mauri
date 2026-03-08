@@ -190,7 +190,7 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "rgba(255,255,255,0.1)" : "#eee";
+  const borderColor = theme.borderColor;
 
   const [startSura, setStartSura] = useState(1);
   const [startAya, setStartAya] = useState(1);

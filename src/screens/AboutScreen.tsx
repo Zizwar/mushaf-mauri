@@ -56,7 +56,7 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";
+  const borderColor = theme.borderColor;
   const inputBg = isDark ? "#12122a" : "#f0f0f0";
 
   const rowDir = isRTL ? "row-reverse" : "row";

@@ -473,7 +473,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
                 styles.themeCircle,
                 {
                   backgroundColor: th.backgroundColor,
-                  borderColor: isActive ? ACCENT : th.night ? "#555" : "#ccc",
+                  borderColor: isActive ? ACCENT : th.borderColor,
                   borderWidth: isActive ? 3 : 1.5,
                 },
                 pressed && { transform: [{ scale: 0.9 }] },
