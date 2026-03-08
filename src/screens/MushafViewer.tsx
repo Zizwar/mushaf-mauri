@@ -14,6 +14,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import QuranPage from "../components/QuranPage";
 import AudioPlayer from "../components/AudioPlayer";
 import DrawerMenu from "../components/DrawerMenu";
+import DonateModal from "../components/DonateModal";
 import AyahActionModal from "../components/AyahActionModal";
 import TafsirModal from "../components/TafsirModal";
 import { useAppStore } from "../store/useAppStore";
@@ -64,6 +65,7 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
 
   // Modal states
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [donateVisible, setDonateVisible] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
   const [longPressInfo, setLongPressInfo] = useState<{
@@ -186,7 +188,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       screen === "tasbih" ||
       screen === "autoscroll" ||
       screen === "prayerMode" ||
-      screen === "media"
+      screen === "media" ||
+      screen === "offline"
     ) {
       if (onNavigate) onNavigate(screen);
     }
@@ -245,6 +248,13 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
             style={styles.headerBtn}
           >
             <Ionicons name="search-outline" size={20} color={theme.color} />
+          </Pressable>
+          <Pressable
+            onPress={() => setDonateVisible(true)}
+            hitSlop={10}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="heart-circle-outline" size={21} color={theme.color} />
           </Pressable>
         </View>
 
@@ -325,6 +335,12 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           aya={longPressInfo.aya}
         />
       )}
+
+      {/* Donate Modal */}
+      <DonateModal
+        visible={donateVisible}
+        onClose={() => setDonateVisible(false)}
+      />
     </SafeAreaView>
   );
 }
