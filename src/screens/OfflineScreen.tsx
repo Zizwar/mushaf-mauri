@@ -396,15 +396,10 @@ function TafsirDBDownloader() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Main Screen
+// Page Image Downloader (per quira)
 // ─────────────────────────────────────────────────────────────────────────────
-interface OfflineScreenProps {
-  onGoBack: () => void;
-}
-
-export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
+function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
   const lang = useAppStore((s) => s.lang);
-  const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
   const imageDownloadProgress = useAppStore((s) => s.imageDownloadProgress);
   const setImageDownloadProgress = useAppStore((s) => s.setImageDownloadProgress);
@@ -414,8 +409,6 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
   const [toPage, setToPage] = useState(String(TOTAL_PAGES));
 
   const isDark = !!theme.night;
-  const bgColor = theme.backgroundColor;
-  const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
   const borderColor = theme.borderColor;
@@ -431,13 +424,10 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
     const from = Math.max(1, Math.min(TOTAL_PAGES, parseInt(fromPage) || 1));
     const to = Math.max(from, Math.min(TOTAL_PAGES, parseInt(toPage) || TOTAL_PAGES));
     const total = to - from + 1;
-
     setImageDownloadProgress(quira, { isDownloading: true, downloaded: 0, total });
-
     await downloadPageRange(quira, from, to, (downloaded, t) => {
       setImageDownloadProgress(quira, { isDownloading: true, downloaded, total: t });
     });
-
     setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: TOTAL_PAGES });
     invalidateImageCacheSet(quira);
     setCachedCount(countDownloadedPages(quira));
@@ -448,7 +438,7 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
     setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: TOTAL_PAGES });
   }, [quira, setImageDownloadProgress]);
 
-  const handleDeleteDownloads = useCallback(() => {
+  const handleDelete = useCallback(() => {
     Alert.alert(
       t("delete_downloads", lang),
       t("confirm_delete_downloads", lang),
@@ -468,9 +458,110 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
   }, [quira, lang]);
 
   const progressFraction =
-    progress.isDownloading && progress.total > 0
+    progress?.isDownloading && progress.total > 0
       ? progress.downloaded / progress.total
       : 0;
+
+  return (
+    <View>
+      <View style={styles.statusRow}>
+        <Ionicons
+          name={cachedCount >= TOTAL_PAGES ? "cloud-done-outline" : "cloud-download-outline"}
+          size={22}
+          color={cachedCount >= TOTAL_PAGES ? "#4caf50" : ACCENT}
+        />
+        <Text style={[styles.statusText, { color: textColor }]}>
+          {t("downloaded_pages", lang)}: {cachedCount} / {TOTAL_PAGES}
+        </Text>
+      </View>
+
+      <View style={[styles.progressTrack, { backgroundColor: inputBg }]}>
+        <View
+          style={[
+            styles.progressFill,
+            {
+              backgroundColor: ACCENT,
+              width: progress?.isDownloading
+                ? `${Math.min(progressFraction * 100, 100)}%` as any
+                : `${Math.min((cachedCount / TOTAL_PAGES) * 100, 100)}%` as any,
+            },
+          ]}
+        />
+      </View>
+
+      {progress?.isDownloading && (
+        <Text style={[styles.progressText, { color: mutedColor }]}>
+          {t("downloading", lang)} {progress.downloaded}/{progress.total}
+        </Text>
+      )}
+
+      {!progress?.isDownloading && (
+        <View style={styles.rangeRow}>
+          <View style={styles.rangeInput}>
+            <Text style={[styles.rangeLabel, { color: mutedColor }]}>{t("from_page", lang)}</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: inputBg, color: textColor, borderColor }]}
+              value={fromPage}
+              onChangeText={setFromPage}
+              keyboardType="number-pad"
+              maxLength={3}
+            />
+          </View>
+          <View style={styles.rangeInput}>
+            <Text style={[styles.rangeLabel, { color: mutedColor }]}>{t("to_page", lang)}</Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: inputBg, color: textColor, borderColor }]}
+              value={toPage}
+              onChangeText={setToPage}
+              keyboardType="number-pad"
+              maxLength={3}
+            />
+          </View>
+        </View>
+      )}
+
+      <View style={styles.buttonRow}>
+        {progress?.isDownloading ? (
+          <Pressable style={[styles.btn, styles.btnDanger]} onPress={handleAbort}>
+            <Ionicons name="stop-circle-outline" size={18} color="#fff" />
+            <Text style={styles.btnText}>{t("abort_download", lang)}</Text>
+          </Pressable>
+        ) : (
+          <>
+            <Pressable style={[styles.btn, { backgroundColor: ACCENT }]} onPress={handleDownload}>
+              <Ionicons name="cloud-download-outline" size={18} color="#fff" />
+              <Text style={styles.btnText}>{t("download_all", lang)}</Text>
+            </Pressable>
+            {cachedCount > 0 && (
+              <Pressable style={[styles.btn, styles.btnDanger]} onPress={handleDelete}>
+                <Ionicons name="trash-outline" size={18} color="#fff" />
+                <Text style={styles.btnText}>{t("delete_downloads", lang)}</Text>
+              </Pressable>
+            )}
+          </>
+        )}
+      </View>
+    </View>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main Screen
+// ─────────────────────────────────────────────────────────────────────────────
+interface OfflineScreenProps {
+  onGoBack: () => void;
+}
+
+export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+
+  const isDark = !!theme.night;
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
+  const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = theme.borderColor;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
@@ -506,88 +597,20 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
           </Text>
         </View>
 
-        {/* Pages download */}
+        {/* Pages download — Hafs */}
         <Text style={[styles.sectionTitle, { color: mutedColor }]}>
-          {t("download_images", lang)}
+          {t("mosshaf_hafs", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <View style={styles.statusRow}>
-            <Ionicons
-              name={cachedCount >= TOTAL_PAGES ? "cloud-done-outline" : "cloud-download-outline"}
-              size={22}
-              color={cachedCount >= TOTAL_PAGES ? "#4caf50" : ACCENT}
-            />
-            <Text style={[styles.statusText, { color: textColor }]}>
-              {t("downloaded_pages", lang)}: {cachedCount} / {TOTAL_PAGES}
-            </Text>
-          </View>
+          <PageDownloader quira="madina" />
+        </View>
 
-          <View style={[styles.progressTrack, { backgroundColor: inputBg }]}>
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: ACCENT,
-                  width: progress.isDownloading
-                    ? `${Math.min(progressFraction * 100, 100)}%` as any
-                    : `${Math.min((cachedCount / TOTAL_PAGES) * 100, 100)}%` as any,
-                },
-              ]}
-            />
-          </View>
-
-          {progress.isDownloading && (
-            <Text style={[styles.progressText, { color: mutedColor }]}>
-              {t("downloading", lang)} {progress.downloaded}/{progress.total}
-            </Text>
-          )}
-
-          {!progress.isDownloading && (
-            <View style={styles.rangeRow}>
-              <View style={styles.rangeInput}>
-                <Text style={[styles.rangeLabel, { color: mutedColor }]}>{t("from_page", lang)}</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: inputBg, color: textColor, borderColor }]}
-                  value={fromPage}
-                  onChangeText={setFromPage}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                />
-              </View>
-              <View style={styles.rangeInput}>
-                <Text style={[styles.rangeLabel, { color: mutedColor }]}>{t("to_page", lang)}</Text>
-                <TextInput
-                  style={[styles.input, { backgroundColor: inputBg, color: textColor, borderColor }]}
-                  value={toPage}
-                  onChangeText={setToPage}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                />
-              </View>
-            </View>
-          )}
-
-          <View style={styles.buttonRow}>
-            {progress.isDownloading ? (
-              <Pressable style={[styles.btn, styles.btnDanger]} onPress={handleAbort}>
-                <Ionicons name="stop-circle-outline" size={18} color="#fff" />
-                <Text style={styles.btnText}>{t("abort_download", lang)}</Text>
-              </Pressable>
-            ) : (
-              <>
-                <Pressable style={[styles.btn, { backgroundColor: ACCENT }]} onPress={handleDownload}>
-                  <Ionicons name="cloud-download-outline" size={18} color="#fff" />
-                  <Text style={styles.btnText}>{t("download_all", lang)}</Text>
-                </Pressable>
-                {cachedCount > 0 && (
-                  <Pressable style={[styles.btn, styles.btnDanger]} onPress={handleDeleteDownloads}>
-                    <Ionicons name="trash-outline" size={18} color="#fff" />
-                    <Text style={styles.btnText}>{t("delete_downloads", lang)}</Text>
-                  </Pressable>
-                )}
-              </>
-            )}
-          </View>
+        {/* Pages download — Warsh */}
+        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+          {t("mosshaf_warsh", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <PageDownloader quira="warsh" />
         </View>
 
         {/* Warsh Audio — always visible so you can pre-download regardless of current mode */}
