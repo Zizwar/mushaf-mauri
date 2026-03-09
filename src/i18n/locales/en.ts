@@ -378,6 +378,8 @@ export default {
   backup_import_desc: "Restore settings from a backup file",
   backup_import_success: "Imported, restart the app to apply",
   backup_import_error: "Invalid or corrupted file",
+  recordings_help_title: "How do Recordings work?",
+  recordings_help_body: "• Open the Mushaf and tap any verse to select it\n• Press «Record» in the audio player to start recording your recitation\n• After recording, your voice is added as an independent reciter you can play back anytime\n• Recorded verses appear with a different highlight color in the Mushaf\n• In this screen you can find all your recordings: listen, re-record, add a note, or delete\n• Export your recordings to share with a teacher or someone who can correct you\n• Use multiple profiles to organize your sessions by surah or date",
   content_sources: "Content Sources",
   source_hafs: "Tafsir, images & audio (Hafs): King Saud University",
   source_warsh: "Warsh recitations: Mohammed VI Foundation for the Holy Quran",

@@ -136,6 +136,9 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   const [noteModalKey, setNoteModalKey] = useState<string | null>(null);
   const [noteInput, setNoteInput] = useState("");
 
+  // -- Help modal --
+  const [showHelp, setShowHelp] = useState(false);
+
   // -- Local state: export --
   const [isExporting, setIsExporting] = useState(false);
 
@@ -619,6 +622,9 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
         {t("my_recordings", lang)}
       </Text>
       <View style={styles.headerRight}>
+        <Pressable onPress={() => setShowHelp(true)} hitSlop={8} style={styles.headerBtn}>
+          <Ionicons name="help-circle-outline" size={22} color={ACCENT} />
+        </Pressable>
         <Pressable
           onPress={() => setShowProfileModal(true)}
           hitSlop={8}
@@ -1370,6 +1376,22 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       {renderProfileNameModal()}
       {renderNoteModal()}
       {renderReciterModal()}
+
+      {/* Help Modal */}
+      <Modal visible={showHelp} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowHelp(false)}>
+        <Pressable style={styles.centerModalOverlay} onPress={() => setShowHelp(false)}>
+          <Pressable style={[styles.helpModalContent, { backgroundColor: cardBg }]} onPress={() => {}}>
+            <View style={styles.helpHeader}>
+              <Ionicons name="mic-circle-outline" size={32} color={ACCENT} />
+              <Text style={[styles.helpTitle, { color: textColor }]}>{t("recordings_help_title", lang)}</Text>
+            </View>
+            <Text style={[styles.helpBody, { color: mutedColor }]}>{t("recordings_help_body", lang)}</Text>
+            <Pressable style={[styles.helpCloseBtn, { backgroundColor: ACCENT }]} onPress={() => setShowHelp(false)}>
+              <Text style={styles.helpCloseBtnText}>{t("alert_ok", lang)}</Text>
+            </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1590,6 +1612,37 @@ const styles = StyleSheet.create({
     width: "100%",
     borderRadius: 20,
     padding: 24,
+  },
+  helpModalContent: {
+    width: "100%",
+    borderRadius: 20,
+    padding: 24,
+    gap: 16,
+  },
+  helpHeader: {
+    alignItems: "center",
+    gap: 10,
+  },
+  helpTitle: {
+    fontSize: 17,
+    fontWeight: "700",
+    textAlign: "center",
+  },
+  helpBody: {
+    fontSize: 14,
+    lineHeight: 24,
+    textAlign: "left",
+  },
+  helpCloseBtn: {
+    paddingVertical: 11,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 4,
+  },
+  helpCloseBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
   },
   modalTitle: {
     fontSize: 18,

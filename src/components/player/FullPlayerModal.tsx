@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -103,12 +103,14 @@ export default function FullPlayerModal({
   onListenThenRecord,
   onReciterPress,
 }: FullPlayerModalProps) {
+  const [showRecordHelp, setShowRecordHelp] = useState(false);
   const translateY = slideAnim.interpolate({
     inputRange: [0, 1],
     outputRange: [SCREEN_HEIGHT, 0],
   });
 
   return (
+    <>
     <Modal
       visible={visible}
       animationType="none"
@@ -283,6 +285,10 @@ export default function FullPlayerModal({
 
         {/* Recording buttons */}
         <View style={styles.recordSection}>
+          <Pressable style={styles.recordHelpBtn} onPress={() => setShowRecordHelp(true)} hitSlop={10}>
+            <Ionicons name="help-circle-outline" size={19} color={RECORDING_COLOR} />
+            <Text style={[styles.recordHelpText, { color: RECORDING_COLOR }]}>{t("record", lang)}</Text>
+          </Pressable>
           <View style={styles.recordButtonRow}>
             {/* Standard record button */}
             <Pressable
@@ -354,6 +360,24 @@ export default function FullPlayerModal({
         </View>
       </Animated.View>
     </Modal>
+
+    {/* Recording help modal */}
+
+    <Modal visible={showRecordHelp} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowRecordHelp(false)}>
+      <Pressable style={styles.helpOverlay} onPress={() => setShowRecordHelp(false)}>
+        <Pressable style={[styles.helpBox, { backgroundColor: colors.fullCard }]} onPress={() => {}}>
+          <View style={styles.helpBoxHeader}>
+            <Ionicons name="mic-circle-outline" size={30} color={RECORDING_COLOR} />
+            <Text style={[styles.helpBoxTitle, { color: colors.fullText }]}>{t("recordings_help_title", lang)}</Text>
+          </View>
+          <Text style={[styles.helpBoxBody, { color: colors.fullSecondary }]}>{t("recordings_help_body", lang)}</Text>
+          <Pressable style={[styles.helpBoxBtn, { backgroundColor: RECORDING_COLOR }]} onPress={() => setShowRecordHelp(false)}>
+            <Text style={styles.helpBoxBtnText}>{t("alert_ok", lang)}</Text>
+          </Pressable>
+        </Pressable>
+      </Pressable>
+    </Modal>
+    </>
   );
 }
 
@@ -557,5 +581,59 @@ const styles = StyleSheet.create({
   recordBtnText: {
     fontSize: 13,
     fontWeight: "600",
+  },
+  recordHelpBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    marginBottom: 8,
+  },
+  recordHelpText: {
+    fontSize: 12,
+    opacity: 0.6,
+  },
+  helpOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.55)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  helpBox: {
+    width: "100%",
+    borderRadius: 18,
+    padding: 24,
+    maxWidth: 380,
+  },
+  helpBoxHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 12,
+  },
+  helpBoxTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    flex: 1,
+  },
+  helpBoxBody: {
+    fontSize: 14,
+    lineHeight: 22,
+    opacity: 0.85,
+    marginBottom: 20,
+  },
+  helpBoxBtn: {
+    alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 32,
+    borderRadius: 20,
+    backgroundColor: ACCENT,
+  },
+  helpBoxBtnText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });

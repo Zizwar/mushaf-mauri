@@ -378,6 +378,8 @@ export default {
   backup_import_desc: "Restaurer depuis un fichier de sauvegarde",
   backup_import_success: "Importé, redémarrez l'application",
   backup_import_error: "Fichier invalide ou corrompu",
+  recordings_help_title: "Comment fonctionnent les enregistrements ?",
+  recordings_help_body: "• Ouvrez le Mushaf et appuyez sur un verset pour le sélectionner\n• Appuyez sur «Enregistrer» dans le lecteur audio pour commencer\n• Votre voix est ajoutée comme récitateur indépendant que vous pouvez écouter à tout moment\n• Les versets enregistrés apparaissent avec une couleur différente dans le Mushaf\n• Dans cet écran : écouter, ré-enregistrer, ajouter une note ou supprimer\n• Exportez vos enregistrements pour les partager avec un enseignant\n• Utilisez plusieurs profils pour organiser vos sessions",
   content_sources: "Sources du contenu",
   source_hafs: "Tafsir, images et audio (Hafs) : Université du Roi Saoud",
   source_warsh: "Récitations Warsh : Fondation Mohammed VI pour le Saint Coran",

@@ -367,6 +367,8 @@ export default {
   backup_import_desc: "ⴰⵙⵙⵓⴷⴷⵙ ⵙⴳ ⵓⴼⴰⵢⵍ",
   backup_import_success: "ⵜⵙⵙⵓⴷⴷⵙ, ⵙⵏⴼⵍ ⵉⵖ ⵜⵔⵉⴷ",
   backup_import_error: "ⴰⴼⴰⵢⵍ ⵓⵔ ⵉⵛⵔⴽⵏ",
+  recordings_help_title: "ⵎⴰⵎⴽ ⵉⵙⵡⵓⵔⵉ ⵓⵙⵔⴰⵔ?",
+  recordings_help_body: "• ⴼⵜⵃ ⴰⵎⵓⵙⵙⵓ ⴳ ⵓⵎⵣⵔⵓⵢ ⴷ ⵎⵍ ⵖⴼ ⵜⴰⵢⴰⵜ\n• ⵔⵏ ⵜⴰⵎⴷⵢⴰⵣⵜ ⵏⵏⴽ ⵙ ⵓⵙⵔⴰⵔ\n• ⵉⵜⵜⵓⵙⴷⴰⵡ ⵓⵙⵔⴰⵔ ⵅ ⵓⵎⵏⵏⵉ ⴰⵔ ⵜⵙⵙⵓⴼⵖⴷ\n• ⵉⵙⵔⴰⵔⵏ ⵉⵜⵜⵓⵙⴽⴰⵔⵏ ⵉⵍⵍⴰⵏ ⵙ ⵓⵙⵏⴼⵍ ⵏ ⵓⵍⵡⴰⵏ",
   content_sources: "ⵉⵙⴰⴳⴳⵯⵏ ⵏ ⵓⵎⵣⵔⵓⵢ",
   source_hafs: "ⵜⴼⵙⵉⵔⵜ, ⵜⵓⵔⴰ ⴷ ⵓⵙⵙⵍⵎⴷ (ⵃⴼⵙ): ⵜⵉⵙⵙⵉⵔⵉⵜ ⵏ ⵓⴳⵍⵍⵉⴷ ⵙⵄⵓⴷ",
   source_warsh: "ⵜⵉⵍⵍⴰⵡⵜ ⵏ ⵓⵔⵛ: ⵜⴰⵙⵏⴰⵎⴰⵔⵜ ⵏ ⵎⵓⵃⵎⵎⴷ VI",
