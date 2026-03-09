@@ -1,18 +1,10 @@
 [
   {
-    "name": "مواهب",
+    "name": "موهوب",
     "txId": "TXN-9012",
     "amount": 420,
     "currency": "MAD",
     "message": "من أجل والدي رحمة الله عليه",
-    "color": "#FF9800"
-  },
-  {
-    "name": "مواهب",
-    "txId": "TXN-9087",
-    "amount": 180,
-    "currency": "MAD",
-    "message": "",
     "color": "#FF9800"
   },
   {
@@ -24,44 +16,20 @@
     "color": "#2196F3"
   },
   {
-    "name": "Mehdi Baha",
-    "txId": "TXN-3401",
-    "amount": 20,
+    "name": "بنهادي",
+    "txId": "TXN-5521",
+    "amount": 420,
     "currency": "MAD",
-    "message": "بالتوفيق",
-    "color": "#2196F3"
+    "message": "الدعاء لبناتي",
+    "color": "#009688"
   },
   {
-    "name": "Mehdi Baha",
-    "txId": "TXN-3445",
+    "name": "مجهول",
+    "txId": "TXN-1147",
     "amount": 20,
     "currency": "MAD",
     "message": "",
-    "color": "#2196F3"
-  },
-  {
-    "name": "Mehdi Baha",
-    "txId": "TXN-3512",
-    "amount": 20,
-    "currency": "MAD",
-    "message": "",
-    "color": "#2196F3"
-  },
-  {
-    "name": "Mehdi Baha",
-    "txId": "TXN-3589",
-    "amount": 20,
-    "currency": "MAD",
-    "message": "",
-    "color": "#2196F3"
-  },
-  {
-    "name": "Mehdi Baha",
-    "txId": "TXN-3634",
-    "amount": 20,
-    "currency": "MAD",
-    "message": "",
-    "color": "#2196F3"
+    "color": "#78909C"
   },
   {
     "name": "خديجة",
@@ -80,6 +48,22 @@
     "color": "#4CAF50"
   },
   {
+    "name": "مجهول",
+    "txId": "TXN-2283",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "بالتوفيق",
+    "color": "#607D8B"
+  },
+  {
+    "name": "موهوب",
+    "txId": "TXN-9087",
+    "amount": 180,
+    "currency": "MAD",
+    "message": "",
+    "color": "#FF9800"
+  },
+  {
     "name": "احمد",
     "txId": "TXN-6654",
     "amount": 180,
@@ -96,11 +80,27 @@
     "color": "#00BCD4"
   },
   {
+    "name": "مجهول",
+    "txId": "TXN-3390",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "",
+    "color": "#546E7A"
+  },
+  {
     "name": "سارة ع.",
     "txId": "TXN-2290",
     "amount": 20,
     "currency": "MAD",
     "message": "في ميزان حسناتكم",
-    "color": "#607D8B"
+    "color": "#8BC34A"
+  },
+  {
+    "name": "مجهول",
+    "txId": "TXN-6618",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "",
+    "color": "#90A4AE"
   }
 ]
