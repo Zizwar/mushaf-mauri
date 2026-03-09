@@ -205,7 +205,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
       {/* App Icon */}
       <View style={[styles.welcomeIconWrap, { backgroundColor: isDark ? "#1a2a1e" : ACCENT_LIGHT }]}>
         <Image
-          source={require("../../assets/mauri.png")}
+          source={require("../../assets/icon.png")}
           style={styles.welcomeIcon}
           resizeMode="contain"
         />
