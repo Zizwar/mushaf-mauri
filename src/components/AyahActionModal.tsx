@@ -70,10 +70,10 @@ export default function AyahActionModal({
   const cardBg = theme.backgroundColor;
   const textColor = isNight ? "#e8e8f0" : "#1a1a2e";
   const subtitleColor = isNight ? "#a0a0c0" : "#666";
-  const iconColor = isNight ? "#8cacff" : "#4285f4";
+  const iconColor = isNight ? "#8cacff" : "#336699";
   const btnBg = theme.borderColor;
   const btnPressedBg = isNight ? "#32325a" : "#d0d8e0";
-  const headerBg = "#4285f4";
+  const headerBg = "#336699";
   const dividerColor = theme.borderColor;
   const fontFamily = quranFont !== "default" ? quranFont : undefined;
 
@@ -228,7 +228,7 @@ export default function AyahActionModal({
                 </Pressable>
                 <Pressable
                   onPress={handleSaveNote}
-                  style={[styles.noteBtn, { backgroundColor: "#4285f4" }]}
+                  style={[styles.noteBtn, { backgroundColor: "#336699" }]}
                 >
                   <Text style={{ color: "#fff", fontWeight: "600" }}>{t("save_note", lang)}</Text>
                 </Pressable>

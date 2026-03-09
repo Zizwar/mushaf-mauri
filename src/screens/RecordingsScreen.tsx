@@ -780,7 +780,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
               backgroundColor: cardBg,
               borderColor: isPlaying
                 ? playMode === "compare"
-                  ? "#4285f4"
+                  ? "#336699"
                   : ACCENT
                 : isRecording
                 ? RECORDING_COLOR
@@ -816,7 +816,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
                   styles.playingBadge,
                   {
                     backgroundColor:
-                      playMode === "compare" ? "#4285f4" : ACCENT,
+                      playMode === "compare" ? "#336699" : ACCENT,
                   },
                 ]}
               >
@@ -869,7 +869,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
                 {
                   backgroundColor:
                     isPlaying && playMode === "compare"
-                      ? "#4285f4"
+                      ? "#336699"
                       : inputBg,
                 },
               ]}
@@ -878,7 +878,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
               <Ionicons
                 name={isPlaying && playMode === "compare" ? "stop" : "headset"}
                 size={15}
-                color={isPlaying && playMode === "compare" ? "#fff" : "#4285f4"}
+                color={isPlaying && playMode === "compare" ? "#fff" : "#336699"}
               />
             </Pressable>
 

@@ -323,7 +323,7 @@ export default function KhatmaScreen({ onGoBack, onNavigateToPage }: KhatmaScree
 
             {/* Action buttons */}
             <View style={styles.actionRow}>
-              <Pressable style={[styles.actionBtn, { backgroundColor: "#4285f4" }]} onPress={handleListen}>
+              <Pressable style={[styles.actionBtn, { backgroundColor: "#336699" }]} onPress={handleListen}>
                 <Ionicons name="headset-outline" size={20} color="#fff" />
                 <Text style={styles.actionBtnText}>{t("listen_portion", lang)}</Text>
               </Pressable>

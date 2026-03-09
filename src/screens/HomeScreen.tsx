@@ -255,7 +255,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
     <View style={styles.stepContent}>
       <View style={styles.stepIconWrap}>
         <View style={[styles.stepIconCircle, { backgroundColor: isDark ? "#1a2a3e" : "#e3f2fd" }]}>
-          <Ionicons name="language" size={36} color="#4285f4" />
+          <Ionicons name="language" size={36} color="#336699" />
         </View>
       </View>
       <Text style={[styles.stepTitle, { color: textColor }]}>
@@ -482,7 +482,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
             >
               {th.night && !isActive && <Ionicons name="moon" size={14} color="#aaa" />}
               {isActive && (
-                <Ionicons name="checkmark-circle" size={22} color={th.night ? "#4285f4" : ACCENT} />
+                <Ionicons name="checkmark-circle" size={22} color={th.night ? "#336699" : ACCENT} />
               )}
             </Pressable>
           );

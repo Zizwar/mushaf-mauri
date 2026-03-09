@@ -6,7 +6,10 @@ export const getImagePageUri = (pageId: number, quira: Quira = "madina"): string
       return `https://mushaf.ma/fahres/page/images/muhammadi/page${pageId + 2}.png`;
     case "madina":
     default:
-      return `https://www.mushaf.ma/fahres/page/images/hafsTajweed/page${pageId}.png`;
+      // return `https://www.mushaf.ma/fahres/page/images/hafsTajweed/page${pageId}.png`;
+     //return   `http://quran.ksu.edu.sa/warsh/${pageId}.png`;
+      return `https://quran.ksu.edu.sa/safahat/hafs/${pageId}.png`
+      //return `https://quran.ksu.edu.sa/safahat/alsose/${pageId}.jpg`;
   }
 };
 

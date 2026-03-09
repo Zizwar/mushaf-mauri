@@ -320,9 +320,9 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
 
           {/* FROM row */}
           <View style={styles.rangeRow}>
-            <View style={[styles.rangeBadge, { backgroundColor: "#4285f422" }]}>
-              <Ionicons name="play-circle" size={18} color="#4285f4" />
-              <Text style={[styles.rangeBadgeText, { color: "#4285f4" }]}>{t("from", lang)}</Text>
+            <View style={[styles.rangeBadge, { backgroundColor: "#33669922" }]}>
+              <Ionicons name="play-circle" size={18} color="#336699" />
+              <Text style={[styles.rangeBadgeText, { color: "#336699" }]}>{t("from", lang)}</Text>
             </View>
             <View style={styles.rangeSelectors}>
               <Pressable
@@ -438,7 +438,7 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
 
           {/* Full-range repeat */}
           <View style={styles.repeatHeader}>
-            <Ionicons name="repeat" size={17} color="#4285f4" />
+            <Ionicons name="repeat" size={17} color="#336699" />
             <Text style={[styles.repeatLabel, { color: textColor }]}>{t("range_repeat", lang)}</Text>
           </View>
           <View style={styles.repeatControls}>
@@ -448,8 +448,8 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
             >
               <Ionicons name="remove" size={20} color={textColor} />
             </Pressable>
-            <View style={[styles.repeatCountBox, { borderColor: "#4285f440" }]}>
-              <Text style={[styles.repeatCountNum, { color: "#4285f4" }]}>{repeatCount}</Text>
+            <View style={[styles.repeatCountBox, { borderColor: "#33669940" }]}>
+              <Text style={[styles.repeatCountNum, { color: "#336699" }]}>{repeatCount}</Text>
               <Text style={[styles.repeatCountSub, { color: mutedColor }]}>{t("times", lang)}</Text>
             </View>
             <Pressable
@@ -464,7 +464,7 @@ export default function RecitingScreen({ onGoBack }: RecitingScreenProps) {
               <Pressable
                 key={n}
                 style={[styles.repeatQuickChip,
-                  repeatCount === n && { backgroundColor: "#4285f4", borderColor: "#4285f4" },
+                  repeatCount === n && { backgroundColor: "#336699", borderColor: "#336699" },
                   repeatCount !== n && { borderColor }
                 ]}
                 onPress={() => setRepeatCount(n)}

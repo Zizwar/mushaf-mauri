@@ -14,7 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { t, type LangKey } from "../../i18n";
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
-const ACCENT = "#4285f4";
+const ACCENT = "#336699";
 const RECORDING_COLOR = "#d32f2f";
 
 export interface FullPlayerColors {

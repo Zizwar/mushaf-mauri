@@ -37,7 +37,7 @@ import * as WarshEngine from "../utils/warshAudioEngine";
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const ACCENT = "#4285f4";
+const ACCENT = "#336699";
 const ACCENT_LIGHT = "#e8f0fe";
 const RECORDING_COLOR = "#d32f2f";
 const MINI_HEIGHT = 64;
