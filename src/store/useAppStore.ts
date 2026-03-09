@@ -293,7 +293,6 @@ export const useAppStore = create<AppState>()(
         moqriId: state.moqriId,
         lastMadinaRecitorId: state.lastMadinaRecitorId,
         currentPage: state.currentPage,
-        selectedAya: state.selectedAya,
         hasCompletedSetup: state.hasCompletedSetup,
         bookmarks: state.bookmarks,
         quranFont: state.quranFont,
