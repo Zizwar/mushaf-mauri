@@ -39,6 +39,7 @@ function FontSelector() {
   const setQuranFont = useAppStore((s) => s.setQuranFont);
 
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const borderColor = theme.borderColor;
 
@@ -51,7 +52,7 @@ function FontSelector() {
         <Pressable
           key={font.key}
           style={{
-            flexDirection: "row",
+            flexDirection: isRTL ? "row-reverse" : "row",
             alignItems: "center",
             paddingVertical: 10,
             paddingHorizontal: 12,
@@ -77,6 +78,8 @@ function FontSelector() {
               color: quranFont === font.key ? ACCENT : textColor,
               fontWeight: quranFont === font.key ? "700" : "400",
               fontFamily: font.key !== "default" ? font.key : undefined,
+              textAlign: isRTL ? "right" : "left",
+              flex: 1,
             }}
           >
             {t(font.labelKey, lang)}
@@ -106,6 +109,7 @@ function BackupSection() {
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const textColor = isDark ? "#e8e8e8" : theme.color;
   const mutedColor = isDark ? "#888" : "#999";
   const borderColor = theme.borderColor;
@@ -166,29 +170,29 @@ function BackupSection() {
   return (
     <View style={{ gap: 8 }}>
       <Pressable
-        style={[styles.backupBtn, { borderColor }]}
+        style={[styles.backupBtn, { borderColor, flexDirection: isRTL ? "row-reverse" : "row" }]}
         onPress={handleExport}
         disabled={busy}
       >
         <Ionicons name="cloud-upload-outline" size={20} color={ACCENT} />
         <View style={{ flex: 1 }}>
-          <Text style={[styles.backupBtnTitle, { color: textColor }]}>{t("backup_export", lang)}</Text>
-          <Text style={[styles.backupBtnDesc, { color: mutedColor }]}>{t("backup_export_desc", lang)}</Text>
+          <Text style={[styles.backupBtnTitle, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_export", lang)}</Text>
+          <Text style={[styles.backupBtnDesc, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_export_desc", lang)}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+        <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
       </Pressable>
 
       <Pressable
-        style={[styles.backupBtn, { borderColor }]}
+        style={[styles.backupBtn, { borderColor, flexDirection: isRTL ? "row-reverse" : "row" }]}
         onPress={handleImport}
         disabled={busy}
       >
         <Ionicons name="cloud-download-outline" size={20} color={ACCENT} />
         <View style={{ flex: 1 }}>
-          <Text style={[styles.backupBtnTitle, { color: textColor }]}>{t("backup_import", lang)}</Text>
-          <Text style={[styles.backupBtnDesc, { color: mutedColor }]}>{t("backup_import_desc", lang)}</Text>
+          <Text style={[styles.backupBtnTitle, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_import", lang)}</Text>
+          <Text style={[styles.backupBtnDesc, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_import_desc", lang)}</Text>
         </View>
-        <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+        <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
       </Pressable>
     </View>
   );
@@ -201,6 +205,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
   const setQuira = useAppStore((s) => s.setQuira);
 
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const bgColor = theme.backgroundColor;
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
@@ -217,7 +222,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={22} color={textColor} />
+          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={22} color={textColor} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: textColor }]}>
           {t("settings", lang)}
@@ -231,7 +236,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
         showsVerticalScrollIndicator={false}
       >
         {/* Mushaf Selector */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("mosshaf_type", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -271,46 +276,46 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
         </View>
 
         {/* Offline / Downloads */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("offline", lang)}
         </Text>
         <Pressable
           style={[styles.card, { backgroundColor: cardBg, borderColor }]}
           onPress={() => onNavigate?.("offline")}
         >
-          <View style={styles.navRow}>
+          <View style={[styles.navRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <Ionicons name="cloud-download-outline" size={22} color={ACCENT} />
             <View style={{ flex: 1 }}>
-              <Text style={[styles.navRowTitle, { color: textColor }]}>
+              <Text style={[styles.navRowTitle, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>
                 {t("offline", lang)}
               </Text>
-              <Text style={[styles.navRowDesc, { color: mutedColor }]}>
+              <Text style={[styles.navRowDesc, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>
                 {t("offline_desc", lang)}
               </Text>
             </View>
-            <Ionicons name="chevron-forward" size={20} color={mutedColor} />
+            <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={mutedColor} />
           </View>
         </Pressable>
 
         {/* Recordings */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("my_recordings", lang)}
         </Text>
         <Pressable
           style={[styles.card, { backgroundColor: cardBg, borderColor }]}
           onPress={() => onNavigate?.("recordings")}
         >
-          <View style={styles.navRow}>
+          <View style={[styles.navRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <Ionicons name="mic-outline" size={22} color={ACCENT} />
-            <Text style={[styles.navRowTitle, { color: textColor, flex: 1 }]}>
+            <Text style={[styles.navRowTitle, { color: textColor, flex: 1, textAlign: isRTL ? "right" : "left" }]}>
               {t("manage_recordings", lang)}
             </Text>
-            <Ionicons name="chevron-forward" size={20} color={mutedColor} />
+            <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={mutedColor} />
           </View>
         </Pressable>
 
         {/* Font Selection */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("font_selection", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -318,7 +323,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
         </View>
 
         {/* Backup & Restore */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("backup_data", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>

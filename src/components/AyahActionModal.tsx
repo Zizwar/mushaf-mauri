@@ -91,9 +91,10 @@ export default function AyahActionModal({
   }, [suraName, aya, ayahText, lang, onClose]);
 
   const handleShare = useCallback(async () => {
-    const shareText = ayahText
-      ? `${ayahText}\n\n${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}\nhttps://meshaf.ma/d/a${aya}s${sura}r1z`
-      : `${t("sura_s", lang)} ${suraName} - ${t("aya_s", lang)} ${aya}\nhttps://meshaf.ma/d/a${aya}s${sura}r1z`;
+    const quiraCode = quira === "warsh" ? 1 : 2;
+    const link = `https://mushaf.ma/#/s${sura}a${aya}q${quiraCode}`;
+    const ref = `${t("sura_s", lang)} ${suraName} • ${t("aya_s", lang)} ${aya}`;
+    const shareText = ayahText ? `${ayahText}\n\n${ref}\n${link}` : `${ref}\n${link}`;
     try {
       await Share.share({
         message: shareText,

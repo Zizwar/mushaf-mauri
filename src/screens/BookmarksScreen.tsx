@@ -31,6 +31,7 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
   const updateBookmarkNote = useAppStore((s) => s.updateBookmarkNote);
 
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const bgColor = theme.backgroundColor;
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
@@ -83,12 +84,12 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
       style={[styles.card, { backgroundColor: cardBg, borderColor }]}
       onPress={() => handleGoToPage(item.page, item.sura, item.aya)}
     >
-      <View style={styles.cardContent}>
+      <View style={[styles.cardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
         <View style={styles.cardInfo}>
-          <Text style={[styles.suraName, { color: textColor }]}>
+          <Text style={[styles.suraName, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>
             {getSuraName(item.sura)}
           </Text>
-          <Text style={[styles.details, { color: mutedColor }]}>
+          <Text style={[styles.details, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>
             {t("aya_s", lang)} {item.aya} • {t("page", lang)} {item.page}
           </Text>
           {item.text ? (
@@ -98,13 +99,13 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
           ) : null}
           {item.note ? (
             <Pressable onPress={() => handleEditNote(item)}>
-              <Text style={[styles.noteText, { color: ACCENT }]} numberOfLines={1}>
+              <Text style={[styles.noteText, { color: ACCENT, textAlign: isRTL ? "right" : "left" }]} numberOfLines={1}>
                 {item.note}
               </Text>
             </Pressable>
           ) : null}
         </View>
-        <View style={styles.cardActions}>
+        <View style={[styles.cardActions, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
           <Pressable
             onPress={() => handleEditNote(item)}
             hitSlop={10}
@@ -129,7 +130,7 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Pressable onPress={onGoBack} hitSlop={10} style={styles.backBtn}>
-          <Ionicons name="arrow-forward" size={24} color={textColor} />
+          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color={textColor} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: textColor }]}>
           {t("bookmarks", lang)}

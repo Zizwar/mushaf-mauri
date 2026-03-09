@@ -557,11 +557,13 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
   const theme = useAppStore((s) => s.theme);
 
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const bgColor = theme.backgroundColor;
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
   const borderColor = theme.borderColor;
+  const sectionTitleStyle = { color: mutedColor, textAlign: isRTL ? "right" as const : "left" as const, marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
@@ -573,7 +575,7 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={22} color={textColor} />
+          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={22} color={textColor} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: textColor }]}>
           {t("offline", lang)}
@@ -598,7 +600,7 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
         </View>
 
         {/* Pages download — Hafs */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, sectionTitleStyle]}>
           {t("mosshaf_hafs", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -606,7 +608,7 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
         </View>
 
         {/* Pages download — Warsh */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, sectionTitleStyle]}>
           {t("mosshaf_warsh", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -614,7 +616,7 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
         </View>
 
         {/* Warsh Audio — always visible so you can pre-download regardless of current mode */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, sectionTitleStyle]}>
           {t("download_warsh_audio", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -622,11 +624,11 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
         </View>
 
         {/* Tafsir / Tarjama */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, sectionTitleStyle]}>
           {t("download_tafsir_db", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.statusText, { color: mutedColor, marginBottom: 10, fontSize: 12 }]}>
+          <Text style={[styles.statusText, { color: mutedColor, marginBottom: 10, fontSize: 12, textAlign: isRTL ? "right" : "left" }]}>
             {t("tafsir_db_desc", lang)}
           </Text>
           <TafsirDBDownloader />

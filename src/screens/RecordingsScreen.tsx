@@ -144,6 +144,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
 
   // -- Theme --
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const bgColor = theme.backgroundColor;
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
@@ -616,7 +617,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
   const renderHeader = () => (
     <View style={[styles.header, { borderBottomColor: borderColor }]}>
       <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
-        <Ionicons name="arrow-back" size={22} color={textColor} />
+        <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={22} color={textColor} />
       </Pressable>
       <Text style={[styles.headerTitle, { color: textColor }]}>
         {t("my_recordings", lang)}
