@@ -246,7 +246,7 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
             { icon: "globe-outline",           label: "mushaf.ma",             url: "https://mushaf.ma" },
             { icon: "person-outline",          label: "brah.im",               url: "https://brah.im" },
             { icon: "shield-checkmark-outline",label: t("privacy_policy", lang),url: "https://www.mushaf.ma/wino/privacy" },
-            { icon: "logo-github",             label: t("open_source", lang),  url: "https://github.com/nicefella1/mushaf-mauri" },
+            { icon: "logo-github",             label: t("open_source", lang),  url: "https://github.com/Zizwar/mushaf-mauri" },
           ].map((item) => (
             <Pressable key={item.url} style={[styles.linkRow, { flexDirection: rowDir }]} onPress={() => openLink(item.url)}>
               <Ionicons name={item.icon as any} size={20} color={ACCENT} />
