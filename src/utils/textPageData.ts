@@ -8,7 +8,8 @@ import type { Quira } from "../store/useAppStore";
 export interface PageAyah {
   sura: number;
   aya: number;
-  text: string;
+  text: string;   // text without marker
+  marker: string; // ﴿٣﴾
   isFirstInSura: boolean;
 }
 
@@ -27,7 +28,7 @@ export function ayahMarker(n: number): string {
   return `﴿${toArabicNum(n)}﴾`;
 }
 
-function annotate(raw: { sura: number; aya: number; text: string }[]): PageAyah[] {
+function annotate(raw: { sura: number; aya: number; text: string; marker: string }[]): PageAyah[] {
   let prev = -1;
   return raw.map((r) => {
     const isFirstInSura = r.sura !== prev;
@@ -58,8 +59,8 @@ export function getHafsPageAyahs(page: number): PageAyah[] {
     .map((e) => ({
       sura: Number(e[1]),
       aya: Number(e[2]),
-      // ayatJson text doesn't embed the ayah marker — add it
-      text: String(e[3]) + " " + ayahMarker(Number(e[2])),
+      text: String(e[3]),
+      marker: ayahMarker(Number(e[2])),
     }));
   return annotate(raw);
 }
@@ -79,8 +80,12 @@ export function getWarshPageAyahs(page: number): PageAyah[] {
       const sura = e[2];
       const aya = e[3];
       const ti = warshCumulative[sura - 1] + (aya - 1);
-      const text = textwarsh[ti]?.[0] ?? "";
-      return { sura, aya, text };
+      // textwarsh text embeds ﴿n﴾ at the end — strip it out
+      const full = textwarsh[ti]?.[0] ?? "";
+      const markerMatch = full.match(/﴿[٠-٩]+﴾\s*$/);
+      const marker = markerMatch ? markerMatch[0].trim() : ayahMarker(aya);
+      const text = markerMatch ? full.slice(0, full.length - markerMatch[0].length).trimEnd() : full;
+      return { sura, aya, text, marker };
     });
   return annotate(raw);
 }
@@ -89,6 +94,9 @@ export function getWarshPageAyahs(page: number): PageAyah[] {
 export function getPageAyahs(page: number, quira: Quira): PageAyah[] {
   return quira === "warsh" ? getWarshPageAyahs(page) : getHafsPageAyahs(page);
 }
+
+/** Ayah count per sura (index 0 unused, index 1..114) */
+export const SURA_AYAH_COUNTS: number[] = [0,7,286,200,176,120,165,206,75,129,109,123,111,43,52,99,128,111,110,98,135,112,78,118,64,77,227,93,88,69,60,34,30,73,54,45,83,182,88,75,85,54,53,89,59,37,35,38,29,18,45,60,49,62,55,78,96,29,22,24,13,14,11,11,18,12,12,30,52,52,44,28,28,20,56,40,31,50,40,46,42,29,19,36,25,22,17,19,26,30,20,15,21,11,8,8,19,5,8,8,11,11,8,3,9,5,4,7,3,6,3,5,4,5,6];
 
 // Bismillah display constants
 export const BISMILLAH_WARSH = "بِسْمِ اِ۬للَّـهِ اِ۬لرَّحْمَـٰنِ اِ۬لرَّحِيمِ";

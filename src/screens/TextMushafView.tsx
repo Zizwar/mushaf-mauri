@@ -30,6 +30,7 @@ import {
   showBismillah,
   BISMILLAH_WARSH,
   BISMILLAH_HAFS,
+  SURA_AYAH_COUNTS,
   type SuraSection,
 } from "../utils/textPageData";
 import { getTotalPages } from "../utils/coordinates";
@@ -44,40 +45,43 @@ const SuraBanner = memo(function SuraBanner({
   sura,
   quira,
   fontFamily,
-  textColor,
-  borderColor,
   isDark,
 }: {
   sura: number;
   quira: "madina" | "warsh";
   fontFamily: string | undefined;
-  textColor: string;
-  borderColor: string;
   isDark: boolean;
 }) {
-  const suraName = QuranData.Sura[sura]?.[0] ?? "";
-  const suraNum = sura;
+  const suraData = QuranData.Sura[sura] ?? [];
+  const suraName = suraData[0] ?? "";
+  const suraType = suraData[3]; // "Meccan" | "Medinan"
+  const suraTypeAr = suraType === "Meccan" ? "مكية" : suraType === "Medinan" ? "مدنية" : "";
+  const ayahCount = SURA_AYAH_COUNTS[sura] ?? 0;
   const hasBismillah = showBismillah(sura);
   const bismillah = quira === "warsh" ? BISMILLAH_WARSH : BISMILLAH_HAFS;
   const bannerBg = isDark ? "rgba(26,92,46,0.18)" : "rgba(26,92,46,0.07)";
-  const accentColor = "#1a5c2e";
+  const accentColor = isDark ? "#4caf72" : "#1a5c2e";
+  const goldColor = isDark ? "#c8a84b" : "#7a5900";
 
   return (
-    <View style={[styles.suraBanner, { borderColor: accentColor + "55", backgroundColor: bannerBg }]}>
-      {/* Sura name row */}
-      <View style={styles.suraNameRow}>
-        <Text style={[styles.suraOrnament, { color: accentColor }]}>۞</Text>
-        <Text style={[styles.suraName, { color: accentColor, fontFamily }]}>
-          {suraName}
+    <View>
+      {/* Banner frame — name + info only */}
+      <View style={[styles.suraBanner, { borderColor: accentColor + "44", backgroundColor: bannerBg }]}>
+        <View style={styles.suraNameRow}>
+          <Text style={[styles.suraOrnament, { color: accentColor }]}>۞</Text>
+          <Text style={[styles.suraName, { color: accentColor, fontFamily }]}>
+            {"سورة " + suraName}
+          </Text>
+          <Text style={[styles.suraOrnament, { color: accentColor }]}>۞</Text>
+        </View>
+        {/* Sura meta: type + ayah count */}
+        <Text style={[styles.suraMeta, { color: accentColor + "cc" }]}>
+          {[suraTypeAr, ayahCount ? `${ayahCount} آية` : ""].filter(Boolean).join("  •  ")}
         </Text>
-        <Text style={[styles.suraNum, { color: accentColor }]}>
-          {"(" + suraNum + ")"}
-        </Text>
-        <Text style={[styles.suraOrnament, { color: accentColor }]}>۞</Text>
       </View>
-      {/* Bismillah */}
+      {/* Bismillah — outside the frame */}
       {hasBismillah && (
-        <Text style={[styles.bismillah, { color: isDark ? "#c8a84b" : "#7a5900", fontFamily }]}>
+        <Text style={[styles.bismillah, { color: goldColor, fontFamily }]}>
           {bismillah}
         </Text>
       )}
@@ -166,13 +170,11 @@ const TextPage = memo(function TextPage({
               sura={section.sura}
               quira={quira}
               fontFamily={fontFamily}
-              textColor={textColor}
-              borderColor={borderColor}
               isDark={isDark}
             />
 
-            {/* Continuous inline text — all ayahs of this sura section */}
-            <Text style={[styles.sectionText, { fontFamily, fontSize: fontSize + 2 }]}>
+            {/* Continuous inline text — all ayahs of this sura section, RTL flow */}
+            <Text style={[styles.sectionText, { fontFamily, fontSize }]}>
               {section.ayahs.map((ayah) => {
                 const isSelected =
                   selectedAya?.sura === ayah.sura &&
@@ -192,7 +194,7 @@ const TextPage = memo(function TextPage({
                     ]}
                   >
                     {ayah.text}
-                    {"  "}
+                    <Text style={[styles.ayahMarker, { color: isDark ? "#4cce80" : "#1a6e38" }]}>{" " + ayah.marker + " "}</Text>
                   </Text>
                 );
               })}
@@ -360,11 +362,12 @@ const styles = StyleSheet.create({
   suraBanner: {
     borderWidth: 1,
     borderRadius: 10,
-    marginVertical: 10,
+    marginTop: 12,
+    marginBottom: 4,
     paddingVertical: 10,
     paddingHorizontal: 12,
     alignItems: "center",
-    gap: 6,
+    gap: 4,
   },
   suraNameRow: {
     flexDirection: "row",
@@ -372,26 +375,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 10,
   },
-  suraOrnament: { fontSize: 20 },
+  suraOrnament: { fontSize: 18 },
   suraName: {
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "700",
     textAlign: "center",
   },
-  suraNum: {
-    fontSize: 13,
-    fontWeight: "600",
+  suraMeta: {
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "center",
+    marginTop: 2,
   },
   bismillah: {
     fontSize: 17,
     textAlign: "center",
     letterSpacing: 0.5,
+    marginTop: 6,
+    marginBottom: 4,
   },
   sectionText: {
-    textAlign: "justify",
+    textAlign: "right",
     writingDirection: "rtl",
-    lineHeight: 44,
-    letterSpacing: 0.3,
+    lineHeight: 48,
+    letterSpacing: 0.2,
+    paddingTop: 4,
+  },
+  ayahMarker: {
+    fontSize: 18,
+    fontWeight: "700",
   },
   emptyPage: {
     flex: 1,

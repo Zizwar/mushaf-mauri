@@ -242,15 +242,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           isRTL && styles.headerRTL,
         ]}
       >
-        {/* Left side: Home + Search */}
+        {/* Left side: Search + donate */}
         <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
-          {onGoBack ? (
-            <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
-              <Ionicons name="home-outline" size={20} color={theme.color} />
-            </Pressable>
-          ) : (
-            <View style={styles.headerBtn} />
-          )}
           <Pressable
             onPress={() => onNavigate?.("search")}
             hitSlop={10}
