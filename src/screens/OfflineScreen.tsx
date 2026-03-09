@@ -590,17 +590,13 @@ export default function OfflineScreen({ onGoBack }: OfflineScreenProps) {
           </View>
         </View>
 
-        {/* Warsh Audio (warsh mode only) */}
-        {quira === "warsh" && (
-          <>
-            <Text style={[styles.sectionTitle, { color: mutedColor }]}>
-              {t("download_warsh_audio", lang)}
-            </Text>
-            <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-              <WarshAudioDownloader />
-            </View>
-          </>
-        )}
+        {/* Warsh Audio — always visible so you can pre-download regardless of current mode */}
+        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+          {t("download_warsh_audio", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <WarshAudioDownloader />
+        </View>
 
         {/* Tafsir / Tarjama */}
         <Text style={[styles.sectionTitle, { color: mutedColor }]}>
