@@ -76,7 +76,7 @@ const AyahOverlay = React.memo(
         style={[
           styles.ayahButton,
           {
-            top: position.top - 5,
+            top: position.top + 5,
             left: position.left + 8,
             width: position.width,
             height: position.height + 1,
