@@ -260,17 +260,19 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           </Pressable>
         </View>
 
-        {/* Center: Sura name + Page/Juz/Hizb */}
-        <View style={styles.headerCenter}>
-          <Pressable onPress={() => onNavigate?.("search")} hitSlop={6}>
-            <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
-              {pageInfo.suraName}
+        {/* Center: Sura name + Page/Juz/Hizb — hidden in text mode (shown in page meta bar) */}
+        {mushafMode !== "text" && (
+          <View style={styles.headerCenter}>
+            <Pressable onPress={() => onNavigate?.("search")} hitSlop={6}>
+              <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
+                {pageInfo.suraName}
+              </Text>
+            </Pressable>
+            <Text style={[styles.headerMeta, { color: isDark ? "#888" : "#999" }]} numberOfLines={1}>
+              {currentPage} • {t("juz", lang)} {pageInfo.juz}{pageInfo.hizbLabel ? ` • ${pageInfo.hizbLabel}` : ""}
             </Text>
-          </Pressable>
-          <Text style={[styles.headerMeta, { color: isDark ? "#888" : "#999" }]} numberOfLines={1}>
-            {currentPage} • {t("juz", lang)} {pageInfo.juz}{pageInfo.hizbLabel ? ` • ${pageInfo.hizbLabel}` : ""}
-          </Text>
-        </View>
+          </View>
+        )}
 
         {/* Right side: font controls (text mode) + mode toggle + menu */}
         <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
