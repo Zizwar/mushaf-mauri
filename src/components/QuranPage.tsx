@@ -77,9 +77,9 @@ const AyahOverlay = React.memo(
           styles.ayahButton,
           {
             top: position.top,
-            left: position.left - 5,
+            left: position.left + 10,
             width: position.width,
-            height: position.height + 5,
+            height: position.height - 2,
           },
           isRecorded && !isSelected && {
             backgroundColor: "rgba(76,175,80,0.18)",
