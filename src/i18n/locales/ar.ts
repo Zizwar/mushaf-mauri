@@ -277,6 +277,12 @@ export default {
   from_quran: "من القرآن",
   load_ayah: "تحميل الآية",
   dhikr_arabic: "نص الذكر",
+  // Text Mushaf
+  text_mushaf: "المصحف النصي",
+  image_mushaf: "المصحف المصور",
+  mushaf_mode: "وضع القراءة",
+  text_font: "خط المصحف",
+  font_size: "حجم الخط",
   // Auto-scroll / Prayer mode
   auto_scroll: "التمرير التلقائي",
   prayer_mode: "وضع المصلي",
@@ -307,6 +313,7 @@ export default {
   slow: "بطيء",
   fast: "سريع",
   // Font selection
+  font_auto: "تلقائي (خط القرآن)",
   font_selection: "اختيار الخط",
   choose_font: "اختر خط العرض",
   standard_font: "الخط الافتراضي",
@@ -353,7 +360,6 @@ export default {
   start_from_juz: "البداية من الجزء",
   khatma_summary: "ستنهي في",
   khatma_days_needed: "يوم",
-  go_to_page: "الذهاب للصفحة",
   khatma_position: "الموقع",
   today_portion: "حصتك اليوم",
   warsh_tekrar_notice: "التكرار يعمل فقط مع رواية المدينة. سيتم التحويل تلقائياً عند البدء.",

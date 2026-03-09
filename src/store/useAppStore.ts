@@ -106,6 +106,9 @@ interface AppState {
   warshRecitorId: number;
   dhikrList: DhikrItem[];
   vibrateEnabled: boolean;
+  mushafMode: "image" | "text";
+  textFontSize: number;
+  textFontFamily: string; // "auto" | "default" | "Maghribi" | "hafs" | "uthmanic" | "rustam"
 
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
@@ -134,6 +137,9 @@ interface AppState {
   setWarshRecitorId: (id: number) => void;
   setDhikrList: (list: DhikrItem[]) => void;
   setVibrateEnabled: (enabled: boolean) => void;
+  setMushafMode: (mode: "image" | "text") => void;
+  setTextFontSize: (size: number) => void;
+  setTextFontFamily: (family: string) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -193,6 +199,9 @@ export const useAppStore = create<AppState>()(
       warshRecitorId: 1,
       dhikrList: DEFAULT_DHIKR_LIST,
       vibrateEnabled: true,
+      mushafMode: "image",
+      textFontSize: 22,
+      textFontFamily: "auto",
 
       setLang: (lang) => set({ lang }),
       setQuira: (quira) => {
@@ -255,6 +264,9 @@ export const useAppStore = create<AppState>()(
       setQuranFont: (quranFont) => set({ quranFont }),
       setDhikrList: (dhikrList) => set({ dhikrList }),
       setVibrateEnabled: (vibrateEnabled) => set({ vibrateEnabled }),
+      setMushafMode: (mushafMode) => set({ mushafMode }),
+      setTextFontSize: (textFontSize) => set({ textFontSize }),
+      setTextFontFamily: (textFontFamily) => set({ textFontFamily }),
       setWarshRecitorId: (warshRecitorId) => {
         set({ warshRecitorId });
         if (get().quira === "warsh") {
@@ -280,6 +292,9 @@ export const useAppStore = create<AppState>()(
         warshRecitorId: state.warshRecitorId,
         dhikrList: state.dhikrList,
         vibrateEnabled: state.vibrateEnabled,
+        mushafMode: state.mushafMode,
+        textFontSize: state.textFontSize,
+        textFontFamily: state.textFontFamily,
       }),
       // After hydration: re-resolve theme from name to pick up any new fields (e.g. borderColor)
       onRehydrateStorage: () => (state) => {

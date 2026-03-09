@@ -277,6 +277,12 @@ export default {
   from_quran: "From Quran",
   load_ayah: "Load Verse",
   dhikr_arabic: "Dhikr Text",
+  // Text Mushaf
+  text_mushaf: "Text Mushaf",
+  image_mushaf: "Image Mushaf",
+  mushaf_mode: "Reading Mode",
+  text_font: "Mushaf Font",
+  font_size: "Font Size",
   // Auto-scroll / Prayer mode
   auto_scroll: "Auto Scroll",
   prayer_mode: "Prayer Mode",
@@ -307,6 +313,7 @@ export default {
   slow: "Slow",
   fast: "Fast",
   // Font selection
+  font_auto: "Auto (Quran default)",
   font_selection: "Font Selection",
   choose_font: "Choose Display Font",
   standard_font: "Default Font",
@@ -351,7 +358,6 @@ export default {
   start_from_juz: "Start from Juz",
   khatma_summary: "You'll finish on",
   khatma_days_needed: "days",
-  go_to_page: "Go to Page",
   khatma_position: "Position",
   today_portion: "Today's Portion",
   warsh_tekrar_notice: "Repetition only works with Madina recitation. The app will switch automatically when you start.",

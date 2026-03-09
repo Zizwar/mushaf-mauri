@@ -277,6 +277,11 @@ export default {
   from_quran: "ⵙⴳ ⵓⵇⵓⵔⵄⴰⵏ",
   load_ayah: "ⵃⵎⵍ ⵜⴰⵢⴰ",
   dhikr_arabic: "ⴰⵏⵏⴰⵡ ⵏ ⵓⴷⴽⵔ",
+  text_mushaf: "ⴰⵎⵓⵚⵃⴰⴼ ⵙ ⵓⵙⴽⴽⵉⵍ",
+  image_mushaf: "ⴰⵎⵓⵚⵃⴰⴼ ⵙ ⵜⵡⵍⴰⴼⵜ",
+  mushaf_mode: "ⴰⵙⵉⵡⴹ ⵏ ⵜⵖⵓⵔⵉ",
+  text_font: "ⴰⵙⵏⴼⴰⵔ ⵏ ⵓⵎⵓⵚⵃⴰⴼ",
+  font_size: "ⵜⴰⴷⴷⴰⵔⵜ ⵏ ⵓⵙⵏⴼⴰⵔ",
   // Auto-scroll / Prayer mode
   auto_scroll: "ⴰⵙⵎⵓⵜⵜⵉ ⴰⵡⵓⵔⵎⴰⵏ",
   prayer_mode: "ⴰⵍⵍⴰⵙ ⵏ ⵜⵥⴰⵍⵍⵉⵜ",
@@ -307,6 +312,7 @@ export default {
   slow: "ⵉⵎⵥⵥⵉⵢ",
   fast: "ⵉⵣⵔⴰⵔ",
   // Font selection
+  font_auto: "ⴰⵓⵜⵓ (ⵜⵉⴼⵉⵏⴰⵖ ⵏ ⵓⵇⵓⵔⴰⵏ)",
   font_selection: "ⴰⵙⵜⵉ ⵏ ⵓⵙⴽⴽⵉⵍ",
   choose_font: "ⵙⵜⵢ ⴰⵙⴽⴽⵉⵍ",
   standard_font: "ⴰⵙⴽⴽⵉⵍ ⵏ ⵓⵙⵖⴰⵍ",
@@ -341,7 +347,6 @@ export default {
   start_from_juz: "ⴰⴱⴷⵓ ⵙⴳ ⵊⵓⵣ",
   khatma_summary: "ⵜⵙⵙⵍⵎⴷ ⴳ",
   khatma_days_needed: "ⵓⵙⵙⴰⵏ",
-  go_to_page: "ⴰⴷⴷⵓ ⵍ ⵓⵙⵏⴼⵍⵓⵍ",
   khatma_position: "ⴰⵏⴰⵡ",
   today_portion: "ⵜⴰⵣⵡⴰⵔⵜ ⵏ ⵓⴰⵙⵙ",
   warsh_tekrar_notice: "التكرار يعمل فقط مع رواية المدينة. سيتم التحويل تلقائياً عند البدء.",
