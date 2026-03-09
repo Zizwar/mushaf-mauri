@@ -80,10 +80,10 @@ export function getWarshPageAyahs(page: number): PageAyah[] {
       const sura = e[2];
       const aya = e[3];
       const ti = warshCumulative[sura - 1] + (aya - 1);
-      // textwarsh text embeds ﴿n﴾ at the end — strip it out
+      // textwarsh text embeds ﴿n﴾ at the end — strip it, use Western numerals (Moroccan standard)
       const full = textwarsh[ti]?.[0] ?? "";
       const markerMatch = full.match(/﴿[٠-٩]+﴾\s*$/);
-      const marker = markerMatch ? markerMatch[0].trim() : ayahMarker(aya);
+      const marker = `﴿${aya}﴾`; // Western numerals for Warsh
       const text = markerMatch ? full.slice(0, full.length - markerMatch[0].length).trimEnd() : full;
       return { sura, aya, text, marker };
     });
