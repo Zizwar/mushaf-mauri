@@ -109,6 +109,8 @@ interface AppState {
   mushafMode: "image" | "text";
   textFontSize: number;
   textFontFamily: string; // "auto" | "default" | "Maghribi" | "hafs" | "uthmanic" | "rustam"
+  highlightColor: string; // hex color e.g. "#4285F4"
+  highlightOpacity: number; // 0.1 – 0.6
 
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
@@ -140,6 +142,8 @@ interface AppState {
   setMushafMode: (mode: "image" | "text") => void;
   setTextFontSize: (size: number) => void;
   setTextFontFamily: (family: string) => void;
+  setHighlightColor: (color: string) => void;
+  setHighlightOpacity: (opacity: number) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -202,6 +206,8 @@ export const useAppStore = create<AppState>()(
       mushafMode: "image",
       textFontSize: 22,
       textFontFamily: "auto",
+      highlightColor: "#4285F4",
+      highlightOpacity: 0.2,
 
       setLang: (lang) => set({ lang }),
       setQuira: (quira) => {
@@ -267,6 +273,8 @@ export const useAppStore = create<AppState>()(
       setMushafMode: (mushafMode) => set({ mushafMode }),
       setTextFontSize: (textFontSize) => set({ textFontSize }),
       setTextFontFamily: (textFontFamily) => set({ textFontFamily }),
+      setHighlightColor: (highlightColor) => set({ highlightColor }),
+      setHighlightOpacity: (highlightOpacity) => set({ highlightOpacity }),
       setWarshRecitorId: (warshRecitorId) => {
         set({ warshRecitorId });
         if (get().quira === "warsh") {
@@ -295,6 +303,8 @@ export const useAppStore = create<AppState>()(
         mushafMode: state.mushafMode,
         textFontSize: state.textFontSize,
         textFontFamily: state.textFontFamily,
+        highlightColor: state.highlightColor,
+        highlightOpacity: state.highlightOpacity,
       }),
       // After hydration: re-resolve theme from name to pick up any new fields (e.g. borderColor)
       onRehydrateStorage: () => (state) => {

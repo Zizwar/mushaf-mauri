@@ -103,6 +103,109 @@ function FontSelector() {
 }
 
 // ---------------------------------------------------------------------------
+// Highlight Settings
+// ---------------------------------------------------------------------------
+const HIGHLIGHT_COLORS = [
+  { hex: "#4285F4", name: "أزرق" },
+  { hex: "#34A853", name: "أخضر" },
+  { hex: "#FBBC04", name: "أصفر" },
+  { hex: "#EA4335", name: "أحمر" },
+  { hex: "#9C27B0", name: "بنفسجي" },
+  { hex: "#FF6D00", name: "برتقالي" },
+  { hex: "#00BCD4", name: "سماوي" },
+  { hex: "#795548", name: "بني" },
+];
+
+const OPACITY_LEVELS = [0.1, 0.2, 0.3, 0.4, 0.5];
+
+function HighlightSettings() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const highlightColor = useAppStore((s) => s.highlightColor);
+  const highlightOpacity = useAppStore((s) => s.highlightOpacity);
+  const setHighlightColor = useAppStore((s) => s.setHighlightColor);
+  const setHighlightOpacity = useAppStore((s) => s.setHighlightOpacity);
+
+  const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
+  const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = theme.borderColor;
+
+  // Preview: parse hex + opacity
+  const h = highlightColor.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const previewBg = `rgba(${r},${g},${b},${highlightOpacity})`;
+
+  return (
+    <View style={{ gap: 14 }}>
+      {/* Color picker */}
+      <Text style={{ fontSize: 13, color: mutedColor, textAlign: isRTL ? "right" : "left" }}>
+        {t("highlight_color", lang)}
+      </Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+        {HIGHLIGHT_COLORS.map((c) => (
+          <Pressable
+            key={c.hex}
+            onPress={() => setHighlightColor(c.hex)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: c.hex,
+              borderWidth: highlightColor === c.hex ? 3 : 1.5,
+              borderColor: highlightColor === c.hex ? ACCENT : borderColor,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {highlightColor === c.hex && (
+              <Ionicons name="checkmark" size={16} color="#fff" />
+            )}
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Opacity picker */}
+      <Text style={{ fontSize: 13, color: mutedColor, textAlign: isRTL ? "right" : "left" }}>
+        {t("highlight_opacity", lang)}
+      </Text>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {OPACITY_LEVELS.map((op) => (
+          <Pressable
+            key={op}
+            onPress={() => setHighlightOpacity(op)}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: highlightOpacity === op ? ACCENT : borderColor,
+              backgroundColor: highlightOpacity === op
+                ? isDark ? "#1a3a2e" : "#e8f5e9"
+                : "transparent",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: "700", color: highlightOpacity === op ? ACCENT : textColor }}>
+              {Math.round(op * 100)}%
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Preview */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View style={{ flex: 1, height: 28, borderRadius: 4, backgroundColor: previewBg }} />
+        <Text style={{ fontSize: 12, color: mutedColor }}>{Math.round(highlightOpacity * 100)}%</Text>
+      </View>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Backup / Restore
 // ---------------------------------------------------------------------------
 function BackupSection() {
@@ -320,6 +423,14 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
           <FontSelector />
+        </View>
+
+        {/* Ayah Highlight */}
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
+          {t("highlight_settings", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <HighlightSettings />
         </View>
 
         {/* Backup & Restore */}

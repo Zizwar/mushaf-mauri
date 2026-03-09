@@ -315,6 +315,9 @@ export default {
   // Font selection
   font_auto: "Auto (Quran default)",
   font_selection: "Font Selection",
+  highlight_settings: "Ayah Highlight",
+  highlight_color: "Highlight Color",
+  highlight_opacity: "Highlight Opacity",
   choose_font: "Choose Display Font",
   standard_font: "Default Font",
   hafs_font: "Hafs Font",

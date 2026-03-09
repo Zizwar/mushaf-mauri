@@ -314,6 +314,9 @@ export default {
   // Font selection
   font_auto: "ⴰⵓⵜⵓ (ⵜⵉⴼⵉⵏⴰⵖ ⵏ ⵓⵇⵓⵔⴰⵏ)",
   font_selection: "ⴰⵙⵜⵉ ⵏ ⵓⵙⴽⴽⵉⵍ",
+  highlight_settings: "ⴰⵙⵙⵓⴼⵖ ⵏ ⵜⵢⴰⵜ",
+  highlight_color: "ⴰⵍⵡⴰⵏ ⵏ ⵓⵙⵙⵓⴼⵖ",
+  highlight_opacity: "ⴰⵙⴽⴷⴷⵉ ⵏ ⵓⵙⵙⵓⴼⵖ",
   choose_font: "ⵙⵜⵢ ⴰⵙⴽⴽⵉⵍ",
   standard_font: "ⴰⵙⴽⴽⵉⵍ ⵏ ⵓⵙⵖⴰⵍ",
   hafs_font: "ⴰⵙⴽⴽⵉⵍ ⵏ ⵃⴰⴼⵚ",

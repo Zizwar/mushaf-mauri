@@ -315,6 +315,9 @@ export default {
   // Font selection
   font_auto: "تلقائي (خط القرآن)",
   font_selection: "اختيار الخط",
+  highlight_settings: "تضليل الآيات",
+  highlight_color: "لون التضليل",
+  highlight_opacity: "شفافية التضليل",
   choose_font: "اختر خط العرض",
   standard_font: "الخط الافتراضي",
   hafs_font: "خط حفص",

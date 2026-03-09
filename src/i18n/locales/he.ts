@@ -315,6 +315,9 @@ export default {
   resume_reading: "המשך",
   free_continuation: "המשך חופשי",
   open_ended: "פתוח",
+  highlight_settings: "הדגשת פסוקים",
+  highlight_color: "צבע ההדגשה",
+  highlight_opacity: "שקיפות ההדגשה",
   // Tafsir/Tarjama offline databases
   download_tafsir_db: "הורדת תפסיר ותרגומים",
   tafsir_db_desc: "הורד מסדי נתונים לקריאה ללא אינטרנט",

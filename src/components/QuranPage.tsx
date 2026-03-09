@@ -28,11 +28,15 @@ const AyahOverlay = React.memo(
     isSelected,
     isRecorded,
     onLongPress,
+    highlightColor,
+    highlightOpacity,
   }: {
     position: AyahPosition;
     isSelected: boolean;
     isRecorded: boolean;
     onLongPress?: () => void;
+    highlightColor: string;
+    highlightOpacity: number;
   }) => {
     const setSelectedAya = useAppStore((s) => s.setSelectedAya);
     const lastTapRef = useRef(0);
@@ -55,6 +59,15 @@ const AyahOverlay = React.memo(
       }
     };
 
+    // Helper: parse hex → rgba string
+    const toRgba = (hex: string, alpha: number) => {
+      const h = hex.replace("#", "");
+      const r = parseInt(h.substring(0, 2), 16);
+      const g = parseInt(h.substring(2, 4), 16);
+      const b = parseInt(h.substring(4, 6), 16);
+      return `rgba(${r},${g},${b},${alpha})`;
+    };
+
     return (
       <Pressable
         onPress={onPress}
@@ -64,12 +77,16 @@ const AyahOverlay = React.memo(
           styles.ayahButton,
           {
             top: position.top,
-            left: position.left,
+            left: position.left - 5,
             width: position.width,
-            height: position.height,
+            height: position.height + 5,
           },
-          isRecorded && !isSelected && styles.ayahRecorded,
-          isSelected && styles.ayahSelected,
+          isRecorded && !isSelected && {
+            backgroundColor: "rgba(76,175,80,0.18)",
+          },
+          isSelected && {
+            backgroundColor: toRgba(highlightColor, highlightOpacity),
+          },
         ]}
       />
     );
@@ -86,6 +103,8 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
   const theme = useAppStore((s) => s.theme);
   const recordedAyahs = useAppStore((s) => s.recordedAyahs);
   const showRecordingHighlights = useAppStore((s) => s.showRecordingHighlights);
+  const highlightColor = useAppStore((s) => s.highlightColor);
+  const highlightOpacity = useAppStore((s) => s.highlightOpacity);
 
   const imageUri = useMemo(() => {
     if (!cachedPageSets[quira] || !cacheInitialized[quira]) {
@@ -128,6 +147,8 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
               showRecordingHighlights &&
               !!recordedAyahs[`s${pos.wino.sura}a${pos.wino.aya}`]
             }
+            highlightColor={highlightColor}
+            highlightOpacity={highlightOpacity}
             onLongPress={
               onLongPressAya
                 ? () =>
@@ -176,16 +197,6 @@ const styles = StyleSheet.create({
   ayahButton: {
     position: "absolute",
     backgroundColor: "transparent",
-    borderRadius: 3,
-  },
-  ayahSelected: {
-    backgroundColor: "rgba(66, 133, 244, 0.2)",
-    borderWidth: 1,
-    borderColor: "rgba(66, 133, 244, 0.3)",
-  },
-  ayahRecorded: {
-    backgroundColor: "rgba(76, 175, 80, 0.15)",
-    borderWidth: 1,
-    borderColor: "rgba(76, 175, 80, 0.25)",
+    borderRadius: 2,
   },
 });

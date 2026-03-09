@@ -315,6 +315,9 @@ export default {
   // Font selection
   font_auto: "Auto (police par défaut)",
   font_selection: "S\u00e9lection de Police",
+  highlight_settings: "Surlignage des Versets",
+  highlight_color: "Couleur du Surlignage",
+  highlight_opacity: "Opacité du Surlignage",
   choose_font: "Choisir la Police d'Affichage",
   standard_font: "Police par D\u00e9faut",
   hafs_font: "Police Hafs",
