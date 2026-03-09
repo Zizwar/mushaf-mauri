@@ -1381,11 +1381,11 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       <Modal visible={showHelp} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowHelp(false)}>
         <Pressable style={styles.centerModalOverlay} onPress={() => setShowHelp(false)}>
           <Pressable style={[styles.helpModalContent, { backgroundColor: cardBg }]} onPress={() => {}}>
-            <View style={styles.helpHeader}>
+            <View style={[styles.helpHeader, { flexDirection: (lang === "ar" || lang === "he") ? "row-reverse" : "row" }]}>
               <Ionicons name="mic-circle-outline" size={32} color={ACCENT} />
-              <Text style={[styles.helpTitle, { color: textColor }]}>{t("recordings_help_title", lang)}</Text>
+              <Text style={[styles.helpTitle, { color: textColor, textAlign: (lang === "ar" || lang === "he") ? "right" : "left" }]}>{t("recordings_help_title", lang)}</Text>
             </View>
-            <Text style={[styles.helpBody, { color: mutedColor }]}>{t("recordings_help_body", lang)}</Text>
+            <Text style={[styles.helpBody, { color: mutedColor, textAlign: (lang === "ar" || lang === "he") ? "right" : "left", writingDirection: (lang === "ar" || lang === "he") ? "rtl" : "ltr" }]}>{t("recordings_help_body", lang)}</Text>
             <Pressable style={[styles.helpCloseBtn, { backgroundColor: ACCENT }]} onPress={() => setShowHelp(false)}>
               <Text style={styles.helpCloseBtnText}>{t("alert_ok", lang)}</Text>
             </Pressable>

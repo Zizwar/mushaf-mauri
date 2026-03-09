@@ -366,11 +366,11 @@ export default function FullPlayerModal({
     <Modal visible={showRecordHelp} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowRecordHelp(false)}>
       <Pressable style={styles.helpOverlay} onPress={() => setShowRecordHelp(false)}>
         <Pressable style={[styles.helpBox, { backgroundColor: colors.fullCard }]} onPress={() => {}}>
-          <View style={styles.helpBoxHeader}>
+          <View style={[styles.helpBoxHeader, { flexDirection: (lang === "ar" || lang === "he") ? "row-reverse" : "row" }]}>
             <Ionicons name="mic-circle-outline" size={30} color={RECORDING_COLOR} />
-            <Text style={[styles.helpBoxTitle, { color: colors.fullText }]}>{t("recordings_help_title", lang)}</Text>
+            <Text style={[styles.helpBoxTitle, { color: colors.fullText, textAlign: (lang === "ar" || lang === "he") ? "right" : "left" }]}>{t("recordings_help_title", lang)}</Text>
           </View>
-          <Text style={[styles.helpBoxBody, { color: colors.fullSecondary }]}>{t("recordings_help_body", lang)}</Text>
+          <Text style={[styles.helpBoxBody, { color: colors.fullSecondary, textAlign: (lang === "ar" || lang === "he") ? "right" : "left", writingDirection: (lang === "ar" || lang === "he") ? "rtl" : "ltr" }]}>{t("recordings_help_body", lang)}</Text>
           <Pressable style={[styles.helpBoxBtn, { backgroundColor: RECORDING_COLOR }]} onPress={() => setShowRecordHelp(false)}>
             <Text style={styles.helpBoxBtnText}>{t("alert_ok", lang)}</Text>
           </Pressable>
