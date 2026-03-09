@@ -270,6 +270,13 @@ export default {
   target: "Objectif",
   completed: "Termin\u00e9",
   daily_progress: "Progr\u00e8s Quotidien",
+  edit_dhikr: "Modifier le Dhikr",
+  delete_dhikr: "Supprimer le Dhikr",
+  delete_dhikr_confirm: "Supprimer ce dhikr\u00a0?",
+  vibrate: "Vibration",
+  from_quran: "Du Coran",
+  load_ayah: "Charger le Verset",
+  dhikr_arabic: "Texte du Dhikr",
   // Auto-scroll / Prayer mode
   auto_scroll: "D\u00e9filement Automatique",
   prayer_mode: "Mode Pri\u00e8re",

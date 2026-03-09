@@ -270,6 +270,13 @@ export default {
   target: "ⴰⵙⵡⵉⵔ",
   completed: "ⵉⴽⵎⵎⵍ",
   daily_progress: "ⴰⵎⴰⵣⵔⴰⵢ ⵏ ⵡⴰⵙⵙ",
+  edit_dhikr: "ⵙⵏⴼⵍ ⴰⴷⴽⵔ",
+  delete_dhikr: "ⴽⴽⵙ ⴰⴷⴽⵔ",
+  delete_dhikr_confirm: "ⵎⴰ ⵜⵔⵉⴷ ⴰⴷ ⵜⴽⴽⵙⴷ ⴰⴷⴽⵔ?",
+  vibrate: "ⴰⵔⵣⵓⵣ",
+  from_quran: "ⵙⴳ ⵓⵇⵓⵔⵄⴰⵏ",
+  load_ayah: "ⵃⵎⵍ ⵜⴰⵢⴰ",
+  dhikr_arabic: "ⴰⵏⵏⴰⵡ ⵏ ⵓⴷⴽⵔ",
   // Auto-scroll / Prayer mode
   auto_scroll: "ⴰⵙⵎⵓⵜⵜⵉ ⴰⵡⵓⵔⵎⴰⵏ",
   prayer_mode: "ⴰⵍⵍⴰⵙ ⵏ ⵜⵥⴰⵍⵍⵉⵜ",

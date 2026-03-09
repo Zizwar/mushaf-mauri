@@ -64,6 +64,24 @@ export interface RecordingProfile {
   createdAt: string;
 }
 
+export interface DhikrItem {
+  id: string;
+  arabic: string;
+  target: number;
+  isPreset?: boolean;
+  ayahRef?: { sura: number; aya: number };
+}
+
+const DEFAULT_DHIKR_LIST: DhikrItem[] = [
+  { id: "subhanallah", arabic: "سبحان الله", target: 33, isPreset: true },
+  { id: "alhamdulillah", arabic: "الحمد لله", target: 33, isPreset: true },
+  { id: "allahu_akbar", arabic: "الله أكبر", target: 34, isPreset: true },
+  { id: "la_ilaha", arabic: "لا إله إلا الله", target: 100, isPreset: true },
+  { id: "astaghfirullah", arabic: "أستغفر الله", target: 100, isPreset: true },
+  { id: "la_hawla", arabic: "لا حول ولا قوة إلا بالله", target: 100, isPreset: true },
+  { id: "salawat", arabic: "اللهم صل على محمد", target: 100, isPreset: true },
+];
+
 interface AppState {
   lang: LangKey;
   quira: Quira;
@@ -86,6 +104,8 @@ interface AppState {
   khatma: KhatmaState;
   quranFont: string;
   warshRecitorId: number;
+  dhikrList: DhikrItem[];
+  vibrateEnabled: boolean;
 
   setLang: (lang: LangKey) => void;
   setQuira: (quira: Quira) => void;
@@ -112,6 +132,8 @@ interface AppState {
   setKhatma: (khatma: KhatmaState) => void;
   setQuranFont: (font: string) => void;
   setWarshRecitorId: (id: number) => void;
+  setDhikrList: (list: DhikrItem[]) => void;
+  setVibrateEnabled: (enabled: boolean) => void;
 }
 
 const defaultDownloadProgress: ImageDownloadProgress = {
@@ -169,6 +191,8 @@ export const useAppStore = create<AppState>()(
       },
       quranFont: "default",
       warshRecitorId: 1,
+      dhikrList: DEFAULT_DHIKR_LIST,
+      vibrateEnabled: true,
 
       setLang: (lang) => set({ lang }),
       setQuira: (quira) => {
@@ -229,6 +253,8 @@ export const useAppStore = create<AppState>()(
       setTekrar: (tekrar) => set({ tekrar }),
       setKhatma: (khatma) => set({ khatma }),
       setQuranFont: (quranFont) => set({ quranFont }),
+      setDhikrList: (dhikrList) => set({ dhikrList }),
+      setVibrateEnabled: (vibrateEnabled) => set({ vibrateEnabled }),
       setWarshRecitorId: (warshRecitorId) => {
         set({ warshRecitorId });
         if (get().quira === "warsh") {
@@ -252,6 +278,8 @@ export const useAppStore = create<AppState>()(
         bookmarks: state.bookmarks,
         quranFont: state.quranFont,
         warshRecitorId: state.warshRecitorId,
+        dhikrList: state.dhikrList,
+        vibrateEnabled: state.vibrateEnabled,
       }),
       // After hydration: re-resolve theme from name to pick up any new fields (e.g. borderColor)
       onRehydrateStorage: () => (state) => {

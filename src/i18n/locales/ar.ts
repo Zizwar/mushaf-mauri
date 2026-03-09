@@ -270,6 +270,13 @@ export default {
   target: "الهدف",
   completed: "مكتمل",
   daily_progress: "التقدم اليومي",
+  edit_dhikr: "تعديل الذكر",
+  delete_dhikr: "حذف الذكر",
+  delete_dhikr_confirm: "هل تريد حذف هذا الذكر؟",
+  vibrate: "الاهتزاز",
+  from_quran: "من القرآن",
+  load_ayah: "تحميل الآية",
+  dhikr_arabic: "نص الذكر",
   // Auto-scroll / Prayer mode
   auto_scroll: "التمرير التلقائي",
   prayer_mode: "وضع المصلي",
