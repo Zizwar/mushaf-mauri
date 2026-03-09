@@ -1,8 +1,6 @@
 // @ts-ignore
 import { ayatJson } from "../data/ayatJson";
-import { getWarshIndex } from "./warshAudioDB";
-import { textwarsh } from "../data/textWarsh";
-import { warshCumulative } from "../data/warshIndex";
+import { getWarshIndex, getWarshAyahContent } from "./warshAudioDB";
 import type { Quira } from "../store/useAppStore";
 
 export interface PageAyah {
@@ -77,14 +75,14 @@ export function getWarshPageAyahs(page: number): PageAyah[] {
   const raw = idx
     .filter((e) => e[1] === dbPage)
     .map((e) => {
+      const ayaID = e[0];
       const sura = e[2];
       const aya = e[3];
-      const ti = warshCumulative[sura - 1] + (aya - 1);
-      // textwarsh text embeds ﴿n﴾ at the end — strip it, use Western numerals (Moroccan standard)
-      const full = textwarsh[ti]?.[0] ?? "";
-      const markerMatch = full.match(/﴿[\d٠-٩]+﴾\s*$/);
-      const marker = `﴿${aya}﴾`; // Western numerals for Warsh
-      const text = markerMatch ? full.slice(0, full.length - markerMatch[0].length).trimEnd() : full;
+      const cached = getWarshAyahContent(ayaID);
+      // content field: tashkeel text, bismillah merged in aya 1 of each sura
+      // content_plain: plain text with ﴿n﴾ marker at end — we use Western numerals
+      const text = cached?.content ?? "";
+      const marker = `﴿${aya}﴾`;
       return { sura, aya, text, marker };
     });
   return annotate(raw);

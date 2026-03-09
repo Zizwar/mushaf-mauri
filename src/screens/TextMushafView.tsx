@@ -59,8 +59,9 @@ const SuraBanner = memo(function SuraBanner({
   const suraType = suraData[3]; // "Meccan" | "Medinan"
   const suraTypeAr = suraType === "Meccan" ? "مكية" : suraType === "Medinan" ? "مدنية" : "";
   const ayahCount = SURA_AYAH_COUNTS[sura] ?? 0;
-  const hasBismillah = isStartOfSura && showBismillah(sura);
-  const bismillah = quira === "warsh" ? BISMILLAH_WARSH : BISMILLAH_HAFS;
+  // Warsh: bismillah is already embedded in the first ayah's content from DB — don't show separately
+  const hasBismillah = isStartOfSura && showBismillah(sura) && quira !== "warsh";
+  const bismillah = BISMILLAH_HAFS;
   const bannerBg = isDark ? "rgba(26,92,46,0.18)" : "rgba(26,92,46,0.07)";
   const accentColor = isDark ? "#4caf72" : "#1a5c2e";
   const goldColor = isDark ? "#c8a84b" : "#7a5900";

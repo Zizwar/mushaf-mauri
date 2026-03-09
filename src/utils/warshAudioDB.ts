@@ -42,6 +42,8 @@ export function getDebugLog(): string[] {
 
 // Cached warsh index: same format as old indexMuhammadi.js → [id, page, sura, aya][]
 let _warshIndex: number[][] | null = null;
+// content cache: ayaID → {content, contentPlain}
+let _warshContent: Map<number, { content: string; contentPlain: string }> | null = null;
 
 
 // ==================== INIT ====================
@@ -135,7 +137,7 @@ export async function initWarshDB(): Promise<void> {
       dbg(`First verse error: ${e.message}`);
     }
 
-    // 8. Load warsh index
+    // 8. Load warsh index + content
     if (!_warshIndex) {
       try {
         const rows = await db.getAllAsync<{
@@ -143,13 +145,18 @@ export async function initWarshDB(): Promise<void> {
           pageNum: number;
           suraID: number;
           ayaNum: number;
+          content: string;
+          content_plain: string;
         }>(
-          `SELECT x.idAya, x.pageNum, a.suraID, a.ayaNum
+          `SELECT x.idAya, x.pageNum, a.suraID, a.ayaNum, a.content, a.content_plain
            FROM ayaXYP x
            JOIN aya_audio a ON x.idAya = a.ayaID
            ORDER BY x.idAya`
         );
         _warshIndex = rows.map((r) => [r.idAya, r.pageNum, r.suraID, r.ayaNum]);
+        _warshContent = new Map(
+          rows.map((r) => [r.idAya, { content: r.content ?? "", contentPlain: r.content_plain ?? "" }])
+        );
         dbg(`warshIndex loaded: ${_warshIndex.length} entries`);
       } catch (e: any) {
         dbg(`Index load error: ${e.message}`);
@@ -171,6 +178,11 @@ export async function initWarshDB(): Promise<void> {
  */
 export function getWarshIndex(): number[][] {
   return _warshIndex ?? [];
+}
+
+/** Get cached ayah content by ayaID (synchronous after init) */
+export function getWarshAyahContent(ayaID: number): { content: string; contentPlain: string } | null {
+  return _warshContent?.get(ayaID) ?? null;
 }
 
 export function isWarshIndexReady(): boolean {
