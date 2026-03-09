@@ -46,18 +46,20 @@ const SuraBanner = memo(function SuraBanner({
   quira,
   fontFamily,
   isDark,
+  isStartOfSura,
 }: {
   sura: number;
   quira: "madina" | "warsh";
   fontFamily: string | undefined;
   isDark: boolean;
+  isStartOfSura: boolean;
 }) {
   const suraData = QuranData.Sura[sura] ?? [];
   const suraName = suraData[0] ?? "";
   const suraType = suraData[3]; // "Meccan" | "Medinan"
   const suraTypeAr = suraType === "Meccan" ? "مكية" : suraType === "Medinan" ? "مدنية" : "";
   const ayahCount = SURA_AYAH_COUNTS[sura] ?? 0;
-  const hasBismillah = showBismillah(sura);
+  const hasBismillah = isStartOfSura && showBismillah(sura);
   const bismillah = quira === "warsh" ? BISMILLAH_WARSH : BISMILLAH_HAFS;
   const bannerBg = isDark ? "rgba(26,92,46,0.18)" : "rgba(26,92,46,0.07)";
   const accentColor = isDark ? "#4caf72" : "#1a5c2e";
@@ -171,6 +173,7 @@ const TextPage = memo(function TextPage({
               quira={quira}
               fontFamily={fontFamily}
               isDark={isDark}
+              isStartOfSura={section.ayahs[0]?.aya === 1}
             />
 
             {/* Continuous inline text — all ayahs of this sura section, RTL flow */}
