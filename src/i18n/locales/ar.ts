@@ -380,4 +380,8 @@ export default {
   backup_import_desc: "استعادة الإعدادات من ملف نسخة احتياطية",
   backup_import_success: "تم الاستيراد، أعد تشغيل التطبيق",
   backup_import_error: "ملف غير صالح أو تالف",
+  content_sources: "مصادر المحتوى",
+  source_hafs: "التفاسير والصور والصوتيات (حفص): جامعة الملك سعود",
+  source_warsh: "تلاوات ورش والقراءات: مؤسسة محمد السادس للمصحف الشريف",
+  feedback_email_subject: "ملاحظة - مصحف ماوري",
 };

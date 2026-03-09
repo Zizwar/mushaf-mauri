@@ -353,4 +353,8 @@ export default {
   backup_import_desc: "שחזור הגדרות מקובץ גיבוי",
   backup_import_success: "יובא, הפעל מחדש את האפליקציה",
   backup_import_error: "קובץ לא חוקי או פגום",
+  content_sources: "מקורות תוכן",
+  source_hafs: "תפסיר, תמונות ואודיו (חפס): אוניברסיטת המלך סעוד",
+  source_warsh: "קריאות ורש: קרן מוחמד השישי לקוראן הקדוש",
+  feedback_email_subject: "משוב - Mushaf Mauri",
 };

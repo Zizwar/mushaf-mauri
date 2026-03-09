@@ -367,4 +367,8 @@ export default {
   backup_import_desc: "ⴰⵙⵙⵓⴷⴷⵙ ⵙⴳ ⵓⴼⴰⵢⵍ",
   backup_import_success: "ⵜⵙⵙⵓⴷⴷⵙ, ⵙⵏⴼⵍ ⵉⵖ ⵜⵔⵉⴷ",
   backup_import_error: "ⴰⴼⴰⵢⵍ ⵓⵔ ⵉⵛⵔⴽⵏ",
+  content_sources: "ⵉⵙⴰⴳⴳⵯⵏ ⵏ ⵓⵎⵣⵔⵓⵢ",
+  source_hafs: "ⵜⴼⵙⵉⵔⵜ, ⵜⵓⵔⴰ ⴷ ⵓⵙⵙⵍⵎⴷ (ⵃⴼⵙ): ⵜⵉⵙⵙⵉⵔⵉⵜ ⵏ ⵓⴳⵍⵍⵉⴷ ⵙⵄⵓⴷ",
+  source_warsh: "ⵜⵉⵍⵍⴰⵡⵜ ⵏ ⵓⵔⵛ: ⵜⴰⵙⵏⴰⵎⴰⵔⵜ ⵏ ⵎⵓⵃⵎⵎⴷ VI",
+  feedback_email_subject: "ⵜⴰⵎⵍⵉⵍⵜ - Mushaf Mauri",
 };

@@ -378,4 +378,8 @@ export default {
   backup_import_desc: "Restore settings from a backup file",
   backup_import_success: "Imported, restart the app to apply",
   backup_import_error: "Invalid or corrupted file",
+  content_sources: "Content Sources",
+  source_hafs: "Tafsir, images & audio (Hafs): King Saud University",
+  source_warsh: "Warsh recitations: Mohammed VI Foundation for the Holy Quran",
+  feedback_email_subject: "Feedback - Mushaf Mauri",
 };

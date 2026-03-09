@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,14 @@ import {
   ScrollView,
   Linking,
   Share,
-  Alert,
   TextInput,
   Animated,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
+import DonateModal from "../components/DonateModal";
 // @ts-ignore
 import appJson from "../../app.json";
 
@@ -77,7 +76,8 @@ interface AboutScreenProps {
 export default function AboutScreen({ onGoBack }: AboutScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
-  const [feedbackText, setFeedbackText] = React.useState("");
+  const [feedbackText, setFeedbackText] = useState("");
+  const [donateVisible, setDonateVisible] = useState(false);
 
   const isDark = !!theme.night;
   const isRTL = RTL_LANGS.includes(lang);
@@ -100,7 +100,9 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
 
   const handleSendFeedback = () => {
     if (!feedbackText.trim()) return;
-    Alert.alert(t("send_feedback", lang), feedbackText, [{ text: t("alert_ok", lang) }]);
+    const subject = encodeURIComponent(t("feedback_email_subject", lang));
+    const body = encodeURIComponent(feedbackText);
+    Linking.openURL(`mailto:feedback@mushaf.ma?subject=${subject}&body=${body}`).catch(() => {});
     setFeedbackText("");
   };
 
@@ -129,21 +131,20 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
 
         {/* ── Sources / Credits ── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.sectionTitle, { color: textColor, textAlign }]}>مصادر المحتوى</Text>
-          <View style={styles.sourceRow}>
-            <Ionicons name="school-outline" size={16} color={ACCENT} style={{ marginTop: 2 }} />
-            <Text style={[styles.sourceText, { color: mutedColor }]}>
-              {"التفاسير والصور والصوتيات (حفص): "}
-              <Text style={{ color: textColor, fontWeight: "600" }}>جامعة الملك سعود</Text>
-            </Text>
-          </View>
-          <View style={styles.sourceRow}>
-            <Ionicons name="mic-outline" size={16} color={ACCENT} style={{ marginTop: 2 }} />
-            <Text style={[styles.sourceText, { color: mutedColor }]}>
-              {"تلاوات ورش والقراءات: "}
-              <Text style={{ color: textColor, fontWeight: "600" }}>مؤسسة محمد السادس للمصحف الشريف</Text>
-            </Text>
-          </View>
+          <Text style={[styles.sectionTitle, { color: textColor, textAlign }]}>
+            {t("content_sources", lang)}
+          </Text>
+          {[
+            { icon: "school-outline", key: "source_hafs" },
+            { icon: "mic-outline",    key: "source_warsh" },
+          ].map((s) => (
+            <View key={s.key} style={[styles.sourceRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+              <Ionicons name={s.icon as any} size={16} color={ACCENT} style={{ marginTop: 2 }} />
+              <Text style={[styles.sourceText, { color: mutedColor, textAlign }]}>
+                {t(s.key as any, lang)}
+              </Text>
+            </View>
+          ))}
         </View>
 
         {/* ── Share ── */}
@@ -183,7 +184,14 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
           <Text style={[styles.sectionTitle, { color: textColor, textAlign }]}>{t("support_project", lang)}</Text>
           <Text style={[styles.supportDesc, { color: mutedColor, textAlign }]}>{t("support_desc", lang)}</Text>
-          <Text style={[styles.donorsLabel, { color: textColor, textAlign }]}>{t("donors", lang)}</Text>
+          <Pressable
+            onPress={() => setDonateVisible(true)}
+            style={({ pressed }) => [styles.donateBtn, { opacity: pressed ? 0.85 : 1 }]}
+          >
+            <Ionicons name="heart" size={18} color="#fff" />
+            <Text style={styles.donateBtnText}>{t("donate", lang)}</Text>
+          </Pressable>
+          <Text style={[styles.donorsLabel, { color: textColor, textAlign, marginTop: 14 }]}>{t("donors", lang)}</Text>
           <DonorTicker isDark={isDark} textColor={textColor} borderColor={borderColor} />
           <Text style={[styles.thankDonors, { color: mutedColor }]}>{t("thank_donors", lang)}</Text>
         </View>
@@ -222,6 +230,8 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
         </View>
 
       </ScrollView>
+
+      <DonateModal visible={donateVisible} onClose={() => setDonateVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -271,7 +281,13 @@ const styles = StyleSheet.create({
   },
   feedbackSendText: { color: "#fff", fontSize: 13, fontWeight: "600" },
 
-  supportDesc: { fontSize: 13, lineHeight: 19, marginBottom: 10 },
+  supportDesc: { fontSize: 13, lineHeight: 19, marginBottom: 12 },
+  donateBtn: {
+    flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 8, paddingVertical: 11, borderRadius: 10,
+    backgroundColor: "#c0392b",
+  },
+  donateBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
   donorsLabel: { fontSize: 14, fontWeight: "700", marginBottom: 8 },
 
   tickerRow: {

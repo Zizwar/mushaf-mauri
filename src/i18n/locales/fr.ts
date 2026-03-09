@@ -378,4 +378,8 @@ export default {
   backup_import_desc: "Restaurer depuis un fichier de sauvegarde",
   backup_import_success: "Importé, redémarrez l'application",
   backup_import_error: "Fichier invalide ou corrompu",
+  content_sources: "Sources du contenu",
+  source_hafs: "Tafsir, images et audio (Hafs) : Université du Roi Saoud",
+  source_warsh: "Récitations Warsh : Fondation Mohammed VI pour le Saint Coran",
+  feedback_email_subject: "Commentaire - Mushaf Mauri",
 };
