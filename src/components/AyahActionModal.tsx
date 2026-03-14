@@ -10,6 +10,7 @@ import {
   Platform,
   TextInput,
   ToastAndroid,
+  ScrollView,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
 import { Ionicons } from "@expo/vector-icons";
@@ -30,7 +31,7 @@ interface AyahActionModalProps {
   page: number;
 }
 
-const ICON_SIZE = 28;
+const ICON_SIZE = 20;
 
 export default function AyahActionModal({
   visible,
@@ -58,7 +59,6 @@ export default function AyahActionModal({
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteText, setNoteText] = useState("");
 
-  // Reset note state when modal opens
   useEffect(() => {
     if (visible) {
       setShowNoteInput(false);
@@ -71,11 +71,11 @@ export default function AyahActionModal({
   const textColor = isNight ? "#e8e8f0" : "#1a1a2e";
   const subtitleColor = isNight ? "#a0a0c0" : "#666";
   const iconColor = isNight ? "#8cacff" : "#336699";
-  const btnBg = theme.borderColor;
+  const btnBg = isNight ? "#252545" : "#f0f2f5";
   const btnPressedBg = isNight ? "#32325a" : "#d0d8e0";
-  const headerBg = "#336699";
   const dividerColor = theme.borderColor;
   const fontFamily = quranFont !== "default" ? quranFont : undefined;
+  const accentGreen = "#1a5c2e";
 
   const handleCopy = useCallback(async () => {
     const copyText = ayahText
@@ -96,12 +96,8 @@ export default function AyahActionModal({
     const ref = `${t("sura_s", lang)} ${suraName} • ${t("aya_s", lang)} ${aya}`;
     const shareText = ayahText ? `${ayahText}\n\n${ref}\n${link}` : `${ref}\n${link}`;
     try {
-      await Share.share({
-        message: shareText,
-      });
-    } catch {
-      // User cancelled or share failed
-    }
+      await Share.share({ message: shareText });
+    } catch {}
     onClose();
   }, [suraName, sura, aya, ayahText, lang, onClose]);
 
@@ -110,61 +106,20 @@ export default function AyahActionModal({
     labelKey: string;
     icon: keyof typeof Ionicons.glyphMap;
     onPress: () => void;
+    color?: string;
   }[] = [
-    {
-      key: "play",
-      labelKey: "play",
-      icon: "play-circle-outline",
-      onPress: () => {
-        onPlay();
-        onClose();
-      },
-    },
-    {
-      key: "bookmark",
-      labelKey: "bookmark",
-      icon: "bookmark-outline",
-      onPress: () => {
-        onBookmark();
-        onClose();
-      },
-    },
-    {
-      key: "tafsir",
-      labelKey: "tafsir",
-      icon: "book-outline",
-      onPress: () => {
-        onTafsir();
-        onClose();
-      },
-    },
-    {
-      key: "copy",
-      labelKey: "copy",
-      icon: "copy-outline",
-      onPress: handleCopy,
-    },
-    {
-      key: "share",
-      labelKey: "share",
-      icon: "share-social-outline",
-      onPress: handleShare,
-    },
-    {
-      key: "note",
-      labelKey: "add_note",
-      icon: "create-outline",
-      onPress: () => setShowNoteInput(true),
-    },
+    { key: "play", labelKey: "play", icon: "play-circle-outline", onPress: () => { onPlay(); onClose(); } },
+    { key: "bookmark", labelKey: "bookmark", icon: "bookmark-outline", onPress: () => { onBookmark(); onClose(); } },
+    { key: "tafsir", labelKey: "tafsir", icon: "book-outline", onPress: () => { onTafsir(); onClose(); } },
+    { key: "copy", labelKey: "copy", icon: "copy-outline", onPress: handleCopy },
+    { key: "share", labelKey: "share", icon: "share-social-outline", onPress: handleShare },
+    { key: "note", labelKey: "add_note", icon: "create-outline", onPress: () => setShowNoteInput(true) },
   ];
 
   const handleSaveNote = () => {
-    // First bookmark the ayah (addBookmark deduplicates)
     getAyahText(sura, aya, quira).then((text) => {
       useAppStore.getState().addBookmark({
-        sura,
-        aya,
-        page,
+        sura, aya, page,
         timestamp: Date.now(),
         text: text ?? undefined,
       });
@@ -186,28 +141,42 @@ export default function AyahActionModal({
     >
       <Pressable style={styles.overlay} onPress={onClose}>
         <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
-          {/* Header with ayah info */}
-          <View style={[styles.header, { backgroundColor: headerBg }]}>
-            <Text style={styles.headerText}>
-              {t("sura_s", lang)} {suraName} : {t("aya_s", lang)} {aya}
-            </Text>
-            <Text style={styles.headerSubtext}>
-              {t("page", lang)} {page}
-            </Text>
-            {ayahText ? (
+          {/* Compact header */}
+          <View style={[styles.header, { borderBottomColor: dividerColor }]}>
+            <View style={styles.headerInfo}>
+              <View style={[styles.suraBadge, { backgroundColor: accentGreen }]}>
+                <Text style={styles.suraBadgeText}>
+                  {suraName} : {aya}
+                </Text>
+              </View>
+              <Text style={[styles.pageText, { color: subtitleColor }]}>
+                {t("page", lang)} {page}
+              </Text>
+            </View>
+            <Pressable onPress={onClose} hitSlop={8}>
+              <Ionicons name="close" size={20} color={subtitleColor} />
+            </Pressable>
+          </View>
+
+          {/* Scrollable ayah text */}
+          {ayahText ? (
+            <ScrollView style={styles.ayahScroll} nestedScrollEnabled showsVerticalScrollIndicator>
               <Text
-                style={[styles.headerAyahText, fontFamily ? { fontFamily } : undefined]}
-                numberOfLines={3}
+                style={[
+                  styles.ayahText,
+                  { color: textColor },
+                  fontFamily ? { fontFamily } : undefined,
+                ]}
               >
                 {ayahText}
               </Text>
-            ) : null}
-          </View>
+            </ScrollView>
+          ) : null}
 
           {/* Divider */}
           <View style={[styles.divider, { backgroundColor: dividerColor }]} />
 
-          {/* Action grid or Note input */}
+          {/* Actions or Note input */}
           {showNoteInput ? (
             <View style={styles.noteContainer}>
               <TextInput
@@ -225,18 +194,18 @@ export default function AyahActionModal({
                   onPress={() => setShowNoteInput(false)}
                   style={[styles.noteBtn, { borderColor: dividerColor }]}
                 >
-                  <Text style={{ color: subtitleColor }}>{t("cancel", lang)}</Text>
+                  <Text style={{ color: subtitleColor, fontSize: 13 }}>{t("cancel", lang)}</Text>
                 </Pressable>
                 <Pressable
                   onPress={handleSaveNote}
-                  style={[styles.noteBtn, { backgroundColor: "#336699" }]}
+                  style={[styles.noteBtn, { backgroundColor: accentGreen }]}
                 >
-                  <Text style={{ color: "#fff", fontWeight: "600" }}>{t("save_note", lang)}</Text>
+                  <Text style={{ color: "#fff", fontWeight: "600", fontSize: 13 }}>{t("save_note", lang)}</Text>
                 </Pressable>
               </View>
             </View>
           ) : (
-            <View style={styles.grid}>
+            <View style={styles.actionsRow}>
               {actions.map((action) => (
                 <Pressable
                   key={action.key}
@@ -246,15 +215,8 @@ export default function AyahActionModal({
                   ]}
                   onPress={action.onPress}
                 >
-                  <Ionicons
-                    name={action.icon}
-                    size={ICON_SIZE}
-                    color={iconColor}
-                  />
-                  <Text
-                    style={[styles.actionLabel, { color: textColor }]}
-                    numberOfLines={1}
-                  >
+                  <Ionicons name={action.icon} size={ICON_SIZE} color={iconColor} />
+                  <Text style={[styles.actionLabel, { color: textColor }]} numberOfLines={1}>
                     {t(action.labelKey, lang)}
                   </Text>
                 </Pressable>
@@ -270,101 +232,109 @@ export default function AyahActionModal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 24,
   },
   card: {
     width: "100%",
-    maxWidth: 320,
-    borderRadius: 16,
+    maxWidth: 300,
+    borderRadius: 14,
     overflow: "hidden",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.25,
-        shadowRadius: 16,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
       },
-      android: {
-        elevation: 12,
-      },
+      android: { elevation: 8 },
     }),
   },
   header: {
-    paddingVertical: 14,
-    paddingHorizontal: 16,
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  headerText: {
-    color: "#ffffff",
-    fontSize: 17,
-    fontWeight: "700",
-    textAlign: "center",
+  headerInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
-  headerSubtext: {
-    color: "rgba(255, 255, 255, 0.75)",
+  suraBadge: {
+    borderRadius: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+  },
+  suraBadgeText: {
+    color: "#fff",
     fontSize: 13,
-    fontWeight: "500",
-    marginTop: 2,
-    textAlign: "center",
+    fontWeight: "700",
   },
-  headerAyahText: {
-    color: "#ffffff",
+  pageText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+  ayahScroll: {
+    maxHeight: 100,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  ayahText: {
     fontSize: 16,
     lineHeight: 28,
-    textAlign: "center",
+    textAlign: "right",
     writingDirection: "rtl",
-    marginTop: 8,
-    paddingHorizontal: 8,
-    opacity: 0.9,
   },
   divider: {
     height: StyleSheet.hairlineWidth,
   },
-  grid: {
+  actionsRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    padding: 12,
-    gap: 10,
+    padding: 8,
+    gap: 6,
   },
   actionBtn: {
-    width: "47%",
-    flexGrow: 1,
-    flexBasis: "45%",
+    flexDirection: "row",
     alignItems: "center",
+    gap: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    flexGrow: 1,
+    flexBasis: "28%",
     justifyContent: "center",
-    paddingVertical: 14,
-    borderRadius: 12,
   },
   actionLabel: {
-    fontSize: 13,
+    fontSize: 11,
     fontWeight: "600",
-    marginTop: 6,
-    textAlign: "center",
   },
   noteContainer: {
-    padding: 16,
+    padding: 12,
   },
   noteInput: {
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 12,
-    minHeight: 80,
-    fontSize: 15,
+    borderRadius: 8,
+    padding: 10,
+    minHeight: 60,
+    fontSize: 14,
     writingDirection: "rtl",
     textAlign: "right",
   },
   noteButtons: {
     flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
+    gap: 8,
+    marginTop: 8,
   },
   noteBtn: {
     flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "transparent",

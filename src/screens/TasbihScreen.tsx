@@ -357,7 +357,7 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
   const vibrateEnabled = useAppStore((s) => s.vibrateEnabled);
   const setVibrateEnabled = useAppStore((s) => s.setVibrateEnabled);
 
-  const isRTL = lang === "ar" || lang === "amz";
+  const isRTL = lang === "ar" || lang === "he";
   const isDark = !!theme.night;
   const bgColor = theme.backgroundColor;
   const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
@@ -404,12 +404,20 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
       tension: 120,
       useNativeDriver: true,
     }).start();
+    const newCount = (counts[selectedDhikr.id] ?? 0) + 1;
     setCounts((prev) => ({
       ...prev,
-      [selectedDhikr.id]: (prev[selectedDhikr.id] ?? 0) + 1,
+      [selectedDhikr.id]: newCount,
     }));
     setTotalSession((prev) => prev + 1);
-  }, [selectedDhikr, pulseAnim, triggerHaptic]);
+
+    // Auto-advance to next dhikr when target reached
+    if (newCount >= selectedDhikr.target && dhikrList.length > 1) {
+      const currentIdx = dhikrList.findIndex((d) => d.id === selectedDhikr.id);
+      const nextIdx = (currentIdx + 1) % dhikrList.length;
+      setTimeout(() => setSelectedId(dhikrList[nextIdx].id), 600);
+    }
+  }, [selectedDhikr, pulseAnim, triggerHaptic, counts, dhikrList]);
 
   const handleReset = useCallback(() => {
     if (!selectedDhikr) return;
@@ -495,7 +503,17 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
         {/* Vibrate toggle */}
         <Pressable
           style={styles.headerBtn}
-          onPress={() => setVibrateEnabled(!vibrateEnabled)}
+          onPress={() => {
+            const newVal = !vibrateEnabled;
+            setVibrateEnabled(newVal);
+            if (newVal) {
+              try {
+                if (Haptics?.impactAsync) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle?.Medium ?? "medium");
+                }
+              } catch (_) {}
+            }
+          }}
           hitSlop={10}
         >
           <Ionicons
@@ -540,6 +558,7 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
                     styles.chipArabic,
                     { color: isSelected ? ACCENT : textColor },
                   ]}
+                  numberOfLines={1}
                 >
                   {dhikr.arabic}
                 </Text>
@@ -737,6 +756,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: "center",
     minWidth: 80,
+    maxWidth: 160,
   },
   addChip: {
     justifyContent: "center",

@@ -131,9 +131,14 @@ const TextPage = memo(function TextPage({
 
   const handleTap = useCallback(
     (sura: number, aya: number) => {
+      // If already selected, open action modal (like double-tap)
+      if (selectedAya?.sura === sura && selectedAya?.aya === aya) {
+        onLongPress(sura, aya, pageId);
+        return;
+      }
       setSelectedAya({ sura, aya, page: pageId, id: `s${sura}a${aya}z` });
     },
-    [pageId, setSelectedAya]
+    [pageId, setSelectedAya, selectedAya, onLongPress]
   );
 
   const pageInfo = useMemo(() => getPageInfo(pageId, quira), [pageId, quira]);
@@ -399,7 +404,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   sectionText: {
-    textAlign: "right",
+    textAlign: "justify",
     writingDirection: "rtl",
     lineHeight: 48,
     letterSpacing: 0.2,

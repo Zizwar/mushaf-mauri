@@ -20,7 +20,7 @@ import appJson from "../../app.json";
 import donorsData from "../data/donors.json";
 
 const ACCENT = "#1a5c2e";
-const RTL_LANGS = ["ar", "amz", "he"];
+const RTL_LANGS = ["ar", "he"];
 const APP_VERSION: string = appJson?.expo?.version ?? "—";
 
 interface Donor {
