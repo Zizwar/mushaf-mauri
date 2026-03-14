@@ -9,13 +9,13 @@ import {
   StatusBar,
   Alert,
   Modal,
+  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import QuranPage from "../components/QuranPage";
 import AudioPlayer from "../components/AudioPlayer";
 import DrawerMenu from "../components/DrawerMenu";
-import DonateModal from "../components/DonateModal";
 import AyahActionModal from "../components/AyahActionModal";
 import TafsirModal from "../components/TafsirModal";
 import TextMushafView from "./TextMushafView";
@@ -73,7 +73,6 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
 
   // Modal states
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const [donateVisible, setDonateVisible] = useState(false);
   const [fontPickerVisible, setFontPickerVisible] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
@@ -223,7 +222,7 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
   const keyExtractor = useCallback((item: { id: number }) => `page_${item.id}`, []);
 
   const isDark = !!theme.night;
-  const isRTL = lang === "ar" || lang === "amz";
+  const isRTL = lang === "ar" || lang === "he";
 
   const pageInfo = useMemo(() => getPageInfo(currentPage, quira), [currentPage, quira]);
 
@@ -252,11 +251,11 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
             <Ionicons name="search-outline" size={20} color={theme.color} />
           </Pressable>
           <Pressable
-            onPress={() => setDonateVisible(true)}
+            onPress={() => Linking.openURL("https://mushaf.ma/support").catch(() => {})}
             hitSlop={10}
             style={styles.headerBtn}
           >
-            <Ionicons name="heart-circle-outline" size={21} color={theme.color} />
+            <Ionicons name="hand-left-outline" size={20} color={theme.color} />
           </Pressable>
         </View>
 
@@ -386,11 +385,6 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
         />
       )}
 
-      {/* Donate Modal */}
-      <DonateModal
-        visible={donateVisible}
-        onClose={() => setDonateVisible(false)}
-      />
 
       {/* Font Picker Modal (text mode) */}
       <Modal

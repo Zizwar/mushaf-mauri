@@ -404,9 +404,10 @@ function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
   const imageDownloadProgress = useAppStore((s) => s.imageDownloadProgress);
   const setImageDownloadProgress = useAppStore((s) => s.setImageDownloadProgress);
 
+  const totalPages = quira === "warsh" ? 638 : TOTAL_PAGES;
   const [cachedCount, setCachedCount] = useState(0);
   const [fromPage, setFromPage] = useState("1");
-  const [toPage, setToPage] = useState(String(TOTAL_PAGES));
+  const [toPage, setToPage] = useState(String(totalPages));
 
   const isDark = !!theme.night;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
@@ -421,22 +422,22 @@ function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
   }, [quira]);
 
   const handleDownload = useCallback(async () => {
-    const from = Math.max(1, Math.min(TOTAL_PAGES, parseInt(fromPage) || 1));
-    const to = Math.max(from, Math.min(TOTAL_PAGES, parseInt(toPage) || TOTAL_PAGES));
+    const from = Math.max(1, Math.min(totalPages, parseInt(fromPage) || 1));
+    const to = Math.max(from, Math.min(totalPages, parseInt(toPage) || totalPages));
     const total = to - from + 1;
     setImageDownloadProgress(quira, { isDownloading: true, downloaded: 0, total });
     await downloadPageRange(quira, from, to, (downloaded, t) => {
       setImageDownloadProgress(quira, { isDownloading: true, downloaded, total: t });
     });
-    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: TOTAL_PAGES });
+    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: totalPages });
     invalidateImageCacheSet(quira);
     setCachedCount(countDownloadedPages(quira));
   }, [quira, fromPage, toPage, setImageDownloadProgress]);
 
   const handleAbort = useCallback(() => {
     abortDownload();
-    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: TOTAL_PAGES });
-  }, [quira, setImageDownloadProgress]);
+    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: totalPages });
+  }, [quira, totalPages, setImageDownloadProgress]);
 
   const handleDelete = useCallback(() => {
     Alert.alert(
@@ -466,12 +467,12 @@ function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
     <View>
       <View style={styles.statusRow}>
         <Ionicons
-          name={cachedCount >= TOTAL_PAGES ? "cloud-done-outline" : "cloud-download-outline"}
+          name={cachedCount >= totalPages ? "cloud-done-outline" : "cloud-download-outline"}
           size={22}
-          color={cachedCount >= TOTAL_PAGES ? "#4caf50" : ACCENT}
+          color={cachedCount >= totalPages ? "#4caf50" : ACCENT}
         />
         <Text style={[styles.statusText, { color: textColor }]}>
-          {t("downloaded_pages", lang)}: {cachedCount} / {TOTAL_PAGES}
+          {t("downloaded_pages", lang)}: {cachedCount} / {totalPages}
         </Text>
       </View>
 
@@ -483,7 +484,7 @@ function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
               backgroundColor: ACCENT,
               width: progress?.isDownloading
                 ? `${Math.min(progressFraction * 100, 100)}%` as any
-                : `${Math.min((cachedCount / TOTAL_PAGES) * 100, 100)}%` as any,
+                : `${Math.min((cachedCount / totalPages) * 100, 100)}%` as any,
             },
           ]}
         />

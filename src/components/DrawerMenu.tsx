@@ -32,6 +32,10 @@ const LANGUAGES: { key: LangKey; label: string }[] = [
   { key: "fr", label: "FR" },
   { key: "amz", label: "ⵣ" },
   { key: "he", label: "עב" },
+  { key: "es", label: "ES" },
+  { key: "nl", label: "NL" },
+  { key: "de", label: "DE" },
+  { key: "it", label: "IT" },
 ];
 
 const MUSHAFS: { key: Quira; labelKey: string }[] = [
@@ -54,7 +58,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
   const setTheme = useAppStore((s) => s.setTheme);
 
   const isNight = !!theme.night;
-  const isRTL = lang === "ar" || lang === "amz" || lang === "he";
+  const isRTL = lang === "ar" || lang === "he";
   const textColor = theme.color;
   const mutedColor = isNight ? "#888" : "#999";
   const bgColor = theme.backgroundColor;
