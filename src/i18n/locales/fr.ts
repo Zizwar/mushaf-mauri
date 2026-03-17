@@ -329,6 +329,8 @@ export default {
   standard_font: "Police par D\u00e9faut",
   hafs_font: "Police Hafs",
   rustam_font: "Police Rustam",
+  amiri_quran_font: "Amiri Quran",
+  noto_naskh_font: "Noto Naskh",
   uthmanic_font: "Police Uthmanienne",
   // Copy
   copied_to_clipboard: "Copi\u00e9",

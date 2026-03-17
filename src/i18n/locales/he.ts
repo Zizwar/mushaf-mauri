@@ -313,6 +313,8 @@ export default {
   standard_font: "גופן ברירת מחדל",
   hafs_font: "גופן חפץ",
   rustam_font: "גופן רוסטם",
+  amiri_quran_font: "Amiri Quran",
+  noto_naskh_font: "Noto Naskh",
   uthmanic_font: "גופן עות׳מאני",
   copied_to_clipboard: "הועתק",
   copy_tafsir: "העתק תפסיר",

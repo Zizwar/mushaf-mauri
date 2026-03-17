@@ -329,6 +329,8 @@ export default {
   standard_font: "الخط الافتراضي",
   hafs_font: "خط حفص",
   rustam_font: "خط رستم",
+  amiri_quran_font: "خط أميري قرآن",
+  noto_naskh_font: "خط نوتو نسخ",
   uthmanic_font: "الخط العثماني",
   // Copy
   copied_to_clipboard: "تم النسخ",

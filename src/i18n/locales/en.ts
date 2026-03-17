@@ -329,6 +329,8 @@ export default {
   standard_font: "Default Font",
   hafs_font: "Hafs Font",
   rustam_font: "Rustam Font",
+  amiri_quran_font: "Amiri Quran",
+  noto_naskh_font: "Noto Naskh",
   uthmanic_font: "Uthmanic Font",
   // Copy
   copied_to_clipboard: "Copied",

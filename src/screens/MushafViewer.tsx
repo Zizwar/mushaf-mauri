@@ -409,6 +409,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
               { key: "hafs", labelKey: "hafs_font" },
               { key: "uthmanic", labelKey: "uthmanic_font" },
               { key: "rustam", labelKey: "rustam_font" },
+              { key: "amiri-quran", labelKey: "amiri_quran_font" },
+              { key: "noto-naskh", labelKey: "noto_naskh_font" },
               { key: "default", labelKey: "standard_font" },
             ].map((opt) => {
               const isSelected = textFontFamily === opt.key;

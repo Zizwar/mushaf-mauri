@@ -48,6 +48,8 @@ export default function App() {
     rustam: require("./assets/fonts/rustam.ttf"),
     uthmanic: require("./assets/fonts/uthmanic.ttf"),
     Maghribi: require("./assets/fonts/maghribi.otf"),
+    "amiri-quran": require("./assets/fonts/amiri-quran.ttf"),
+    "noto-naskh": require("./assets/fonts/noto-naskh.ttf"),
   });
 
   // Wait for Zustand persist to hydrate from AsyncStorage before deciding the initial screen

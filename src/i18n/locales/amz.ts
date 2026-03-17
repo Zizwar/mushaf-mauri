@@ -328,6 +328,8 @@ export default {
   standard_font: "ⴰⵙⴽⴽⵉⵍ ⵏ ⵓⵙⵖⴰⵍ",
   hafs_font: "ⴰⵙⴽⴽⵉⵍ ⵏ ⵃⴰⴼⵚ",
   rustam_font: "ⴰⵙⴽⴽⵉⵍ ⵏ ⵔⵓⵙⵜⴰⵎ",
+  amiri_quran_font: "Amiri Quran",
+  noto_naskh_font: "Noto Naskh",
   uthmanic_font: "ⴰⵙⴽⴽⵉⵍ ⵓⵜⵎⴰⵏⵉ",
   // Copy
   copied_to_clipboard: "ⵉⵜⵜⵓⵙⵏⵖⵍ",
