@@ -9,7 +9,6 @@ import {
   StatusBar,
   Alert,
   Modal,
-  Linking,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -241,7 +240,7 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           isRTL && styles.headerRTL,
         ]}
       >
-        {/* Left side: Search + donate */}
+        {/* Left side: Search */}
         <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
           <Pressable
             onPress={() => onNavigate?.("search")}
@@ -249,13 +248,6 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
             style={styles.headerBtn}
           >
             <Ionicons name="search-outline" size={20} color={theme.color} />
-          </Pressable>
-          <Pressable
-            onPress={() => Linking.openURL("https://mushaf.ma/support").catch(() => {})}
-            hitSlop={10}
-            style={styles.headerBtn}
-          >
-            <Ionicons name="hand-left-outline" size={20} color={theme.color} />
           </Pressable>
         </View>
 

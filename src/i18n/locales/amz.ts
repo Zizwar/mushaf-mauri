@@ -178,6 +178,7 @@ export default {
   // Search
   search_text: "ⵔⵣⵓ ⴳ ⵓⵟⵟⵓⵏ",
   search_sura: "ⵔⵣⵓ ⵙ ⵜⴳⵟⵟⵓⵎⵜ",
+  search_sura_name: "ⵔⵣⵓ ⵉⵙⵎ ⵏ ⵜⴳⵟⵟⵓⵎⵜ...",
   search_page: "ⵔⵣⵓ ⵙ ⵜⵙⵏⴰ",
   enter_page_number: "ⴰⵔⴰ ⵓⵟⵟⵓⵏ ⵏ ⵜⵙⵏⴰ",
   go_to_page: "ⴷⴷⵓ ⵖⵔ ⵜⵙⵏⴰ",

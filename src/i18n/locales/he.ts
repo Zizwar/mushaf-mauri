@@ -174,6 +174,7 @@ export default {
   select_for_export: "בחר לייצוא",
   search_text: "חפש בטקסט",
   search_sura: "חפש לפי סורה",
+  search_sura_name: "חפש שם סורה...",
   search_page: "חפש לפי עמוד",
   enter_page_number: "הזן מספר עמוד",
   go_to_page: "עבור לעמוד",

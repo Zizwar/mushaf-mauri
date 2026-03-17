@@ -175,6 +175,7 @@ export default {
   // Search
   search_text: "Tekst zoeken",
   search_sura: "Zoeken op Sura",
+  search_sura_name: "Zoek suranaam...",
   search_page: "Zoeken op pagina",
   enter_page_number: "Voer paginanummer in",
   go_to_page: "Ga naar pagina",

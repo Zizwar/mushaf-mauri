@@ -137,6 +137,7 @@ export default function SearchScreen({ onGoBack, onNavigateToPage }: SearchScree
   const [pageFilter, setPageFilter] = useState<"juz" | "hizb" | "thumn">("juz");
 
   const suwar = useMemo(() => allSuwar(), []);
+  const [suraFilter, setSuraFilter] = useState("");
 
   const juzData = useMemo(() =>
     Array.from({ length: 30 }, (_, i) => {
@@ -338,13 +339,39 @@ export default function SearchScreen({ onGoBack, onNavigateToPage }: SearchScree
       )}
 
       {activeTab === "sura" && (
-        <FlatList
-          data={suwar}
-          keyExtractor={(item) => `sura_${item.value}`}
-          renderItem={renderSuraItem}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        />
+        <View style={{ flex: 1 }}>
+          {/* Sura filter input */}
+          <View style={[styles.suraFilterRow, { backgroundColor: inputBg, borderColor }]}>
+            <Ionicons name="search-outline" size={18} color={mutedColor} />
+            <TextInput
+              style={[styles.suraFilterInput, { color: textColor }]}
+              placeholder={t("search_sura_name", lang)}
+              placeholderTextColor={mutedColor}
+              value={suraFilter}
+              onChangeText={setSuraFilter}
+              textAlign="right"
+              autoCorrect={false}
+            />
+            {suraFilter.length > 0 && (
+              <Pressable onPress={() => setSuraFilter("")} hitSlop={8}>
+                <Ionicons name="close-circle" size={18} color={mutedColor} />
+              </Pressable>
+            )}
+          </View>
+          <FlatList
+            data={suraFilter.trim()
+              ? suwar.filter((s) => {
+                  const name = normalizeArabic(getSuraName(s.value));
+                  const query = normalizeArabic(suraFilter.trim());
+                  return name.includes(query) || s.label.includes(suraFilter.trim());
+                })
+              : suwar}
+            keyExtractor={(item) => `sura_${item.value}`}
+            renderItem={renderSuraItem}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+          />
+        </View>
       )}
 
       {activeTab === "page" && (
@@ -528,6 +555,24 @@ const styles = StyleSheet.create({
   resultGoText: {
     fontSize: 12,
     fontWeight: "600",
+  },
+  suraFilterRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginHorizontal: 16,
+    marginTop: 10,
+    marginBottom: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  suraFilterInput: {
+    flex: 1,
+    fontSize: 15,
+    paddingVertical: 4,
+    writingDirection: "rtl",
   },
   suraItem: {
     flexDirection: "row",

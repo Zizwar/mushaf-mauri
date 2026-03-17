@@ -178,6 +178,7 @@ export default {
   // Search
   search_text: "Search Text",
   search_sura: "Search by Sura",
+  search_sura_name: "Search sura name...",
   search_page: "Search by Page",
   enter_page_number: "Enter page number",
   go_to_page: "Go to Page",

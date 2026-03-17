@@ -178,6 +178,7 @@ export default {
   // Search
   search_text: "بحث في النص",
   search_sura: "بحث بالسورة",
+  search_sura_name: "ابحث عن اسم السورة...",
   search_page: "بحث بالصفحة",
   enter_page_number: "أدخل رقم الصفحة",
   go_to_page: "الانتقال للصفحة",

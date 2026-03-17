@@ -175,6 +175,7 @@ export default {
   // Search
   search_text: "Cerca testo",
   search_sura: "Cerca per Sura",
+  search_sura_name: "Cerca nome sura...",
   search_page: "Cerca per pagina",
   enter_page_number: "Inserisci numero pagina",
   go_to_page: "Vai alla pagina",
