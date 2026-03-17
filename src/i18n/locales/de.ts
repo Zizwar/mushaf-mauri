@@ -120,9 +120,12 @@ export default {
   offline_ready: "Offline bereit",
   offline: "Offline",
   offline_desc: "Laden Sie Quran-Seiten, Audio und Tafsir vorab herunter, um die App vollständig ohne Internetverbindung zu nutzen.",
+  image_load_error: "Seitenbild konnte nicht geladen werden. Sie können den Textmodus verwenden.",
+  switch_text_mode: "Textmodus",
   from_page: "Von Seite",
   to_page: "Bis Seite",
   downloaded_pages: "Heruntergeladene Seiten",
+  failed_pages: "Seiten fehlgeschlagen",
   abort_download: "Download abbrechen",
   confirm_delete_downloads: "Alle heruntergeladenen Seiten löschen?",
   // Recording

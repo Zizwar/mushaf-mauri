@@ -425,18 +425,22 @@ function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
     const from = Math.max(1, Math.min(totalPages, parseInt(fromPage) || 1));
     const to = Math.max(from, Math.min(totalPages, parseInt(toPage) || totalPages));
     const total = to - from + 1;
-    setImageDownloadProgress(quira, { isDownloading: true, downloaded: 0, total });
-    await downloadPageRange(quira, from, to, (downloaded, t) => {
-      setImageDownloadProgress(quira, { isDownloading: true, downloaded, total: t });
+    setImageDownloadProgress(quira, { isDownloading: true, downloaded: 0, total, failed: 0 });
+    await downloadPageRange(quira, from, to, (downloaded, t, failed) => {
+      setImageDownloadProgress(quira, { isDownloading: true, downloaded, total: t, failed });
     });
-    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: totalPages });
     invalidateImageCacheSet(quira);
-    setCachedCount(countDownloadedPages(quira));
-  }, [quira, fromPage, toPage, setImageDownloadProgress]);
+    const actualCount = countDownloadedPages(quira);
+    setCachedCount(actualCount);
+    const finalFailed = imageDownloadProgress[quira]?.failed ?? 0;
+    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: totalPages, failed: finalFailed });
+  }, [quira, fromPage, toPage, setImageDownloadProgress, imageDownloadProgress]);
 
   const handleAbort = useCallback(() => {
     abortDownload();
-    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: totalPages });
+    setImageDownloadProgress(quira, { isDownloading: false, downloaded: 0, total: totalPages, failed: 0 });
+    invalidateImageCacheSet(quira);
+    setCachedCount(countDownloadedPages(quira));
   }, [quira, totalPages, setImageDownloadProgress]);
 
   const handleDelete = useCallback(() => {
@@ -493,6 +497,12 @@ function PageDownloader({ quira }: { quira: "madina" | "warsh" }) {
       {progress?.isDownloading && (
         <Text style={[styles.progressText, { color: mutedColor }]}>
           {t("downloading", lang)} {progress.downloaded}/{progress.total}
+          {progress.failed > 0 ? ` (${progress.failed} ⚠)` : ""}
+        </Text>
+      )}
+      {!progress?.isDownloading && (progress?.failed ?? 0) > 0 && (
+        <Text style={[styles.progressText, { color: "#d32f2f" }]}>
+          ⚠ {progress!.failed} {t("failed_pages", lang)}
         </Text>
       )}
 

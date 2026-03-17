@@ -120,9 +120,12 @@ export default {
   offline_ready: "Ready for Offline",
   offline: "Offline",
   offline_desc: "Download Quran pages, audio, and tafsir in advance to use the app fully without an internet connection.",
+  image_load_error: "Could not load page image. You can use text mode instead.",
+  switch_text_mode: "Text Mode",
   from_page: "From Page",
   to_page: "To Page",
   downloaded_pages: "Downloaded Pages",
+  failed_pages: "pages failed to download",
   abort_download: "Stop Download",
   confirm_delete_downloads: "Delete all downloaded pages?",
   // Recording

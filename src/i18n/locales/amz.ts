@@ -120,9 +120,12 @@ export default {
   offline_ready: "ⵉⵙⵡⵓⵔⵉ ⴱⵍⴰ ⵉⵏⵜⵔⵏⵜ",
   offline: "ⴱⵍⴰ ⵉⵏⵜⵔⵏⵜ",
   offline_desc: "ⴰⵔⴰ ⵉⵙⵓⵏ ⵏ ⴰⵎⴰⴹⴰⵍ ⵙ ⵓⵙⵉⵏⴰⴳ",
+  image_load_error: "ⵓⵔ ⵉⵜⵜⵓⵙⴽⴰⵔ ⴰⴷ ⴷ ⵜⵜⵓⵙⴽⴰⵔ ⵜⴰⵡⵍⴰⴼⵜ. ⵜⵣⵎⵔⵜ ⴰⴷ ⵜⵙⵡⵓⵔⵉⵜ ⵙ ⵓⵣⵎⵣ ⵏ ⵓⴹⵕⵉⵚ.",
+  switch_text_mode: "ⴰⵣⵎⵣ ⵏ ⵓⴹⵕⵉⵚ",
   from_page: "ⵙⴳ ⵜⴰⵙⵏⴰ",
   to_page: "ⴰⵔ ⵜⴰⵙⵏⴰ",
   downloaded_pages: "ⵜⵉⵙⵏⵉⵡⵉⵏ ⵉⵜⵜⵓⴳⵯⵎⵏ",
+  failed_pages: "ⵜⵉⵙⵏⵉⵡⵉⵏ ⵓⵔ ⵉⵜⵜⵓⴳⵯⵎⵏ",
   abort_download: "ⵙⴱⴷⴷ ⴰⴳⵯⵎ",
   confirm_delete_downloads: "ⴰⴷ ⵜⴽⴽⵙⵜ ⵜⵉⵙⵏⵉⵡⵉⵏ ⵎⴰⵕⵕⴰ?",
   // Recording

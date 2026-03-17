@@ -139,8 +139,9 @@ export default function AyahActionModal({
       onRequestClose={onClose}
       statusBarTranslucent
     >
-      <Pressable style={styles.overlay} onPress={onClose}>
-        <Pressable style={[styles.card, { backgroundColor: cardBg }]}>
+      <View style={styles.overlay}>
+        <Pressable style={StyleSheet.absoluteFillObject} onPress={onClose} />
+        <View style={[styles.card, { backgroundColor: cardBg }]}>
           {/* Compact header */}
           <View style={[styles.header, { borderBottomColor: dividerColor }]}>
             <View style={styles.headerInfo}>
@@ -158,9 +159,13 @@ export default function AyahActionModal({
             </Pressable>
           </View>
 
-          {/* Scrollable ayah text */}
+          {/* Ayah text — shown in full, scrollable if long */}
           {ayahText ? (
-            <ScrollView style={styles.ayahScroll} nestedScrollEnabled showsVerticalScrollIndicator>
+            <ScrollView
+              style={styles.ayahScroll}
+              nestedScrollEnabled
+              showsVerticalScrollIndicator
+            >
               <Text
                 style={[
                   styles.ayahText,
@@ -223,8 +228,8 @@ export default function AyahActionModal({
               ))}
             </View>
           )}
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
@@ -280,7 +285,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   ayahScroll: {
-    maxHeight: 100,
+    maxHeight: 200,
     paddingHorizontal: 12,
     paddingVertical: 8,
   },

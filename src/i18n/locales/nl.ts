@@ -117,9 +117,12 @@ export default {
   offline_ready: "Klaar voor offline",
   offline: "Offline",
   offline_desc: "Download Quranpagina's, audio en tafsir van tevoren om de app volledig zonder internetverbinding te gebruiken.",
+  image_load_error: "Kan paginaafbeelding niet laden. U kunt de tekstmodus gebruiken.",
+  switch_text_mode: "Tekstmodus",
   from_page: "Vanaf pagina",
   to_page: "Tot pagina",
   downloaded_pages: "Gedownloade pagina's",
+  failed_pages: "pagina's mislukt",
   abort_download: "Download stoppen",
   confirm_delete_downloads: "Alle gedownloade pagina's verwijderen?",
   // Recording

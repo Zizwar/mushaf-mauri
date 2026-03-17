@@ -117,9 +117,12 @@ export default {
   offline_ready: "Pronto per l'uso offline",
   offline: "Non in linea",
   offline_desc: "Scarica le pagine del Corano, l'audio e il tafsir in anticipo per utilizzare l'app senza connessione internet.",
+  image_load_error: "Impossibile caricare l'immagine. Puoi usare la modalità testo.",
+  switch_text_mode: "Modalità Testo",
   from_page: "Dalla pagina",
   to_page: "Alla pagina",
   downloaded_pages: "Pagine scaricate",
+  failed_pages: "pagine fallite",
   abort_download: "Interrompi download",
   confirm_delete_downloads: "Eliminare tutte le pagine scaricate?",
   // Recording

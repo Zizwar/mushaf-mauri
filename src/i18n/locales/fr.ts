@@ -120,9 +120,12 @@ export default {
   offline_ready: "Prêt Hors Ligne",
   offline: "Hors-ligne",
   offline_desc: "Téléchargez les pages du Coran, l'audio et les tafsirs pour utiliser l'application sans connexion Internet.",
+  image_load_error: "Impossible de charger l'image. Vous pouvez utiliser le mode texte.",
+  switch_text_mode: "Mode Texte",
   from_page: "De la Page",
   to_page: "\u00c0 la Page",
   downloaded_pages: "Pages T\u00e9l\u00e9charg\u00e9es",
+  failed_pages: "pages échouées",
   abort_download: "Arr\u00eater le T\u00e9l\u00e9chargement",
   confirm_delete_downloads: "Supprimer toutes les pages t\u00e9l\u00e9charg\u00e9es ?",
   // Recording

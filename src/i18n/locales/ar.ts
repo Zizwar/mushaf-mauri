@@ -120,9 +120,12 @@ export default {
   offline_ready: "جاهز للعمل بدون إنترنت",
   offline: "بدون إنترنت",
   offline_desc: "حمّل صفحات المصحف والصوتيات والتفاسير مسبقاً للاستمتاع بتجربة كاملة بدون الحاجة إلى الإنترنت",
+  image_load_error: "تعذّر تحميل صورة الصفحة. يمكنك استخدام الوضع النصي.",
+  switch_text_mode: "الوضع النصي",
   from_page: "من صفحة",
   to_page: "إلى صفحة",
   downloaded_pages: "صفحات محملة",
+  failed_pages: "صفحة فشل تحميلها",
   abort_download: "إيقاف التحميل",
   confirm_delete_downloads: "هل تريد حذف جميع الصفحات المحملة؟",
   // Recording

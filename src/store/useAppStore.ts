@@ -19,6 +19,7 @@ export interface ImageDownloadProgress {
   isDownloading: boolean;
   downloaded: number;
   total: number;
+  failed: number;
 }
 
 export type RecordingState = "idle" | "recording" | "saving";
@@ -150,6 +151,7 @@ const defaultDownloadProgress: ImageDownloadProgress = {
   isDownloading: false,
   downloaded: 0,
   total: 604,
+  failed: 0,
 };
 
 export const useAppStore = create<AppState>()(
