@@ -33,6 +33,15 @@
       ]
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 1240,
+          "resizeMode": "cover",
+          "backgroundColor": "#336699"
+        }
+      ],
       "expo-sqlite",
       [
         "expo-audio",
