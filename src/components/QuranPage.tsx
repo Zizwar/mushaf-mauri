@@ -118,6 +118,7 @@ const TUNER_FIELDS: { key: keyof typeof madinaConfig; label: string; step: numbe
   { key: "MARGIN_PAGE", label: "MrgP", step: 1 },
   { key: "LEFT_OFFSET", label: "L.Off", step: 1 },
   { key: "TOP_OFFSET", label: "T.Off", step: 1 },
+  { key: "TOP_OFFSET_P12", label: "T.P12", step: 1 },
   { key: "overlayTopExtra", label: "OvT", step: 1 },
   { key: "overlayLeftExtra", label: "OvL", step: 1 },
   { key: "height", label: "LnH", step: 1 },
@@ -129,10 +130,10 @@ const TUNER_FIELDS: { key: keyof typeof madinaConfig; label: string; step: numbe
 
 // Defaults snapshot for reset
 const MADINA_DEFAULTS: Record<string, number> = {
-  SCREEN_DEFAULT_WIDTH: 456, MARGIN_PAGE: 48,
-  LEFT_OFFSET: -10, TOP_OFFSET: -20,
+  SCREEN_DEFAULT_WIDTH: 451, MARGIN_PAGE: 48,
+  LEFT_OFFSET: -10, TOP_OFFSET: -30, TOP_OFFSET_P12: -20,
   overlayTopExtra: 5, overlayLeftExtra: 8,
-  height: 30, tWidth: 416, ofWidth: 10, ofHeight: 15, mgWidth: 40,
+  height: 38, tWidth: 416, ofWidth: 10, ofHeight: 8, mgWidth: 20,
 };
 
 function CoordTunerPanel({ onApply }: { onApply: () => void }) {

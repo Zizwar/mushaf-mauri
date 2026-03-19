@@ -13,18 +13,19 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 // ==================== MADINA (Hafs) ====================
 
-// Tunable config — exposed for the debug panel in QuranPage
+// Calibrated config for Hafs coordinate mapping (does NOT affect Warsh)
 export const madinaConfig = {
   MARGIN_PAGE: 48,
-  SCREEN_DEFAULT_WIDTH: 456,
+  SCREEN_DEFAULT_WIDTH: 451,
   LEFT_OFFSET: -10,
-  TOP_OFFSET: -20,
+  TOP_OFFSET: -30,
+  TOP_OFFSET_P12: -20, // pages 1 & 2 have different top offset
   // per-line geometry (normal pages)
-  height: 30,
+  height: 38,
   tWidth: 416,
   ofWidth: 10,
-  ofHeight: 15,
-  mgWidth: 40,
+  ofHeight: 8,
+  mgWidth: 20,
   // sura/page offsets
   faselSura: 110,
   pageTop: 37,
@@ -46,13 +47,13 @@ function scaleMadina(value: number): number {
 
 function hlDrawMadina(
   id: string, top: number, left: number, width: number, height: number,
-  wino: AyahPosition["wino"]
+  wino: AyahPosition["wino"], topOffset: number
 ): AyahPosition {
   return {
     width: scaleMadina(width),
     height: scaleMadina(height),
     left: scaleMadina(left) + madinaConfig.LEFT_OFFSET,
-    top: scaleMadina(top) + madinaConfig.TOP_OFFSET,
+    top: scaleMadina(top) + topOffset,
     wino,
     id: wino.id,
   };
@@ -67,9 +68,11 @@ function getPageCoordinatesMadina(page: number): AyahPosition[] {
   let height = madinaConfig.height, mgWidth = madinaConfig.mgWidth, tWidth = madinaConfig.tWidth, ofWidth = madinaConfig.ofWidth, ofHeight = madinaConfig.ofHeight;
   const faselSura = madinaConfig.faselSura, pageTop = madinaConfig.pageTop, pageSuraTop = madinaConfig.pageSuraTop;
 
-  if (page === 1 || page === 2) {
+  const isP12 = page === 1 || page === 2;
+  if (isP12) {
     height = 20; mgWidth = 80; tWidth = 376; ofWidth = 15; ofHeight = 20;
   }
+  const topOffset = isP12 ? madinaConfig.TOP_OFFSET_P12 : madinaConfig.TOP_OFFSET;
 
   let count = 1;
   const allPositions: AyahPosition[] = [];
@@ -91,14 +94,14 @@ function getPageCoordinatesMadina(page: number): AyahPosition[] {
     const diff = top - prevTop!;
 
     if (diff > height * 1.6) {
-      allPositions.push(hlDrawMadina(hlId + "_1", prevTop!, mgWidth, prevLeft! - mgWidth, height, wino));
-      allPositions.push(hlDrawMadina(hlId + "_2", top, left, tWidth - left, height, wino));
-      allPositions.push(hlDrawMadina(hlId + "_3", prevTop! + height, mgWidth, tWidth - mgWidth, diff - height, wino));
+      allPositions.push(hlDrawMadina(hlId + "_1", prevTop!, mgWidth, prevLeft! - mgWidth, height, wino, topOffset));
+      allPositions.push(hlDrawMadina(hlId + "_2", top, left, tWidth - left, height, wino, topOffset));
+      allPositions.push(hlDrawMadina(hlId + "_3", prevTop! + height, mgWidth, tWidth - mgWidth, diff - height, wino, topOffset));
     } else if (diff > height * 0.6) {
-      allPositions.push(hlDrawMadina(hlId + "_1", prevTop!, mgWidth, prevLeft! - mgWidth, height, wino));
-      allPositions.push(hlDrawMadina(hlId + "_2", top, left, tWidth - left, height, wino));
+      allPositions.push(hlDrawMadina(hlId + "_1", prevTop!, mgWidth, prevLeft! - mgWidth, height, wino, topOffset));
+      allPositions.push(hlDrawMadina(hlId + "_2", top, left, tWidth - left, height, wino, topOffset));
     } else {
-      allPositions.push(hlDrawMadina(hlId + "_1", top, left, prevLeft! - left, height, wino));
+      allPositions.push(hlDrawMadina(hlId + "_1", top, left, prevLeft! - left, height, wino, topOffset));
     }
 
     count++;
