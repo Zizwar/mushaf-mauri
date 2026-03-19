@@ -12,6 +12,7 @@ import {
   Alert,
   Platform,
   KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,6 +23,7 @@ import { allSuwar, getAyahCount } from "../utils/quranHelpers";
 
 const ACCENT = "#1a5c2e";
 const BLUE = "#336699";
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 const RING_SIZE = 220;
 const RING_STROKE = 8;
 const SEGMENT_COUNT = 72;
@@ -190,97 +192,181 @@ function TargetStepper({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Sura picker for Quran ayah selection
+// Sura picker modal (full bottom sheet like PrayerMode)
 // ────────────────────────────────────────────────────────────────────────────
-function SuraAyaPicker({
+function SuraPickerModal({
+  visible,
   isDark,
   textColor,
   mutedColor,
   borderColor,
   lang,
   onSelect,
+  onClose,
 }: {
+  visible: boolean;
   isDark: boolean;
   textColor: string;
   mutedColor: string;
   borderColor: string;
   lang: string;
   onSelect: (sura: number, aya: number) => void;
+  onClose: () => void;
 }) {
   const [selectedSura, setSelectedSura] = useState<number | null>(null);
+  const [suraFilter, setSuraFilter] = useState("");
   const suwar = useMemo(() => allSuwar(), []);
   const ayaCount = selectedSura ? getAyahCount(selectedSura) : 0;
   const inputBg = isDark ? "#2a2a3e" : "#f5f5f5";
+  const sheetBg = isDark ? "#1a1a2e" : "#fff";
 
-  if (selectedSura === null) {
+  // Reset on open
+  React.useEffect(() => {
+    if (visible) {
+      setSelectedSura(null);
+      setSuraFilter("");
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    setSuraFilter("");
+    setSelectedSura(null);
+    onClose();
+  };
+
+  if (selectedSura !== null) {
+    // Show aya number grid
+    const ayaNumbers = Array.from({ length: ayaCount }, (_, i) => i + 1);
     return (
-      <View style={{ maxHeight: 200 }}>
-        <Text style={[styles.modalLabel, { color: mutedColor }]}>
-          {t("sura_s", lang as any)}
-        </Text>
-        <FlatList
-          data={suwar}
-          keyExtractor={(item) => String(item.value)}
-          style={{ maxHeight: 180, borderRadius: 10, borderWidth: 1, borderColor }}
-          renderItem={({ item }) => (
-            <Pressable
-              style={{
-                paddingVertical: 10,
-                paddingHorizontal: 14,
-                borderBottomWidth: StyleSheet.hairlineWidth,
-                borderBottomColor: borderColor,
-              }}
-              onPress={() => setSelectedSura(item.value)}
-            >
-              <Text style={{ color: textColor, fontSize: 15, writingDirection: "rtl" }}>
-                {item.label}
+      <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={handleClose}>
+        <Pressable style={suraPickerStyles.overlay} onPress={handleClose}>
+          <Pressable style={[suraPickerStyles.sheet, { backgroundColor: sheetBg }]}>
+            <View style={[suraPickerStyles.header, { borderBottomColor: borderColor }]}>
+              <Pressable onPress={() => setSelectedSura(null)} hitSlop={8} style={{ padding: 4 }}>
+                <Ionicons name="arrow-back" size={22} color={ACCENT} />
+              </Pressable>
+              <Text style={{ color: textColor, fontSize: 16, fontWeight: "700", flex: 1, textAlign: "right", writingDirection: "rtl" }}>
+                {suwar.find((s) => s.value === selectedSura)?.label}
               </Text>
-            </Pressable>
-          )}
-        />
-      </View>
+              <Text style={{ color: mutedColor, fontSize: 13 }}>
+                {t("aya_s", lang as any)}
+              </Text>
+            </View>
+            <ScrollView
+              contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", padding: 10, gap: 6 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {ayaNumbers.map((num) => (
+                <Pressable
+                  key={num}
+                  style={{
+                    width: 50,
+                    height: 40,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isDark ? "#333" : "#e8e8e8",
+                  }}
+                  onPress={() => {
+                    onSelect(selectedSura, num);
+                    handleClose();
+                  }}
+                >
+                  <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>{num}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     );
   }
 
-  // Show aya number grid
-  const ayaNumbers = Array.from({ length: ayaCount }, (_, i) => i + 1);
   return (
-    <View style={{ gap: 8 }}>
-      <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-        <Pressable onPress={() => setSelectedSura(null)} hitSlop={8}>
-          <Ionicons name="arrow-back" size={20} color={ACCENT} />
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={handleClose}>
+      <Pressable style={suraPickerStyles.overlay} onPress={handleClose}>
+        <Pressable style={[suraPickerStyles.sheet, { backgroundColor: sheetBg }]}>
+          {/* Filter input */}
+          <View style={[suraPickerStyles.header, { borderBottomColor: borderColor }]}>
+            <TextInput
+              style={[suraPickerStyles.filterInput, { backgroundColor: inputBg, color: textColor }]}
+              placeholder="ابحث عن سورة..."
+              placeholderTextColor={mutedColor}
+              value={suraFilter}
+              onChangeText={setSuraFilter}
+              autoFocus
+              textAlign="right"
+            />
+            <Pressable onPress={handleClose} style={{ padding: 4 }}>
+              <Ionicons name="close" size={22} color={mutedColor} />
+            </Pressable>
+          </View>
+          {/* Sura list */}
+          <FlatList
+            data={suwar.filter((s) => !suraFilter || s.label.includes(suraFilter))}
+            keyExtractor={(s) => String(s.value)}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item: s }) => (
+              <Pressable
+                style={suraPickerStyles.item}
+                onPress={() => setSelectedSura(s.value)}
+              >
+                <Text style={[suraPickerStyles.itemText, { color: textColor }]}>
+                  {s.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+              </Pressable>
+            )}
+          />
         </Pressable>
-        <Text style={{ color: textColor, fontSize: 14, fontWeight: "600", flex: 1, writingDirection: "rtl" }}>
-          {suwar.find((s) => s.value === selectedSura)?.label}
-        </Text>
-        <Text style={{ color: mutedColor, fontSize: 12 }}>
-          {t("aya_s", lang as any)}
-        </Text>
-      </View>
-      <ScrollView
-        style={{ maxHeight: 150, borderRadius: 10, borderWidth: 1, borderColor, backgroundColor: inputBg }}
-        contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", padding: 6, gap: 4 }}
-      >
-        {ayaNumbers.map((num) => (
-          <Pressable
-            key={num}
-            style={{
-              width: 44,
-              height: 36,
-              borderRadius: 8,
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: isDark ? "#333" : "#e8e8e8",
-            }}
-            onPress={() => onSelect(selectedSura, num)}
-          >
-            <Text style={{ color: textColor, fontSize: 14, fontWeight: "600" }}>{num}</Text>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </View>
+      </Pressable>
+    </Modal>
   );
 }
+
+const suraPickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: SCREEN_HEIGHT * 0.7,
+    paddingBottom: 24,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+  },
+  filterInput: {
+    flex: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    fontSize: 15,
+    writingDirection: "rtl",
+  },
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#f0f0f0",
+  },
+  itemText: {
+    fontSize: 16,
+    textAlign: "right",
+    flex: 1,
+    writingDirection: "rtl",
+  },
+});
 
 // ────────────────────────────────────────────────────────────────────────────
 // Add / Edit modal
@@ -412,25 +498,28 @@ function AddEditModal({
                 <View style={{ paddingVertical: 20, alignItems: "center" }}>
                   <Ionicons name="hourglass-outline" size={24} color={mutedColor} />
                 </View>
-              ) : showQuranPicker ? (
-                <SuraAyaPicker
-                  isDark={isDark}
-                  textColor={textColor}
-                  mutedColor={mutedColor}
-                  borderColor={borderColor}
-                  lang={lang}
-                  onSelect={handleQuranSelect}
-                />
               ) : (
                 <Pressable
                   style={[styles.loadBtn, { backgroundColor: BLUE, alignSelf: "flex-start" }]}
                   onPress={() => setShowQuranPicker(true)}
                 >
+                  <Ionicons name="book-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
                   <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>
                     {t("load_ayah", lang as any)}
                   </Text>
                 </Pressable>
               )}
+
+              <SuraPickerModal
+                visible={showQuranPicker}
+                isDark={isDark}
+                textColor={textColor}
+                mutedColor={mutedColor}
+                borderColor={borderColor}
+                lang={lang}
+                onSelect={handleQuranSelect}
+                onClose={() => setShowQuranPicker(false)}
+              />
             </ScrollView>
 
             {/* Save / Cancel */}
@@ -1126,6 +1215,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   loadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,

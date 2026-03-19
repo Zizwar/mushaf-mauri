@@ -402,4 +402,7 @@ export default {
   source_hafs: "Tafsir, Bilder & Audio (Hafs): King Saud University",
   source_warsh: "Warsh-Rezitationen: Mohammed VI Foundation for Publishing the Holy Quran",
   feedback_email_subject: "Feedback - Mushaf Mauri",
+  import_from_file: "Von lokaler Datei",
+  import_from_url: "Von URL",
+  import_url_placeholder: "URL der .mrec-Datei eingeben",
 };

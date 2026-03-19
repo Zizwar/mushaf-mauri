@@ -377,4 +377,7 @@ export default {
   source_hafs: "תפסיר, תמונות ואודיו (חפס): אוניברסיטת המלך סעוד",
   source_warsh: "קריאות ורש: קרן מוחמד השישי לקוראן הקדוש",
   feedback_email_subject: "משוב - Mushaf Mauri",
+  import_from_file: "מקובץ מקומי",
+  import_from_url: "מכתובת URL",
+  import_url_placeholder: "הזן כתובת URL של קובץ .mrec",
 };

@@ -404,4 +404,7 @@ export default {
   source_hafs: "التفاسير والصور والصوتيات (حفص): جامعة الملك سعود",
   source_warsh: "تلاوات ورش والقراءات: مؤسسة محمد السادس لنشر المصحف الشريف",
   feedback_email_subject: "ملاحظة - مصحف ماوري",
+  import_from_file: "من ملف محلي",
+  import_from_url: "من رابط",
+  import_url_placeholder: "أدخل رابط ملف .mrec",
 };

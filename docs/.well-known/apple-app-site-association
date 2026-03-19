@@ -1,0 +1,19 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": ["TODO_TEAM_ID.wino.ma.mushaf.mauri"],
+        "components": [
+          {
+            "/": "/#/a*s*q*",
+            "comment": "Deep link to specific aya/sura/quira"
+          }
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": ["TODO_TEAM_ID.wino.ma.mushaf.mauri"]
+  }
+}

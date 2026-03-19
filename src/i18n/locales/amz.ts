@@ -391,4 +391,7 @@ export default {
   source_hafs: "ⵜⴼⵙⵉⵔⵜ, ⵜⵓⵔⴰ ⴷ ⵓⵙⵙⵍⵎⴷ (ⵃⴼⵙ): ⵜⵉⵙⵙⵉⵔⵉⵜ ⵏ ⵓⴳⵍⵍⵉⴷ ⵙⵄⵓⴷ",
   source_warsh: "ⵜⵉⵍⵍⴰⵡⵜ ⵏ ⵓⵔⵛ: ⵜⴰⵙⵏⴰⵎⴰⵔⵜ ⵏ ⵎⵓⵃⵎⵎⴷ VI",
   feedback_email_subject: "ⵜⴰⵎⵍⵉⵍⵜ - Mushaf Mauri",
+  import_from_file: "ⵙⴳ ⵓⴼⴰⵢⵍⵓ ⴰⴷⵖⴰⵔⴰⵏ",
+  import_from_url: "ⵙⴳ URL",
+  import_url_placeholder: "ⵙⴽⵛⵎ URL ⵏ ⵓⴼⴰⵢⵍⵓ .mrec",
 };

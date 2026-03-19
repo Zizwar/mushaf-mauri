@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { BackHandler, View, useColorScheme } from "react-native";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { BackHandler, View, useColorScheme, Linking, Alert } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -9,6 +9,8 @@ const SPLASH_MIN_MS = 2000;
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 import { initWarshDB } from "./src/utils/warshAudioDB";
+import { getPageBySuraAya } from "./src/utils/quranHelpers";
+import { importProfileFromUri } from "./src/utils/recordings";
 import HomeScreen from "./src/screens/HomeScreen";
 import MushafViewer from "./src/screens/MushafViewer";
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -88,6 +90,67 @@ export default function App() {
 
   // Initialize Warsh DB early
   useEffect(() => { initWarshDB().catch((e) => console.warn("[App] initWarshDB failed:", e)); }, []);
+
+  // ─── Deep linking: mushaf.ma/#/a{aya}s{sura}q{quira} & .mrec files ───
+  const deepLinkHandled = useRef(false);
+
+  const handleDeepLink = useCallback(async (url: string) => {
+    if (!url) return;
+    try {
+      // Handle .mrec file URIs
+      if (url.endsWith(".mrec") || url.includes("mrec")) {
+        const quira = useAppStore.getState().quira;
+        const profile = await importProfileFromUri(url, quira);
+        if (profile) {
+          Alert.alert("✓", `${profile.name}`);
+          setScreen("recordings");
+        }
+        return;
+      }
+
+      // Parse mushaf.ma/#/a{aya}s{sura}q{quira} or mushafmauri://a{aya}s{sura}q{quira}
+      // Formats: #/a1s1q1  or  a1s1q1
+      const hash = url.includes("#/") ? url.split("#/")[1] : url.split("://")[1];
+      if (!hash) return;
+      const match = hash.match(/a(\d+)s(\d+)q(\d+)/i);
+      if (!match) return;
+
+      const aya = parseInt(match[1], 10);
+      const sura = parseInt(match[2], 10);
+      const qiraCode = parseInt(match[3], 10); // 1=warsh, 2=hafs
+
+      if (sura < 1 || sura > 114 || aya < 1) return;
+
+      const targetQuira = qiraCode === 2 ? "madina" : "warsh";
+      const store = useAppStore.getState();
+
+      // Switch quira if needed
+      if (store.quira !== targetQuira) {
+        store.setQuira(targetQuira);
+      }
+
+      const page = getPageBySuraAya(sura, aya, targetQuira);
+      store.setCurrentPage(page);
+      store.setSelectedAya({ sura, aya, page, id: `s${sura}a${aya}z` });
+      setScreen("mushaf");
+    } catch (e) {
+      console.warn("[DeepLink] error:", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Handle initial URL (app opened via link)
+    Linking.getInitialURL().then((url) => {
+      if (url && !deepLinkHandled.current) {
+        deepLinkHandled.current = true;
+        handleDeepLink(url);
+      }
+    });
+
+    // Handle URL while app is open
+    const sub = Linking.addEventListener("url", ({ url }) => handleDeepLink(url));
+    return () => sub.remove();
+  }, [handleDeepLink]);
 
   // Android back button
   useEffect(() => {

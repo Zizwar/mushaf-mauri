@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>مصحف ماوري</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #046f98 0%, #1a5c2e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    .card {
+      background: rgba(255,255,255,0.12);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+    }
+    h1 { font-size: 28px; margin-bottom: 12px; }
+    p { font-size: 16px; opacity: 0.85; margin-bottom: 24px; line-height: 1.6; }
+    .btn {
+      display: inline-block;
+      background: #fff;
+      color: #1a5c2e;
+      font-weight: 700;
+      font-size: 16px;
+      padding: 14px 32px;
+      border-radius: 14px;
+      text-decoration: none;
+      margin: 6px;
+      transition: transform 0.15s;
+    }
+    .btn:active { transform: scale(0.96); }
+    .info { font-size: 13px; opacity: 0.6; margin-top: 20px; }
+    #deep-link-info { display: none; margin-top: 16px; font-size: 14px; opacity: 0.9; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>مصحف ماوري</h1>
+    <p>تطبيق المصحف الشريف برواية ورش وحفص</p>
+
+    <div id="deep-link-info"></div>
+
+    <div>
+      <a class="btn" id="open-app" href="mushafmauri://">فتح التطبيق</a>
+    </div>
+
+    <p class="info">إذا لم يفتح التطبيق، قم بتحميله أولاً</p>
+  </div>
+
+  <script>
+    (function() {
+      var hash = window.location.hash;
+      // Parse #/a{aya}s{sura}q{quira}
+      if (hash && hash.startsWith('#/')) {
+        var path = hash.substring(2);
+        var match = path.match(/a(\d+)s(\d+)q(\d+)/i);
+        if (match) {
+          var aya = match[1], sura = match[2], q = match[3];
+          var qName = q === '2' ? 'حفص' : 'ورش';
+          var info = document.getElementById('deep-link-info');
+          info.style.display = 'block';
+          info.innerHTML = 'سورة ' + sura + ' - آية ' + aya + ' (' + qName + ')';
+
+          // Update app link with the deep link path
+          var appLink = document.getElementById('open-app');
+          appLink.href = 'mushafmauri://' + path;
+
+          // Auto-try to open the app
+          setTimeout(function() {
+            window.location.href = 'mushafmauri://' + path;
+          }, 300);
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

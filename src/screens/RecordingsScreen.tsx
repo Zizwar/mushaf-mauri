@@ -29,6 +29,7 @@ import {
   countRecordings,
   exportProfile,
   importProfile,
+  importProfileFromUri,
   exportSelectedRecordings,
   listRecordings,
   deleteRecording,
@@ -410,7 +411,7 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
     [quira, lang, activeProfileId, setActiveProfileId, refreshProfiles]
   );
 
-  const handleImport = useCallback(async () => {
+  const handleImportFile = useCallback(async () => {
     try {
       const profile = await importProfile(quira);
       if (profile) {
@@ -422,6 +423,44 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
       Alert.alert(t("import_profile", lang), t("import_failed", lang));
     }
   }, [quira, lang, refreshProfiles, refreshData]);
+
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [importUrl, setImportUrl] = useState("");
+
+  const handleImportFromUrl = useCallback(() => {
+    setImportUrl("");
+    setShowUrlInput(true);
+  }, []);
+
+  const handleSubmitUrl = useCallback(async () => {
+    const url = importUrl.trim();
+    setShowUrlInput(false);
+    if (!url) return;
+    try {
+      const profile = await importProfileFromUri(url, quira);
+      if (profile) {
+        refreshProfiles();
+        refreshData();
+        Alert.alert(t("import_profile", lang), t("import_success", lang));
+      } else {
+        Alert.alert(t("import_profile", lang), t("import_failed", lang));
+      }
+    } catch {
+      Alert.alert(t("import_profile", lang), t("import_failed", lang));
+    }
+  }, [importUrl, quira, lang, refreshProfiles, refreshData]);
+
+  const handleImport = useCallback(() => {
+    Alert.alert(
+      t("import_profile", lang),
+      undefined,
+      [
+        { text: t("import_from_file", lang), onPress: handleImportFile },
+        { text: t("import_from_url", lang), onPress: handleImportFromUrl },
+        { text: t("cancel", lang), style: "cancel" },
+      ]
+    );
+  }, [lang, handleImportFile, handleImportFromUrl]);
 
   // =========================================================================
   // Simplified Card
@@ -830,6 +869,38 @@ export default function RecordingsScreen({ onGoBack }: RecordingsScreenProps) {
             <Pressable style={[styles.helpCloseBtn, { backgroundColor: ACCENT }]} onPress={() => setShowHelp(false)}>
               <Text style={styles.helpCloseBtnText}>{t("alert_ok", lang)}</Text>
             </Pressable>
+          </Pressable>
+        </Pressable>
+      </Modal>
+
+      {/* URL Import Modal */}
+      <Modal visible={showUrlInput} transparent animationType="fade" statusBarTranslucent onRequestClose={() => setShowUrlInput(false)}>
+        <Pressable style={styles.centerModalOverlay} onPress={() => setShowUrlInput(false)}>
+          <Pressable style={[styles.helpModalContent, { backgroundColor: cardBg, gap: 12 }]} onPress={() => {}}>
+            <Text style={{ color: textColor, fontSize: 16, fontWeight: "700", textAlign: "center" }}>
+              {t("import_from_url", lang)}
+            </Text>
+            <TextInput
+              style={{ borderWidth: 1, borderColor, borderRadius: 10, padding: 12, fontSize: 14, color: textColor, textAlign: "left", direction: "ltr" }}
+              placeholder={t("import_url_placeholder", lang)}
+              placeholderTextColor={mutedColor}
+              value={importUrl}
+              onChangeText={setImportUrl}
+              autoFocus
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              returnKeyType="go"
+              onSubmitEditing={handleSubmitUrl}
+            />
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable style={{ flex: 1, paddingVertical: 12, borderRadius: 10, borderWidth: 1, borderColor, alignItems: "center" }} onPress={() => setShowUrlInput(false)}>
+                <Text style={{ color: mutedColor, fontWeight: "600" }}>{t("cancel", lang)}</Text>
+              </Pressable>
+              <Pressable style={{ flex: 1, paddingVertical: 12, borderRadius: 10, backgroundColor: ACCENT, alignItems: "center" }} onPress={handleSubmitUrl}>
+                <Text style={{ color: "#fff", fontWeight: "700" }}>{t("import_profile", lang)}</Text>
+              </Pressable>
+            </View>
           </Pressable>
         </Pressable>
       </Modal>
