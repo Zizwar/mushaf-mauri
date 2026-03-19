@@ -61,26 +61,39 @@
   <script>
     (function() {
       var hash = window.location.hash;
-      // Parse #/a{aya}s{sura}q{quira}
+      var path = '';
       if (hash && hash.startsWith('#/')) {
-        var path = hash.substring(2);
-        var match = path.match(/a(\d+)s(\d+)q(\d+)/i);
-        if (match) {
-          var aya = match[1], sura = match[2], q = match[3];
-          var qName = q === '2' ? 'حفص' : 'ورش';
-          var info = document.getElementById('deep-link-info');
-          info.style.display = 'block';
-          info.innerHTML = 'سورة ' + sura + ' - آية ' + aya + ' (' + qName + ')';
+        path = hash.substring(2);
+      }
 
-          // Update app link with the deep link path
-          var appLink = document.getElementById('open-app');
-          appLink.href = 'mushafmauri://' + path;
+      // Parse each part independently — any can be missing
+      var sMatch = path.match(/s(\d+)/i);
+      var aMatch = path.match(/a(\d+)/i);
+      var qMatch = path.match(/q(\d+)/i);
 
-          // Auto-try to open the app
-          setTimeout(function() {
-            window.location.href = 'mushafmauri://' + path;
-          }, 300);
-        }
+      var sura = sMatch ? sMatch[1] : '1';
+      var aya = aMatch ? aMatch[1] : '1';
+      var q = qMatch ? qMatch[1] : '1';
+      var qName = q === '2' ? 'حفص' : 'ورش';
+
+      // Build canonical deep link path with defaults
+      var deepPath = 'a' + aya + 's' + sura + 'q' + q;
+
+      if (path) {
+        var info = document.getElementById('deep-link-info');
+        info.style.display = 'block';
+        info.innerHTML = 'سورة ' + sura + ' - آية ' + aya + ' (' + qName + ')';
+      }
+
+      // Update app link
+      var appLink = document.getElementById('open-app');
+      appLink.href = 'mushafmauri://' + deepPath;
+
+      // Auto-try to open the app if there's a hash
+      if (path) {
+        setTimeout(function() {
+          window.location.href = 'mushafmauri://' + deepPath;
+        }, 300);
       }
     })();
   </script>

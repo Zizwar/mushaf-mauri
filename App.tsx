@@ -108,21 +108,35 @@ export default function App() {
         return;
       }
 
-      // Parse mushaf.ma/#/a{aya}s{sura}q{quira} or mushafmauri://a{aya}s{sura}q{quira}
-      // Formats: #/a1s1q1  or  a1s1q1
+      // Extract path from URL
+      // Formats: mushaf.ma/#/a1s1q1 | mushafmauri://a1s1q1 | mushaf.ma (no hash)
       const hash = url.includes("#/") ? url.split("#/")[1] : url.split("://")[1];
-      if (!hash) return;
-      const match = hash.match(/a(\d+)s(\d+)q(\d+)/i);
-      if (!match) return;
 
-      const aya = parseInt(match[1], 10);
-      const sura = parseInt(match[2], 10);
-      const qiraCode = parseInt(match[3], 10); // 1=warsh, 2=hafs
-
-      if (sura < 1 || sura > 114 || aya < 1) return;
-
-      const targetQuira = qiraCode === 2 ? "madina" : "warsh";
+      // Default values — always open the app even if params are missing
       const store = useAppStore.getState();
+      let sura = 1;
+      let aya = 1;
+      let targetQuira = store.quira; // keep current quira as default
+
+      if (hash) {
+        // Parse each part independently — any can be missing
+        const sMatch = hash.match(/s(\d+)/i);
+        const aMatch = hash.match(/a(\d+)/i);
+        const qMatch = hash.match(/q(\d+)/i);
+
+        if (sMatch) {
+          const s = parseInt(sMatch[1], 10);
+          if (s >= 1 && s <= 114) sura = s;
+        }
+        if (aMatch) {
+          const a = parseInt(aMatch[1], 10);
+          if (a >= 1) aya = a;
+        }
+        if (qMatch) {
+          const q = parseInt(qMatch[1], 10);
+          targetQuira = q === 2 ? "madina" : "warsh";
+        }
+      }
 
       // Switch quira if needed
       if (store.quira !== targetQuira) {
@@ -135,6 +149,8 @@ export default function App() {
       setScreen("mushaf");
     } catch (e) {
       console.warn("[DeepLink] error:", e);
+      // Even on error, open the mushaf
+      setScreen("mushaf");
     }
   }, []);
 
