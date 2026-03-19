@@ -188,16 +188,16 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   const mutedColor = isDark ? "#888" : "#888";
   const borderColor = isDark ? "#2a2a3e" : "#e8e8e8";
 
-  const languages: { key: LangKey; label: string; nativeLabel: string; flag: string }[] = [
-    { key: "ar",  label: "Arabic",     nativeLabel: "العربية",     flag: "🇲🇷" },
-    { key: "en",  label: "English",    nativeLabel: "English",    flag: "🇬🇧" },
-    { key: "fr",  label: "Français",   nativeLabel: "Français",   flag: "🇫🇷" },
-    { key: "amz", label: "Tamazight",  nativeLabel: "ⵜⴰⵎⴰⵣⵉⵖⵜ", flag: "ⵣ" },
-    { key: "es",  label: "Español",    nativeLabel: "Español",    flag: "🇪🇸" },
-    { key: "de",  label: "Deutsch",    nativeLabel: "Deutsch",    flag: "🇩🇪" },
-    { key: "it",  label: "Italiano",   nativeLabel: "Italiano",   flag: "🇮🇹" },
-    { key: "nl",  label: "Nederlands", nativeLabel: "Nederlands", flag: "🇳🇱" },
-    { key: "he",  label: "עברית",      nativeLabel: "עברית",      flag: "🇮🇱" },
+  const languages: { key: LangKey; label: string; nativeLabel: string }[] = [
+    { key: "ar",  label: "Arabic",     nativeLabel: "العربية" },
+    { key: "en",  label: "English",    nativeLabel: "English" },
+    { key: "fr",  label: "French",     nativeLabel: "Français" },
+    { key: "es",  label: "Spanish",    nativeLabel: "Español" },
+    { key: "amz", label: "Tamazight",  nativeLabel: "ⵜⴰⵎⴰⵣⵉⵖⵜ" },
+    { key: "de",  label: "German",     nativeLabel: "Deutsch" },
+    { key: "it",  label: "Italian",    nativeLabel: "Italiano" },
+    { key: "nl",  label: "Dutch",      nativeLabel: "Nederlands" },
+    { key: "he",  label: "Hebrew",     nativeLabel: "עברית" },
   ];
 
   const mushafs: {
@@ -288,7 +288,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   );
 
   // =========================================================================
-  // Step 1: Language Selection (compact chips for 9 languages)
+  // Step 1: Language Selection
   // =========================================================================
   const renderLanguageStep = () => (
     <View style={styles.stepContent}>
@@ -311,10 +311,12 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
             <Pressable
               key={l.key}
               style={({ pressed }) => [
-                styles.langChip,
+                styles.langCard,
                 {
                   backgroundColor: isActive
-                    ? isDark ? "#1a3a2e" : ACCENT_LIGHT
+                    ? isDark
+                      ? "#1a3a2e"
+                      : ACCENT_LIGHT
                     : cardBg,
                   borderColor: isActive ? ACCENT : borderColor,
                   borderWidth: isActive ? 2 : 1,
@@ -323,21 +325,25 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
               ]}
               onPress={() => setLang(l.key)}
             >
-              <Text style={styles.langFlag}>{l.flag}</Text>
+              {isActive && (
+                <View style={[styles.langCheckBadge, { backgroundColor: ACCENT }]}>
+                  <Ionicons name="checkmark" size={14} color="#fff" />
+                </View>
+              )}
               <Text
                 style={[
                   styles.langNative,
                   {
                     color: isActive ? ACCENT : textColor,
-                    fontWeight: isActive ? "800" : "500",
+                    fontWeight: isActive ? "800" : "600",
                   },
                 ]}
               >
                 {l.nativeLabel}
               </Text>
-              {isActive && (
-                <Ionicons name="checkmark-circle" size={18} color={ACCENT} />
-              )}
+              <Text style={[styles.langSub, { color: mutedColor }]}>
+                {l.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -865,29 +871,45 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // ---- Language Chips ----
+  // ---- Language Cards ----
   langGrid: {
     width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 10,
     justifyContent: "center",
   },
-  langChip: {
-    flexDirection: "row",
+  langCard: {
+    width: (SCREEN_WIDTH - 72) / 3,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    borderRadius: 14,
     alignItems: "center",
-    gap: 8,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    minWidth: (SCREEN_WIDTH - 80) / 3,
+    justifyContent: "center",
+    position: "relative",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  langFlag: {
-    fontSize: 16,
+  langCheckBadge: {
+    position: "absolute",
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
   },
   langNative: {
-    fontSize: 14,
-    flex: 1,
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  langSub: {
+    fontSize: 9,
+    opacity: 0.7,
   },
 
   // ---- Mushaf Cards ----

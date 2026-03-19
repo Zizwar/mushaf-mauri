@@ -1,8 +1,8 @@
 {
   "expo": {
     "name": "Mushaf Mauri",
-    "slug": "mushaf-mauri",
-    "version": "1.0.0",
+    "slug": "mushaf-mauri-v3",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -118,7 +118,7 @@
               "appExtensions": [
                 {
                   "targetName": "expo-sharing-extension",
-                  "bundleIdentifier": "wino.ma.mushaf.mauri.expo-sharing-extension",
+                  "bundleIdentifier": "com.mushaf.mauri.v3.expo-sharing-extension",
                   "entitlements": []
                 }
               ]
