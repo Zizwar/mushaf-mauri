@@ -38,6 +38,7 @@ const AyahOverlay = React.memo(
     position,
     isSelected,
     isRecorded,
+    isMadina,
     onLongPress,
     highlightColor,
     highlightOpacity,
@@ -45,6 +46,7 @@ const AyahOverlay = React.memo(
     position: AyahPosition;
     isSelected: boolean;
     isRecorded: boolean;
+    isMadina: boolean;
     onLongPress?: () => void;
     highlightColor: string;
     highlightOpacity: number;
@@ -55,11 +57,9 @@ const AyahOverlay = React.memo(
     const onPress = () => {
       const now = Date.now();
       if (now - lastTapRef.current < 300) {
-        // Double tap — open action modal
         onLongPress?.();
         lastTapRef.current = 0;
       } else {
-        // Single tap — select ayah
         setSelectedAya({
           sura: position.wino.sura,
           aya: position.wino.aya,
@@ -70,7 +70,6 @@ const AyahOverlay = React.memo(
       }
     };
 
-    // Helper: parse hex → rgba string
     const toRgba = (hex: string, alpha: number) => {
       const h = hex.replace("#", "");
       const r = parseInt(h.substring(0, 2), 16);
@@ -78,6 +77,10 @@ const AyahOverlay = React.memo(
       const b = parseInt(h.substring(4, 6), 16);
       return `rgba(${r},${g},${b},${alpha})`;
     };
+
+    // Only apply madinaConfig extra offsets for Hafs — Warsh coords are already correct
+    const extraTop = isMadina ? madinaConfig.overlayTopExtra : 0;
+    const extraLeft = isMadina ? madinaConfig.overlayLeftExtra : 0;
 
     return (
       <Pressable
@@ -87,8 +90,8 @@ const AyahOverlay = React.memo(
         style={[
           styles.ayahButton,
           {
-            top: position.top + madinaConfig.overlayTopExtra,
-            left: position.left + madinaConfig.overlayLeftExtra,
+            top: position.top + extraTop,
+            left: position.left + extraLeft,
             width: position.width,
             height: position.height + 1,
           },
@@ -107,19 +110,30 @@ const AyahOverlay = React.memo(
 // ────────────────────────────────────────────────────────────────────────────
 // DEBUG: Coordinate Tuner Panel — remove after calibration
 // ────────────────────────────────────────────────────────────────────────────
-const TUNER_FIELDS: { key: keyof typeof madinaConfig; label: string; min: number; max: number; step: number }[] = [
-  { key: "SCREEN_DEFAULT_WIDTH", label: "ImgW", min: 300, max: 600, step: 1 },
-  { key: "MARGIN_PAGE", label: "MargP", min: 0, max: 100, step: 1 },
-  { key: "LEFT_OFFSET", label: "LeftOff", min: -50, max: 50, step: 1 },
-  { key: "TOP_OFFSET", label: "TopOff", min: -80, max: 50, step: 1 },
-  { key: "overlayTopExtra", label: "OvTop", min: -20, max: 30, step: 1 },
-  { key: "overlayLeftExtra", label: "OvLeft", min: -20, max: 30, step: 1 },
-  { key: "height", label: "LineH", min: 15, max: 50, step: 1 },
-  { key: "tWidth", label: "TxtW", min: 300, max: 500, step: 1 },
-  { key: "ofWidth", label: "ofW", min: -20, max: 40, step: 1 },
-  { key: "ofHeight", label: "ofH", min: -20, max: 40, step: 1 },
-  { key: "mgWidth", label: "MgW", min: 10, max: 100, step: 1 },
+let Clipboard: any = null;
+try { Clipboard = require("expo-clipboard"); } catch (_) {}
+
+const TUNER_FIELDS: { key: keyof typeof madinaConfig; label: string; step: number }[] = [
+  { key: "SCREEN_DEFAULT_WIDTH", label: "ImgW", step: 1 },
+  { key: "MARGIN_PAGE", label: "MrgP", step: 1 },
+  { key: "LEFT_OFFSET", label: "L.Off", step: 1 },
+  { key: "TOP_OFFSET", label: "T.Off", step: 1 },
+  { key: "overlayTopExtra", label: "OvT", step: 1 },
+  { key: "overlayLeftExtra", label: "OvL", step: 1 },
+  { key: "height", label: "LnH", step: 1 },
+  { key: "tWidth", label: "TxW", step: 1 },
+  { key: "ofWidth", label: "ofW", step: 1 },
+  { key: "ofHeight", label: "ofH", step: 1 },
+  { key: "mgWidth", label: "MgW", step: 1 },
 ];
+
+// Defaults snapshot for reset
+const MADINA_DEFAULTS: Record<string, number> = {
+  SCREEN_DEFAULT_WIDTH: 456, MARGIN_PAGE: 48,
+  LEFT_OFFSET: -10, TOP_OFFSET: -20,
+  overlayTopExtra: 5, overlayLeftExtra: 8,
+  height: 30, tWidth: 416, ofWidth: 10, ofHeight: 15, mgWidth: 40,
+};
 
 function CoordTunerPanel({ onApply }: { onApply: () => void }) {
   const [localVals, setLocalVals] = useState(() => {
@@ -127,65 +141,103 @@ function CoordTunerPanel({ onApply }: { onApply: () => void }) {
     TUNER_FIELDS.forEach((f) => { vals[f.key] = madinaConfig[f.key] as number; });
     return vals;
   });
+  const [copied, setCopied] = useState(false);
 
   const handleChange = (key: string, text: string) => {
     const n = parseFloat(text);
     if (!isNaN(n)) setLocalVals((prev) => ({ ...prev, [key]: n }));
   };
 
-  const handleApply = () => {
-    TUNER_FIELDS.forEach((f) => {
-      (madinaConfig as any)[f.key] = localVals[f.key];
-    });
-    madinaConfig._rev++;
-    onApply();
-  };
-
   const handleStep = (key: string, step: number) => {
     setLocalVals((prev) => ({ ...prev, [key]: +(prev[key] + step).toFixed(1) }));
   };
 
+  const handleApply = () => {
+    TUNER_FIELDS.forEach((f) => { (madinaConfig as any)[f.key] = localVals[f.key]; });
+    madinaConfig._rev++;
+    onApply();
+  };
+
+  const handleReset = () => {
+    setLocalVals({ ...MADINA_DEFAULTS });
+    TUNER_FIELDS.forEach((f) => { (madinaConfig as any)[f.key] = MADINA_DEFAULTS[f.key]; });
+    madinaConfig._rev++;
+    onApply();
+  };
+
+  const handleCopy = async () => {
+    const lines = TUNER_FIELDS.map((f) => `${f.key}: ${localVals[f.key]}`).join("\n");
+    try {
+      if (Clipboard?.setStringAsync) await Clipboard.setStringAsync(lines);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch (_) {}
+  };
+
+  const PW = SCREEN_WIDTH * 0.72; // panel width — centered & compact
+
   return (
     <View style={{
-      position: "absolute", top: 36, left: 4, right: 4, zIndex: 998,
-      backgroundColor: "rgba(0,0,0,0.88)", borderRadius: 12, padding: 8,
-      maxHeight: 360,
+      position: "absolute", top: 40, left: (SCREEN_WIDTH - PW) / 2, width: PW, zIndex: 998,
+      backgroundColor: "rgba(0,0,0,0.92)", borderRadius: 14, padding: 8,
+      maxHeight: 320,
     }}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {TUNER_FIELDS.map((f) => (
-          <View key={f.key} style={{ flexDirection: "row", alignItems: "center", marginBottom: 4, gap: 4 }}>
-            <Text style={{ color: "#aaa", fontSize: 10, width: 48 }}>{f.label}</Text>
-            <Pressable
-              onPress={() => handleStep(f.key, -f.step)}
-              style={{ backgroundColor: "#444", borderRadius: 6, width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
-            >
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>−</Text>
-            </Pressable>
-            <TextInput
-              style={{
-                flex: 1, backgroundColor: "#222", color: "#0f0", fontSize: 13, fontWeight: "700",
-                textAlign: "center", borderRadius: 6, paddingVertical: 2, fontVariant: ["tabular-nums"],
-              }}
-              value={String(localVals[f.key])}
-              onChangeText={(t) => handleChange(f.key, t)}
-              keyboardType="numeric"
-              selectTextOnFocus
-            />
-            <Pressable
-              onPress={() => handleStep(f.key, f.step)}
-              style={{ backgroundColor: "#444", borderRadius: 6, width: 26, height: 26, alignItems: "center", justifyContent: "center" }}
-            >
-              <Text style={{ color: "#fff", fontSize: 14, fontWeight: "700" }}>+</Text>
-            </Pressable>
-          </View>
-        ))}
+        {TUNER_FIELDS.map((f) => {
+          const changed = localVals[f.key] !== MADINA_DEFAULTS[f.key];
+          return (
+            <View key={f.key} style={{ flexDirection: "row", alignItems: "center", marginBottom: 3, gap: 3 }}>
+              <Text style={{ color: changed ? "#0f0" : "#888", fontSize: 9, width: 32, fontWeight: changed ? "700" : "400" }}>{f.label}</Text>
+              <Pressable
+                onPress={() => handleStep(f.key, -f.step)}
+                style={{ backgroundColor: "#444", borderRadius: 5, width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>−</Text>
+              </Pressable>
+              <TextInput
+                style={{
+                  flex: 1, backgroundColor: "#1a1a1a", color: changed ? "#0f0" : "#aaa",
+                  fontSize: 12, fontWeight: "700", textAlign: "center", borderRadius: 5,
+                  paddingVertical: 1, fontVariant: ["tabular-nums"],
+                }}
+                value={String(localVals[f.key])}
+                onChangeText={(t) => handleChange(f.key, t)}
+                keyboardType="numeric"
+                selectTextOnFocus
+              />
+              <Pressable
+                onPress={() => handleStep(f.key, f.step)}
+                style={{ backgroundColor: "#444", borderRadius: 5, width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
+              >
+                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>+</Text>
+              </Pressable>
+            </View>
+          );
+        })}
       </ScrollView>
-      <Pressable
-        onPress={handleApply}
-        style={{ backgroundColor: "#1a5c2e", borderRadius: 8, paddingVertical: 8, marginTop: 6, alignItems: "center" }}
-      >
-        <Text style={{ color: "#fff", fontSize: 14, fontWeight: "800" }}>تطبيق</Text>
-      </Pressable>
+      {/* Action buttons */}
+      <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
+        <Pressable
+          onPress={handleReset}
+          style={{ flex: 1, backgroundColor: "#555", borderRadius: 7, paddingVertical: 7, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 4 }}
+        >
+          <Ionicons name="refresh" size={13} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>إعادة</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleCopy}
+          style={{ flex: 1, backgroundColor: copied ? "#1a5c2e" : "#336699", borderRadius: 7, paddingVertical: 7, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 4 }}
+        >
+          <Ionicons name={copied ? "checkmark" : "copy-outline"} size={13} color="#fff" />
+          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>{copied ? "تم" : "نسخ"}</Text>
+        </Pressable>
+        <Pressable
+          onPress={handleApply}
+          style={{ flex: 1.3, backgroundColor: "#1a5c2e", borderRadius: 7, paddingVertical: 7, alignItems: "center" }}
+        >
+          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>تطبيق</Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
@@ -293,6 +345,7 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
             key={`${pos.id}_${index}`}
             position={pos}
             isSelected={selectedId === pos.wino.id}
+            isMadina={quira === "madina"}
             isRecorded={
               showRecordingHighlights &&
               !!recordedAyahs[`s${pos.wino.sura}a${pos.wino.aya}`]
