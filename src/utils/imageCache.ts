@@ -2,6 +2,35 @@ import { File, Directory, Paths } from "expo-file-system";
 import { getImagePageUri } from "./api";
 import type { Quira } from "../store/useAppStore";
 
+// Track pages currently being background-cached to avoid duplicate downloads
+const cachingInProgress = new Set<string>();
+
+/**
+ * Background-cache a page image that was fetched remotely.
+ * Non-blocking — fires and forgets.
+ */
+export function backgroundCachePage(pageId: number, quira: Quira): void {
+  const key = `${quira}:${pageId}`;
+  if (cachingInProgress.has(key)) return;
+  const localFile = getLocalFile(pageId, quira);
+  if (localFile.exists && localFile.size > 0) return;
+
+  cachingInProgress.add(key);
+  ensureDir(quira);
+  const remoteUri = getImagePageUri(pageId, quira);
+  File.downloadFileAsync(remoteUri, localFile, { idempotent: true })
+    .then(() => {
+      // Remove corrupt files
+      if (localFile.exists && localFile.size === 0) {
+        try { localFile.delete(); } catch {}
+      }
+    })
+    .catch(() => {
+      if (localFile.exists) try { localFile.delete(); } catch {}
+    })
+    .finally(() => cachingInProgress.delete(key));
+}
+
 function getDir(quira: Quira): Directory {
   return new Directory(Paths.document, "mushaf-images", quira);
 }
@@ -52,7 +81,7 @@ export function countDownloadedPages(quira: Quira): number {
   if (!dir.exists) return 0;
   const items = dir.list();
   return items.filter(
-    (item) => item instanceof File && item.uri.endsWith(".png")
+    (item) => item instanceof File && item.uri.endsWith(".png") && item.size > 0
   ).length;
 }
 
@@ -81,12 +110,13 @@ let abortController: AbortController | null = null;
 /**
  * Download pages in a range. Calls onProgress after each page.
  * Returns the count of newly downloaded pages.
+ * `failed` count is available via the onProgress callback.
  */
 export async function downloadPageRange(
   quira: Quira,
   fromPage: number,
   toPage: number,
-  onProgress: (downloaded: number, total: number) => void
+  onProgress: (downloaded: number, total: number, failed: number) => void
 ): Promise<number> {
   ensureDir(quira);
 
@@ -95,21 +125,38 @@ export async function downloadPageRange(
 
   const total = toPage - fromPage + 1;
   let downloaded = 0;
+  let failed = 0;
 
   for (let page = fromPage; page <= toPage; page++) {
     if (signal.aborted) break;
 
     const localFile = getLocalFile(page, quira);
-    if (!localFile.exists) {
-      const remoteUri = getImagePageUri(page, quira);
-      try {
-        await File.downloadFileAsync(remoteUri, localFile, { idempotent: true });
-      } catch {
-        // skip failed page, continue
+    // Skip if already cached with valid size
+    if (localFile.exists && localFile.size > 0) {
+      downloaded++;
+      onProgress(downloaded, total, failed);
+      continue;
+    }
+    // Remove empty/corrupt file before re-downloading
+    if (localFile.exists) {
+      try { localFile.delete(); } catch {}
+    }
+
+    const remoteUri = getImagePageUri(page, quira);
+    try {
+      await File.downloadFileAsync(remoteUri, localFile, { idempotent: true });
+      // Verify the downloaded file is valid
+      if (!localFile.exists || localFile.size === 0) {
+        if (localFile.exists) try { localFile.delete(); } catch {}
+        failed++;
       }
+    } catch {
+      // Clean up partial/corrupt file
+      if (localFile.exists) try { localFile.delete(); } catch {}
+      failed++;
     }
     downloaded++;
-    onProgress(downloaded, total);
+    onProgress(downloaded, total, failed);
   }
 
   abortController = null;

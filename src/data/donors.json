@@ -1,0 +1,106 @@
+[
+  {
+    "name": "موهوب",
+    "txId": "TXN-9012",
+    "amount": 420,
+    "currency": "MAD",
+    "message": "من أجل والدي رحمة الله عليه",
+    "color": "#FF9800"
+  },
+  {
+    "name": "Mehdi Baha",
+    "txId": "TXN-3387",
+    "amount": 420,
+    "currency": "MAD",
+    "message": "صدقة من أجل أمي",
+    "color": "#2196F3"
+  },
+  {
+    "name": "بنهادي",
+    "txId": "TXN-5521",
+    "amount": 420,
+    "currency": "MAD",
+    "message": "الدعاء لبناتي",
+    "color": "#009688"
+  },
+  {
+    "name": "مجهول",
+    "txId": "TXN-1147",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "",
+    "color": "#78909C"
+  },
+  {
+    "name": "خديجة",
+    "txId": "TXN-7741",
+    "amount": 420,
+    "currency": "MAD",
+    "message": "صدقة لأخوتي",
+    "color": "#E91E63"
+  },
+  {
+    "name": "Hamid Bidi",
+    "txId": "TXN-4521",
+    "amount": 60,
+    "currency": "$",
+    "message": "الدعاء لوالدي",
+    "color": "#4CAF50"
+  },
+  {
+    "name": "مجهول",
+    "txId": "TXN-2283",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "بالتوفيق",
+    "color": "#607D8B"
+  },
+  {
+    "name": "موهوب",
+    "txId": "TXN-9087",
+    "amount": 180,
+    "currency": "MAD",
+    "message": "",
+    "color": "#FF9800"
+  },
+  {
+    "name": "احمد",
+    "txId": "TXN-6654",
+    "amount": 180,
+    "currency": "$",
+    "message": "بالتوفيق",
+    "color": "#9C27B0"
+  },
+  {
+    "name": "يوسف م.",
+    "txId": "TXN-8841",
+    "amount": 60,
+    "currency": "$",
+    "message": "جزاكم الله خيرا",
+    "color": "#00BCD4"
+  },
+  {
+    "name": "مجهول",
+    "txId": "TXN-3390",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "",
+    "color": "#546E7A"
+  },
+  {
+    "name": "سارة ع.",
+    "txId": "TXN-2290",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "في ميزان حسناتكم",
+    "color": "#8BC34A"
+  },
+  {
+    "name": "مجهول",
+    "txId": "TXN-6618",
+    "amount": 20,
+    "currency": "MAD",
+    "message": "",
+    "color": "#90A4AE"
+  }
+]

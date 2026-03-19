@@ -372,6 +372,60 @@ export async function importProfile(
   }
 }
 
+/**
+ * Import a .mrec profile from a URI (deep link, file association, or URL).
+ * Accepts file:// , content:// , http(s):// URIs.
+ */
+export async function importProfileFromUri(
+  uri: string,
+  quira: Quira
+): Promise<RecordingProfile | null> {
+  try {
+    let content: string;
+
+    if (uri.startsWith("http://") || uri.startsWith("https://")) {
+      const response = await fetch(uri);
+      if (!response.ok) return null;
+      content = await response.text();
+    } else {
+      // file:// or content:// URI
+      const file = new File(uri);
+      if (!file.exists) return null;
+      content = file.textSync();
+    }
+
+    const backup = JSON.parse(content) as RecordingBackup;
+    if (
+      backup.format !== "mushaf-mauri-recording-backup" ||
+      !backup.recordings
+    ) {
+      return null;
+    }
+
+    const newProfile: RecordingProfile = {
+      id: generateId(),
+      name: backup.profile.name,
+      createdAt: new Date().toISOString(),
+    };
+
+    const profiles = loadProfiles(quira);
+    profiles.push(newProfile);
+    saveProfilesList(quira, profiles);
+
+    ensureDir(quira, newProfile.id);
+    for (const rec of backup.recordings) {
+      const file = getFile(rec.sura, rec.aya, quira, newProfile.id);
+      if (file.exists) file.delete();
+      file.create();
+      file.write(rec.base64, { encoding: "base64" });
+    }
+
+    return newProfile;
+  } catch {
+    return null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Notes
 // ---------------------------------------------------------------------------

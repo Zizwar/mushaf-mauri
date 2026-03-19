@@ -6,7 +6,13 @@ export const getImagePageUri = (pageId: number, quira: Quira = "madina"): string
       return `https://mushaf.ma/fahres/page/images/muhammadi/page${pageId + 2}.png`;
     case "madina":
     default:
-      return `https://www.mushaf.ma/fahres/page/images/hafsTajweed/page${pageId}.png`;
+      // return `https://www.mushaf.ma/fahres/page/images/hafsTajweed/page${pageId}.png`;
+     //return   `http://quran.ksu.edu.sa/warsh/${pageId}.png`;
+       return (pageId===1 || pageId===2) ?
+       `https://quran.ksu.edu.sa/ayat/safahat1/${pageId}.png`: 
+         `https://quran.ksu.edu.sa/safahat/hafs/${pageId}.png`
+        
+     //return `https://quran.ksu.edu.sa/safahat/alsose/${pageId}.jpg`;
   }
 };
 
@@ -21,4 +27,9 @@ export const getAudioKsuUri = (moqriId: string, sura: number, aya: number): stri
   const suraStr = String(sura).padStart(3, "0");
   const ayaStr = String(aya).padStart(3, "0");
   return `https://quran.ksu.edu.sa/ayat/mp3/${moqriId}/${suraStr}${ayaStr}.mp3`;
+};
+
+// Warsh audio from al-mushaf.com (long files with quadratic timing)
+export const getWarshAudioUri = (folder: string, fileName: string): string => {
+  return `https://audio.al-mushaf.com/${folder}/${fileName}`;
 };

@@ -58,10 +58,30 @@ export const listAuthorTarajem = [
   { name: "Hausa - Gumi", filter: "Africa", id: "ha_gumi" },
   { name: "Swahili - Al-Barwani", filter: "Africa", id: "sw_barwani" }
 ];
+// Warsh DB reciters (Al-Kouchi, Al-Kazabri) - use quadratic timing from SQLite DB
+export const WARSH_DB_RECITERS = [
+  { id: "__warsh_db_1__", warshRecitorId: 1 },
+  { id: "__warsh_db_2__", warshRecitorId: 2 },
+];
+
+// Warsh CDN reciter IDs (tagged with type: "warsh_cdn" in listVoiceMoqri)
+export const WARSH_CDN_IDS = ["warsh_dossary_128kbps", "warsh_husary_64kbps", "warsh_yassin_64kbps"];
+
 export const listVoiceMoqri = _lang => [
   {
     id: "__user_recording__",
     voice: _lang["recite_user"] || "My Recitation"
+  },
+  // Warsh DB reciters (shown only in Warsh mode)
+  {
+    id: "__warsh_db_1__",
+    voice: _lang["recitor_alkouchi"] || "العيون الكوشي",
+    type: "warsh_db"
+  },
+  {
+    id: "__warsh_db_2__",
+    voice: _lang["recitor_alkazabri"] || "عمر القزابري",
+    type: "warsh_db"
   },
   {
     id: "Hudhaify_64kbps",
@@ -199,14 +219,17 @@ export const listVoiceMoqri = _lang => [
   },
   {
     id: "warsh_dossary_128kbps",
-    voice: _lang["recite_ibrahim_dosary"] + " - " + _lang["recite_warsh"]
+    voice: _lang["recite_ibrahim_dosary"] + " - " + _lang["recite_warsh"],
+    type: "warsh_cdn"
   },
   {
     id: "warsh_husary_64kbps",
-    voice: _lang["recite_husary"] + " - " + _lang["recite_warsh"]
+    voice: _lang["recite_husary"] + " - " + _lang["recite_warsh"],
+    type: "warsh_cdn"
   },
   {
     id: "warsh_yassin_64kbps",
-    voice: _lang["recite_yassin"] + " - " + _lang["recite_warsh"]
+    voice: _lang["recite_yassin"] + " - " + _lang["recite_warsh"],
+    type: "warsh_cdn"
   }
 ];

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -11,33 +11,15 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Paths, File } from "expo-file-system";
 import { useAppStore, type Bookmark } from "../store/useAppStore";
 import { t } from "../i18n";
 import { getSuraName } from "../utils/quranHelpers";
 
-const BOOKMARKS_FILE = new File(Paths.document, "bookmarks.json");
 const ACCENT = "#1a5c2e";
 
 interface BookmarksScreenProps {
   onGoBack: () => void;
   onNavigateToPage?: (page: number, sura?: number, aya?: number) => void;
-}
-
-function loadBookmarks(): Bookmark[] {
-  try {
-    if (BOOKMARKS_FILE.exists) {
-      const json = BOOKMARKS_FILE.textSync();
-      return JSON.parse(json);
-    }
-  } catch {}
-  return [];
-}
-
-function saveBookmarks(bookmarks: Bookmark[]) {
-  try {
-    BOOKMARKS_FILE.write(JSON.stringify(bookmarks));
-  } catch {}
 }
 
 export default function BookmarksScreen({ onGoBack, onNavigateToPage }: BookmarksScreenProps) {
@@ -49,29 +31,20 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
   const updateBookmarkNote = useAppStore((s) => s.updateBookmarkNote);
 
   const isDark = !!theme.night;
-  const bgColor = isDark ? "#0d0d1a" : "#f5f5f5";
-  const cardBg = isDark ? "#1a1a2e" : "#ffffff";
+  const isRTL = lang === "ar" || lang === "he";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "rgba(255,255,255,0.08)" : "#eee";
+  const borderColor = theme.borderColor;
 
   // Note editing modal state
   const [noteModalVisible, setNoteModalVisible] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [noteText, setNoteText] = useState("");
 
-  // Load bookmarks from file on mount
-  useEffect(() => {
-    const saved = loadBookmarks();
-    if (saved.length > 0) {
-      setBookmarks(saved);
-    }
-  }, [setBookmarks]);
-
-  // Save bookmarks to file whenever they change
-  useEffect(() => {
-    saveBookmarks(bookmarks);
-  }, [bookmarks]);
+  // Bookmarks are loaded at store init and persisted on every mutation
+  // No need for load/save effects here
 
   const handleRemove = (sura: number, aya: number) => {
     Alert.alert(t("remove", lang), "", [
@@ -111,12 +84,12 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
       style={[styles.card, { backgroundColor: cardBg, borderColor }]}
       onPress={() => handleGoToPage(item.page, item.sura, item.aya)}
     >
-      <View style={styles.cardContent}>
+      <View style={[styles.cardContent, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
         <View style={styles.cardInfo}>
-          <Text style={[styles.suraName, { color: textColor }]}>
+          <Text style={[styles.suraName, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>
             {getSuraName(item.sura)}
           </Text>
-          <Text style={[styles.details, { color: mutedColor }]}>
+          <Text style={[styles.details, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>
             {t("aya_s", lang)} {item.aya} • {t("page", lang)} {item.page}
           </Text>
           {item.text ? (
@@ -126,13 +99,13 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
           ) : null}
           {item.note ? (
             <Pressable onPress={() => handleEditNote(item)}>
-              <Text style={[styles.noteText, { color: ACCENT }]} numberOfLines={1}>
+              <Text style={[styles.noteText, { color: ACCENT, textAlign: isRTL ? "right" : "left" }]} numberOfLines={1}>
                 {item.note}
               </Text>
             </Pressable>
           ) : null}
         </View>
-        <View style={styles.cardActions}>
+        <View style={[styles.cardActions, { marginLeft: isRTL ? 0 : 8, marginRight: isRTL ? 8 : 0 }]}>
           <Pressable
             onPress={() => handleEditNote(item)}
             hitSlop={10}
@@ -157,7 +130,7 @@ export default function BookmarksScreen({ onGoBack, onNavigateToPage }: Bookmark
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Pressable onPress={onGoBack} hitSlop={10} style={styles.backBtn}>
-          <Ionicons name="arrow-forward" size={24} color={textColor} />
+          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={24} color={textColor} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: textColor }]}>
           {t("bookmarks", lang)}

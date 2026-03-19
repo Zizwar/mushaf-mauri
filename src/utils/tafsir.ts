@@ -1,6 +1,9 @@
 import { Paths, File, Directory } from "expo-file-system";
 import { openDatabaseAsync } from "expo-sqlite";
 
+// Warsh → Hafs mapping lives in warshMapping.ts (re-exported for backwards compatibility)
+export { warshToHafsAyahs } from "./warshMapping";
+
 // ==============================================================
 // URL Builders
 // ==============================================================
@@ -14,12 +17,17 @@ export const getTafsirUri = (
 ): string =>
   `${BASE_URL}interface.php?ui=mobile&do=tafsir&author=${author || "sa3dy"}&sura=${sura}&aya=${aya}`;
 
+/**
+ * Build a tarjama URL fetching ayahs [bAya, eAya) — eAya is exclusive.
+ * The KSU API returns empty when bAya === eAya; always pass eAya = lastAya + 1.
+ */
 export const getTarjamaUri = (
   tarjama: string,
   sura: number,
-  aya: number
+  bAya: number,
+  eAya: number
 ): string =>
-  `${BASE_URL}interface.php?ui=mobile&do=tarjama&tafsir=${tarjama || "ar_muyassar"}&b_sura=${sura}&b_aya=${aya}&e_sura=${sura}&e_aya=${aya}`;
+  `${BASE_URL}interface.php?ui=mobile&do=tarjama&tafsir=${tarjama || "ar_muyassar"}&b_sura=${sura}&b_aya=${bAya}&e_sura=${sura}&e_aya=${eAya}`;
 
 export const getDBTafsirUrl = (db: string): string =>
   `${BASE_URL}ayat/resources/tafasir/${db}.ayt`;
@@ -81,20 +89,28 @@ export async function fetchTafsirOnline(
 
 /**
  * Try to extract translation text from a JSON response.
- * The KSU API sometimes returns JSON like {"tafsir":{"1":"text"}} or {"tafsir":{}}
+ * The KSU tarjama API returns:
+ *   {"tafsir":{"2_1":{"text":"..."},"2_2":{"text":"..."}}}
+ * Values are sorted by key (sura_aya) so order is preserved.
  */
 function extractFromJson(raw: string): string | null {
   try {
     const json = JSON.parse(raw);
-    // Handle {"tafsir":{"1":"text here"}} format
     if (json?.tafsir && typeof json.tafsir === "object") {
-      const values = Object.values(json.tafsir);
-      if (values.length > 0) {
-        return values.map((v) => (typeof v === "string" ? stripHtml(v) : "")).join("\n").trim();
-      }
-      return null; // empty tafsir object
+      // Sort entries by key so multi-ayah results appear in order
+      const entries = Object.entries(json.tafsir).sort(([a], [b]) => a.localeCompare(b));
+      if (entries.length === 0) return null;
+
+      const texts = entries
+        .map(([, v]) => {
+          if (typeof v === "string") return stripHtml(v);
+          if (v && typeof v === "object" && "text" in v) return stripHtml((v as { text: string }).text);
+          return "";
+        })
+        .filter(Boolean);
+
+      return texts.length > 0 ? texts.join("\n\n") : null;
     }
-    // Handle {"text":"..."} format
     if (json?.text && typeof json.text === "string") {
       return stripHtml(json.text);
     }
@@ -105,17 +121,24 @@ function extractFromJson(raw: string): string | null {
 }
 
 /**
- * Fetch translation (tarjama) text from KSU online API.
+ * Fetch translation (tarjama) for one or more consecutive Hafs ayahs.
+ * Uses the KSU range API (b_aya / e_aya) in a single request.
+ * e_aya is exclusive: to fetch ayah n, pass bAya=n, eAya=n+1.
+ *
+ * @param hafsAyahs - Hafs ayah number(s). For a Warsh merged ayah this can be [n, n+1].
  */
 export async function fetchTarjamaOnline(
   tarjama: string,
   sura: number,
-  aya: number
+  hafsAyahs: number[]
 ): Promise<string> {
-  const uri = getTarjamaUri(tarjama, sura, aya);
+  const bAya = hafsAyahs[0];
+  const eAya = hafsAyahs[hafsAyahs.length - 1] + 1; // exclusive end
+  const uri = getTarjamaUri(tarjama, sura, bAya, eAya);
+
   const response = await fetch(uri, {
     headers: {
-      Accept: "text/html, application/xhtml+xml, */*",
+      Accept: "application/json, text/html, */*",
       "Accept-Language": "ar",
     },
   });
@@ -125,9 +148,8 @@ export async function fetchTarjamaOnline(
   }
 
   const raw = await response.text();
-
-  // Check if response is JSON (API returns {"tafsir":{}} when unavailable)
   const trimmed = raw.trim();
+
   if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
     const jsonText = extractFromJson(trimmed);
     if (jsonText && jsonText.length > 1) {
@@ -137,11 +159,9 @@ export async function fetchTarjamaOnline(
   }
 
   const text = stripHtml(raw);
-
   if (!text || text.length < 2) {
     throw new Error("no_translation");
   }
-
   return text;
 }
 
@@ -185,7 +205,38 @@ export function isDBAvailable(author: string): boolean {
 }
 
 /**
+ * Fetch tarjama for one or more Hafs ayahs from a local SQLite database.
+ * Returns null if the database does not exist, is missing rows, or fails.
+ */
+export async function fetchTarjamaOffline(
+  tarjama: string,
+  sura: number,
+  hafsAyahs: number[]
+): Promise<string | null> {
+  try {
+    if (!isDBAvailable(tarjama)) return null;
+
+    const db = await openDatabaseAsync(`${tarjama}.db`);
+    const texts: string[] = [];
+
+    for (const aya of hafsAyahs) {
+      const row = await db.getFirstAsync<{ text?: string; nass?: string }>(
+        `SELECT * FROM ${tarjama} WHERE sura = ? AND aya = ?`,
+        [sura, aya]
+      );
+      const raw = row?.text ?? row?.nass ?? null;
+      if (raw) texts.push(stripHtml(raw));
+    }
+
+    return texts.length > 0 ? texts.join("\n\n") : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Fetch tafsir from a local SQLite database.
+ * Strips HTML tags (KSU tafsir DBs store HTML content).
  * Returns null if the database does not exist or the query fails.
  */
 export async function fetchTafsirOffline(
@@ -204,8 +255,8 @@ export async function fetchTafsirOffline(
 
     if (!row) return null;
 
-    // The KSU .ayt databases use either "text" or "nass" as the column name
-    return row.text ?? row.nass ?? null;
+    const raw = row.text ?? row.nass ?? null;
+    return raw ? stripHtml(raw) : null;
   } catch {
     return null;
   }

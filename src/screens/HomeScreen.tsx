@@ -10,6 +10,7 @@ import {
   Animated,
   Platform,
   StatusBar,
+  NativeModules,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,12 +23,41 @@ import type { Theme } from "../theme/themes";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // ---------------------------------------------------------------------------
+// Detect device language → map to our supported LangKey
+// ---------------------------------------------------------------------------
+function getDeviceLang(): LangKey {
+  try {
+    const raw =
+      Platform.OS === "ios"
+        ? NativeModules.SettingsManager?.settings?.AppleLocale ||
+          NativeModules.SettingsManager?.settings?.AppleLanguages?.[0]
+        : NativeModules.I18nManager?.localeIdentifier;
+    if (!raw) return "ar";
+    const code = String(raw).split(/[_-]/)[0].toLowerCase();
+    const map: Record<string, LangKey> = { ar: "ar", en: "en", fr: "fr", he: "he", es: "es", nl: "nl", de: "de", it: "it" };
+    return map[code] ?? "ar";
+  } catch {
+    return "ar";
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 const ACCENT = "#1a5c2e";
 const ACCENT_LIGHT = "#e8f5e9";
 const GOLD = "#c9a96e";
-const TOTAL_STEPS = 4; // welcome, language, mushaf, theme
+const TOTAL_STEPS = 5; // welcome, language, mushaf, mode, theme+font
+
+const FONT_OPTIONS = [
+  { key: "default",      labelKey: "standard_font" },
+  { key: "Maghribi",     labelKey: "maghribi_font" },
+  { key: "hafs",         labelKey: "hafs_font" },
+  { key: "rustam",       labelKey: "rustam_font" },
+  { key: "uthmanic",     labelKey: "uthmanic_font" },
+  { key: "amiri-quran",  labelKey: "amiri_quran_font" },
+  { key: "noto-naskh",   labelKey: "noto_naskh_font" },
+];
 
 interface HomeScreenProps {
   onOpenMushaf: () => void;
@@ -44,8 +74,22 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   const setQuira = useAppStore((s) => s.setQuira);
   const setTheme = useAppStore((s) => s.setTheme);
   const setHasCompletedSetup = useAppStore((s) => s.setHasCompletedSetup);
+  const quranFont = useAppStore((s) => s.quranFont);
+  const setQuranFont = useAppStore((s) => s.setQuranFont);
+  const mushafMode = useAppStore((s) => s.mushafMode);
+  const setMushafMode = useAppStore((s) => s.setMushafMode);
 
   const [step, setStep] = useState(0);
+
+  // Auto-detect device language on first mount
+  const langDetected = useRef(false);
+  useEffect(() => {
+    if (!langDetected.current) {
+      langDetected.current = true;
+      const detected = getDeviceLang();
+      if (detected !== lang) setLang(detected);
+    }
+  }, []);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -138,17 +182,22 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   }, [setHasCompletedSetup, onOpenMushaf]);
 
   const isDark = !!theme.night;
-  const bgColor = isDark ? "#0a0a1a" : "#f5f7f3";
-  const cardBg = isDark ? "#151528" : "#ffffff";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#151528" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#888";
   const borderColor = isDark ? "#2a2a3e" : "#e8e8e8";
 
   const languages: { key: LangKey; label: string; nativeLabel: string }[] = [
-    { key: "ar", label: "Arabic", nativeLabel: "العربية" },
-    { key: "en", label: "English", nativeLabel: "English" },
-    { key: "fr", label: "French", nativeLabel: "Français" },
-    { key: "amz", label: "Tamazight", nativeLabel: "ⵜⴰⵎⴰⵣⵉⵖⵜ" },
+    { key: "ar",  label: "Arabic",     nativeLabel: "العربية" },
+    { key: "en",  label: "English",    nativeLabel: "English" },
+    { key: "fr",  label: "French",     nativeLabel: "Français" },
+    { key: "es",  label: "Spanish",    nativeLabel: "Español" },
+    { key: "amz", label: "Tamazight",  nativeLabel: "ⵜⴰⵎⴰⵣⵉⵖⵜ" },
+    { key: "de",  label: "German",     nativeLabel: "Deutsch" },
+    { key: "it",  label: "Italian",    nativeLabel: "Italiano" },
+    { key: "nl",  label: "Dutch",      nativeLabel: "Nederlands" },
+    { key: "he",  label: "Hebrew",     nativeLabel: "עברית" },
   ];
 
   const mushafs: {
@@ -171,9 +220,6 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
     },
   ];
 
-  // Split themes into light and dark
-  const lightThemes = THEMES.filter((th) => !th.night);
-  const darkThemes = THEMES.filter((th) => th.night);
 
   // =========================================================================
   // Step 0: Welcome
@@ -198,7 +244,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
       {/* App Icon */}
       <View style={[styles.welcomeIconWrap, { backgroundColor: isDark ? "#1a2a1e" : ACCENT_LIGHT }]}>
         <Image
-          source={require("../../assets/mauri.png")}
+          source={require("../../assets/icon.png")}
           style={styles.welcomeIcon}
           resizeMode="contain"
         />
@@ -248,7 +294,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
     <View style={styles.stepContent}>
       <View style={styles.stepIconWrap}>
         <View style={[styles.stepIconCircle, { backgroundColor: isDark ? "#1a2a3e" : "#e3f2fd" }]}>
-          <Ionicons name="language" size={36} color="#4285f4" />
+          <Ionicons name="language" size={36} color="#336699" />
         </View>
       </View>
       <Text style={[styles.stepTitle, { color: textColor }]}>
@@ -385,106 +431,179 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   );
 
   // =========================================================================
-  // Step 3: Theme Selection
+  // Step 3: Mushaf Mode (Image vs Text)
   // =========================================================================
-  const renderThemeStep = () => {
-    const renderThemeCircle = (th: Theme, idx: number) => {
-      const isActive = theme.name === th.name;
-      return (
-        <Pressable
-          key={idx}
-          style={({ pressed }) => [
-            styles.themeCircle,
-            {
-              backgroundColor: th.backgroundColor,
-              borderColor: isActive ? ACCENT : th.night ? "#555" : "#ddd",
-              borderWidth: isActive ? 3 : 1.5,
-            },
-            pressed && { transform: [{ scale: 0.9 }] },
-          ]}
-          onPress={() => setTheme(th)}
-        >
-          {th.night && !isActive && (
-            <Ionicons name="moon" size={16} color="#aaa" />
-          )}
-          {isActive && (
-            <Ionicons
-              name="checkmark-circle"
-              size={22}
-              color={th.night ? "#4285f4" : ACCENT}
-            />
-          )}
-        </Pressable>
-      );
-    };
-
+  const renderModeStep = () => {
+    const modes: { key: "image" | "text"; icon: keyof typeof Ionicons.glyphMap; titleKey: string; descKey: string }[] = [
+      { key: "image", icon: "image",          titleKey: "mode_image",      descKey: "mode_image_desc" },
+      { key: "text",  icon: "reader-outline",  titleKey: "mode_text",       descKey: "mode_text_desc" },
+    ];
     return (
       <View style={styles.stepContent}>
         <View style={styles.stepIconWrap}>
-          <View
-            style={[
-              styles.stepIconCircle,
-              { backgroundColor: isDark ? "#2a2a1e" : "#fff3e0" },
-            ]}
-          >
-            <Ionicons name="color-palette" size={36} color="#ff9800" />
+          <View style={[styles.stepIconCircle, { backgroundColor: isDark ? "#1a2a2e" : "#e0f2f1" }]}>
+            <Ionicons name="eye" size={36} color="#00796b" />
           </View>
         </View>
         <Text style={[styles.stepTitle, { color: textColor }]}>
-          {t("step_theme", lang)}
+          {t("step_mode", lang)}
         </Text>
         <Text style={[styles.stepDesc, { color: mutedColor }]}>
-          {t("step_theme_desc", lang)}
+          {t("step_mode_desc", lang)}
         </Text>
 
-        {/* Preview Card */}
-        <View
-          style={[
-            styles.themePreview,
-            {
-              backgroundColor: theme.backgroundColor,
-              borderColor: borderColor,
-            },
-          ]}
-        >
-          <Text
-            style={[
-              styles.themePreviewText,
-              { color: theme.color },
-            ]}
-          >
-            بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
-          </Text>
-          <Text
-            style={[
-              styles.themePreviewVerse,
-              { color: theme.color, opacity: 0.7 },
-            ]}
-          >
-            الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
-          </Text>
-        </View>
-
-        {/* Light Themes */}
-        <Text style={[styles.themeGroupLabel, { color: mutedColor }]}>
-          {t("light_themes", lang)}
-        </Text>
-        <View style={styles.themeGrid}>
-          {lightThemes.map((th, idx) => renderThemeCircle(th, idx))}
-        </View>
-
-        {/* Dark Themes */}
-        <Text style={[styles.themeGroupLabel, { color: mutedColor }]}>
-          {t("dark_themes", lang)}
-        </Text>
-        <View style={styles.themeGrid}>
-          {darkThemes.map((th, idx) =>
-            renderThemeCircle(th, idx + lightThemes.length)
-          )}
+        <View style={styles.mushafGrid}>
+          {modes.map((m) => {
+            const isActive = mushafMode === m.key;
+            return (
+              <Pressable
+                key={m.key}
+                style={({ pressed }) => [
+                  styles.mushafCard,
+                  {
+                    backgroundColor: isActive
+                      ? isDark ? "#1a3a2e" : ACCENT_LIGHT
+                      : cardBg,
+                    borderColor: isActive ? ACCENT : borderColor,
+                    borderWidth: isActive ? 2.5 : 1,
+                  },
+                  pressed && { transform: [{ scale: 0.96 }] },
+                ]}
+                onPress={() => setMushafMode(m.key)}
+              >
+                <View
+                  style={[
+                    styles.mushafIconCircle,
+                    {
+                      backgroundColor: isActive ? ACCENT : isDark ? "#2a2a3e" : "#f0f0f0",
+                    },
+                  ]}
+                >
+                  <Ionicons name={m.icon} size={32} color={isActive ? "#fff" : mutedColor} />
+                </View>
+                <Text
+                  style={[
+                    styles.mushafLabel,
+                    { color: isActive ? ACCENT : textColor, fontWeight: isActive ? "800" : "600" },
+                  ]}
+                >
+                  {t(m.titleKey, lang)}
+                </Text>
+                <Text style={{ color: mutedColor, fontSize: 11, textAlign: "center", marginTop: 4, lineHeight: 16 }}>
+                  {t(m.descKey, lang)}
+                </Text>
+                {isActive && (
+                  <View style={[styles.mushafCheckBadge, { backgroundColor: ACCENT }]}>
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
         </View>
       </View>
     );
   };
+
+  // =========================================================================
+  // Step 4: Theme + Font Selection
+  // =========================================================================
+  const renderThemeStep = () => (
+    <View style={styles.stepContent}>
+      <View style={styles.stepIconWrap}>
+        <View style={[styles.stepIconCircle, { backgroundColor: isDark ? "#2a2a1e" : "#fff3e0" }]}>
+          <Ionicons name="color-palette" size={36} color="#ff9800" />
+        </View>
+      </View>
+      <Text style={[styles.stepTitle, { color: textColor }]}>{t("step_theme", lang)}</Text>
+      <Text style={[styles.stepDesc, { color: mutedColor }]}>{t("step_theme_desc", lang)}</Text>
+
+      {/* Preview Card — shows selected theme + font live */}
+      <View style={[styles.themePreview, { backgroundColor: theme.backgroundColor, borderColor }]}>
+        <Text
+          style={[
+            styles.themePreviewText,
+            { color: theme.color },
+            quranFont !== "default" && { fontFamily: quranFont },
+          ]}
+        >
+          بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ
+        </Text>
+        <Text
+          style={[
+            styles.themePreviewVerse,
+            { color: theme.color, opacity: 0.7 },
+            quranFont !== "default" && { fontFamily: quranFont },
+          ]}
+        >
+          الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+        </Text>
+
+        {/* Font selector — below Basmala inside preview card */}
+        <View style={[styles.fontDivider, { borderTopColor: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)" }]} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.fontRow}>
+          {FONT_OPTIONS.map((f) => {
+            const active = quranFont === f.key;
+            return (
+              <Pressable
+                key={f.key}
+                style={[
+                  styles.fontChip,
+                  {
+                    backgroundColor: active ? ACCENT : isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
+                    borderColor: active ? ACCENT : "transparent",
+                  },
+                ]}
+                onPress={() => setQuranFont(f.key)}
+              >
+                <Text style={[
+                  styles.fontChipText,
+                  { color: active ? "#fff" : theme.color },
+                  f.key !== "default" && { fontFamily: f.key },
+                ]}>
+                  {t(f.labelKey, lang)}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
+
+      {/* All themes — single horizontal scroll like DrawerMenu */}
+      <Text style={[styles.themeGroupLabel, { color: mutedColor }]}>
+        {t("choose_theme", lang)}
+      </Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.themeScrollRow}
+      >
+        {THEMES.map((th, idx) => {
+          const isActive = theme.name === th.name;
+          return (
+            <Pressable
+              key={idx}
+              style={({ pressed }) => [
+                styles.themeCircle,
+                {
+                  backgroundColor: th.backgroundColor,
+                  borderColor: isActive ? ACCENT : th.borderColor,
+                  borderWidth: isActive ? 3 : 1.5,
+                },
+                pressed && { transform: [{ scale: 0.9 }] },
+              ]}
+              onPress={() => setTheme(th)}
+            >
+              {th.night && !isActive && <Ionicons name="moon" size={14} color="#aaa" />}
+              {isActive && (
+                <Ionicons name="checkmark-circle" size={22} color={th.night ? "#336699" : ACCENT} />
+              )}
+            </Pressable>
+          );
+        })}
+      </ScrollView>
+    </View>
+  );
 
   // =========================================================================
   // Progress Indicator
@@ -607,7 +726,8 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
             >
               {step === 1 && renderLanguageStep()}
               {step === 2 && renderMushafStep()}
-              {step === 3 && renderThemeStep()}
+              {step === 3 && renderModeStep()}
+              {step === 4 && renderThemeStep()}
             </Animated.View>
           </ScrollView>
 
@@ -756,14 +876,14 @@ const styles = StyleSheet.create({
     width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 10,
     justifyContent: "center",
   },
   langCard: {
-    width: (SCREEN_WIDTH - 72) / 2,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+    width: (SCREEN_WIDTH - 72) / 3,
+    paddingVertical: 16,
+    paddingHorizontal: 10,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
     position: "relative",
@@ -775,20 +895,21 @@ const styles = StyleSheet.create({
   },
   langCheckBadge: {
     position: "absolute",
-    top: 10,
-    right: 10,
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    top: 6,
+    right: 6,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
   },
   langNative: {
-    fontSize: 20,
-    marginBottom: 6,
+    fontSize: 13,
+    marginBottom: 2,
   },
   langSub: {
-    fontSize: 12,
+    fontSize: 9,
+    opacity: 0.7,
   },
 
   // ---- Mushaf Cards ----
@@ -835,15 +956,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 
-  // ---- Theme Selection ----
+  // ---- Theme + Font Selection ----
   themePreview: {
     width: "100%",
     borderRadius: 16,
-    paddingVertical: 24,
+    paddingTop: 20,
     paddingHorizontal: 20,
+    paddingBottom: 12,
     alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 24,
+    marginBottom: 20,
     borderWidth: 1,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -856,14 +977,34 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 8,
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
     lineHeight: 36,
   },
   themePreviewVerse: {
     fontSize: 18,
     textAlign: "center",
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
     lineHeight: 30,
+  },
+  fontDivider: {
+    width: "100%",
+    borderTopWidth: StyleSheet.hairlineWidth,
+    marginTop: 14,
+    marginBottom: 10,
+  },
+  fontRow: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 4,
+    paddingBottom: 4,
+  },
+  fontChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  fontChipText: {
+    fontSize: 13,
+    fontWeight: "600",
   },
   themeGroupLabel: {
     fontSize: 13,
@@ -873,18 +1014,16 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     alignSelf: "flex-start",
   },
-  themeGrid: {
+  themeScrollRow: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 14,
-    justifyContent: "center",
-    marginBottom: 20,
-    width: "100%",
+    gap: 12,
+    paddingHorizontal: 4,
+    paddingBottom: 8,
   },
   themeCircle: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",

@@ -8,8 +8,11 @@ import {
   ScrollView,
   Image,
   Dimensions,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAppStore, type Quira } from "../store/useAppStore";
 import { t, type LangKey } from "../i18n";
 import { THEMES, type Theme } from "../theme/themes";
@@ -29,6 +32,10 @@ const LANGUAGES: { key: LangKey; label: string }[] = [
   { key: "fr", label: "FR" },
   { key: "amz", label: "ⵣ" },
   { key: "he", label: "עב" },
+  { key: "es", label: "ES" },
+  { key: "nl", label: "NL" },
+  { key: "de", label: "DE" },
+  { key: "it", label: "IT" },
 ];
 
 const MUSHAFS: { key: Quira; labelKey: string }[] = [
@@ -37,6 +44,12 @@ const MUSHAFS: { key: Quira; labelKey: string }[] = [
 ];
 
 export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuProps) {
+  const insets = useSafeAreaInsets();
+  // On Android, StatusBar.currentHeight is more reliable inside a statusBarTranslucent Modal
+  const statusBarHeight = Platform.OS === "android"
+    ? (StatusBar.currentHeight ?? insets.top)
+    : insets.top;
+  const navBarHeight = Platform.OS === "android" ? insets.bottom : insets.bottom;
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
@@ -45,13 +58,20 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
   const setTheme = useAppStore((s) => s.setTheme);
 
   const isNight = !!theme.night;
-  const isRTL = lang === "ar" || lang === "amz" || lang === "he";
+  const isRTL = lang === "ar" || lang === "he";
   const textColor = theme.color;
   const mutedColor = isNight ? "#888" : "#999";
-  const bgColor = isNight ? "#111122" : "#fafafa";
-  const cardBg = isNight ? "#1a1a2e" : "#fff";
-  const borderColor = isNight ? "#2a2a3e" : "#eee";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isNight ? "#1a1a2e" : theme.backgroundColor;
+  const borderColor = theme.borderColor;
   const accentColor = "#1a5c2e";
+
+  // White first, night second, then the rest
+  const sortedThemes = [
+    ...THEMES.filter((t) => t.name === "white"),
+    ...THEMES.filter((t) => t.name === "night"),
+    ...THEMES.filter((t) => t.name !== "white" && t.name !== "night"),
+  ];
 
   const handleMenuPress = (screen: string) => {
     onNavigate(screen);
@@ -74,7 +94,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
         <View style={[styles.drawer, { width: DRAWER_WIDTH, backgroundColor: bgColor }]}>
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.scrollContent}
+            contentContainerStyle={[styles.scrollContent, { paddingBottom: navBarHeight + 24 }]}
           >
             {/* Cover Image */}
             <View style={styles.coverWrapper}>
@@ -83,15 +103,15 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 style={styles.coverImage}
                 resizeMode="cover"
               />
-              {/* Close button on cover */}
-              <Pressable style={styles.closeBtn} onPress={onClose}>
+              {/* Close button on cover - respects status bar */}
+              <Pressable style={[styles.closeBtn, { top: statusBarHeight + 8 }]} onPress={onClose}>
                 <Ionicons name="close" size={24} color="#fff" />
               </Pressable>
             </View>
 
             {/* Menu Items */}
             <View style={styles.menuSection}>
-              {/* 1. Mushaf Type */}
+              {/* 1. Mushaf Type + Fahres */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
                   style={[styles.menuItem, isRTL && styles.menuItemRTL]}
@@ -143,6 +163,17 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                     </Pressable>
                   ))}
                 </View>
+                {/* Fahres below mushaf chips */}
+                <Pressable
+                  style={[styles.menuItem, isRTL && styles.menuItemRTL, { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: borderColor }]}
+                  onPress={() => handleMenuPress("search")}
+                >
+                  <Ionicons name="list-outline" size={22} color={accentColor} />
+                  <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                    {t("fahres", lang)}
+                  </Text>
+                  <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+                </Pressable>
               </View>
 
               {/* 2. Bookmarks */}
@@ -220,7 +251,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
               {/* Auto-scroll / Prayer Mode */}
               <Pressable
                 style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
-                onPress={() => handleMenuPress("autoscroll")}
+                onPress={() => handleMenuPress("prayerMode")}
               >
                 <Ionicons name="swap-vertical-outline" size={22} color={accentColor} />
                 <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
@@ -229,7 +260,31 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                 <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
               </Pressable>
 
-              {/* 5. Theme */}
+              {/* Media (video + radio) */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("media")}
+              >
+                <Ionicons name="play-circle-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("media", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* 5. Offline */}
+              <Pressable
+                style={[styles.menuBlock, styles.menuItem, isRTL && styles.menuItemRTL, { backgroundColor: cardBg, borderColor }]}
+                onPress={() => handleMenuPress("offline")}
+              >
+                <Ionicons name="cloud-download-outline" size={22} color={accentColor} />
+                <Text style={[styles.menuLabel, { color: textColor }, isRTL && styles.menuLabelRTL]}>
+                  {t("offline", lang)}
+                </Text>
+                <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+              </Pressable>
+
+              {/* 6. Theme */}
               <View style={[styles.menuBlock, { backgroundColor: cardBg, borderColor }]}>
                 <Pressable
                   style={[styles.menuItem, isRTL && styles.menuItemRTL]}
@@ -247,15 +302,14 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                   contentContainerStyle={styles.themeRow}
                   style={[styles.themeScrollView, { borderTopColor: borderColor }]}
                 >
-                  {THEMES.map((th, idx) => (
+                  {sortedThemes.map((th, idx) => (
                     <Pressable
                       key={idx}
                       style={[
                         styles.themeCircle,
                         {
                           backgroundColor: th.backgroundColor,
-                          borderColor:
-                            theme.name === th.name ? accentColor : th.night ? "#555" : "#ccc",
+                          borderColor: theme.name === th.name ? accentColor : th.borderColor,
                           borderWidth: theme.name === th.name ? 3 : 1.5,
                         },
                       ]}
@@ -284,7 +338,12 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                   </Text>
                   <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
                 </Pressable>
-                <View style={[styles.langRow, { borderTopColor: borderColor }]}>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  contentContainerStyle={styles.langRow}
+                  style={[styles.langScrollView, { borderTopColor: borderColor }]}
+                >
                   {LANGUAGES.map((l) => (
                     <Pressable
                       key={l.key}
@@ -321,7 +380,7 @@ export default function DrawerMenu({ visible, onClose, onNavigate }: DrawerMenuP
                       </Text>
                     </Pressable>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               {/* 7. Settings */}
@@ -399,7 +458,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     position: "absolute",
-    top: 48,
+    top: 16,
     left: 16,
     width: 36,
     height: 36,
@@ -483,14 +542,15 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   // Language chips
+  langScrollView: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+  },
   langRow: {
     flexDirection: "row",
-    justifyContent: "center",
     paddingHorizontal: 14,
     paddingBottom: 12,
     paddingTop: 10,
     gap: 8,
-    borderTopWidth: StyleSheet.hairlineWidth,
   },
   langChip: {
     paddingVertical: 6,

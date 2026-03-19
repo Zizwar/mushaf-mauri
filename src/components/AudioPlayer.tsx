@@ -4,14 +4,13 @@ import {
   Text,
   Pressable,
   StyleSheet,
-  Modal,
-  FlatList,
   Animated,
-  ScrollView,
-  Dimensions,
   Platform,
   Alert,
+  Image,
 } from "react-native";
+import FullPlayerModal from "./player/FullPlayerModal";
+import ReciterModal from "./player/ReciterModal";
 import {
   useAudioPlayer,
   useAudioPlayerStatus,
@@ -31,19 +30,21 @@ import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listVoiceMoqri } from "../data/listAuthor";
 import { getAyahText } from "../utils/ayahText";
+import { warshToHafsAyahs } from "../utils/tafsir";
 import { saveRecording, getRecordingUri, createProfile, loadProfiles } from "../utils/recordings";
-
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
+import * as WarshEngine from "../utils/warshAudioEngine";
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const ACCENT = "#4285f4";
+const ACCENT = "#336699";
 const ACCENT_LIGHT = "#e8f0fe";
 const RECORDING_COLOR = "#d32f2f";
 const MINI_HEIGHT = 64;
 const PROGRESS_HEIGHT = 3;
 const USER_RECORDING_ID = "__user_recording__";
+// App icon for lock screen / notification artwork
+const APP_ICON_URL = Image.resolveAssetSource(require("../../assets/icon.png"))?.uri ?? "";
 
 const TRANSLATION_KEYS = [
   "recite_hudhaify", "recite_husary", "recite_basfar", "recite_ayyoub",
@@ -104,13 +105,26 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const tekrar = useAppStore((s) => s.tekrar);
   const setTekrar = useAppStore((s) => s.setTekrar);
 
+  const warshRecitorId = useAppStore((s) => s.warshRecitorId);
+  const quranFont = useAppStore((s) => s.quranFont);
+  const warshRecitorIdRef = useRef(warshRecitorId);
+
   const isUserRecording = moqriId === USER_RECORDING_ID;
+  const isWarshDbMode = quira === "warsh" && (moqriId === "__warsh_db_1__" || moqriId === "__warsh_db_2__");
+  const isWarshCdnMode = quira === "warsh" && moqriId.startsWith("warsh_");
+
+  // Queue of pending Hafs ayah URIs when a Warsh CDN merged ayah plays
+  const warshCdnQueueRef = useRef<string[]>([]);
 
   // Keep refs in sync for listener access
   quiraRef.current = quira;
   moqriIdRef.current = moqriId;
+  warshRecitorIdRef.current = warshRecitorId;
   tekrarRef.current = tekrar;
   listenThenRecordRef.current = listenThenRecord;
+
+  // Warsh pending seek: after loading a new file, seek to the target verse once duration is known
+  const warshPendingSeekRef = useRef<{ sura: number; aya: number } | null>(null);
 
   // -- Derived from status (replaces local state) --
   const progress = status.duration > 0 ? status.currentTime / status.duration : 0;
@@ -119,23 +133,24 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const isDark = !!theme.night;
   const colors = useMemo(
     () => ({
-      miniBar: isDark ? "#0d0d1a" : theme.backgroundColor || "#f5f5f0",
-      miniText: isDark ? "#ffffff" : theme.color || "#1a1a2e",
+      miniBar: theme.backgroundColor,
+      miniText: isDark ? "#ffffff" : theme.color,
       miniSecondary: isDark ? "rgba(255,255,255,0.6)" : "rgba(0,0,0,0.5)",
-      fullBg: isDark ? "#0d0d1a" : "#f8f9fa",
-      fullText: isDark ? "#e8e8e8" : "#1a1a2e",
+      fullBg: theme.backgroundColor,
+      fullText: isDark ? "#e8e8e8" : theme.color,
       fullSecondary: isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.45)",
-      fullCard: isDark ? "#1a1a2e" : "#ffffff",
-      modalBg: isDark ? "#1a1a2e" : "#ffffff",
-      modalText: isDark ? "#e8e8e8" : "#333333",
-      modalBorder: isDark ? "rgba(255,255,255,0.08)" : "#eeeeee",
+      fullCard: isDark ? "#1a1a2e" : theme.backgroundColor,
+      modalBg: isDark ? "#1a1a2e" : theme.backgroundColor,
+      modalText: isDark ? "#e8e8e8" : theme.color,
+      modalBorder: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)",
       accent: ACCENT,
       accentLight: isDark ? "rgba(66,133,244,0.2)" : ACCENT_LIGHT,
       progressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.1)",
       fullProgressTrack: isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)",
       sliderThumb: ACCENT,
+      buttonBg: theme.borderColor,
     }),
-    [isDark],
+    [isDark, theme],
   );
 
   // -- Translations & reciters --
@@ -149,9 +164,33 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
 
   const recordingProfiles = useAppStore((s) => s.recordingProfiles);
 
-  const reciters: { id: string; voice: string; isProfile?: boolean }[] = useMemo(
+  const reciters: { id: string; voice: string; isProfile?: boolean; type?: string }[] = useMemo(
     () => {
-      const base = listVoiceMoqri(translations);
+      const all = listVoiceMoqri(translations);
+      // Filter by mushaf type:
+      // - Warsh mode: user recording + DB reciters + separator + CDN reciters
+      // - Hafs mode: show user recording + all non-warsh reciters
+      let base: typeof all;
+      if (quira === "warsh") {
+        const dbReciters = all.filter((r: { id: string; type?: string }) =>
+          r.id === USER_RECORDING_ID || r.type === "warsh_db"
+        );
+        const cdnReciters = all.filter((r: { type?: string }) => r.type === "warsh_cdn");
+        if (cdnReciters.length > 0) {
+          base = [
+            ...dbReciters,
+            { id: "__separator__", voice: "", type: "separator" },
+            ...cdnReciters,
+          ];
+        } else {
+          base = dbReciters;
+        }
+      } else {
+        base = all.filter((r: { id: string; type?: string }) =>
+          r.type !== "warsh_db" && r.type !== "warsh_cdn"
+        );
+      }
+
       // Insert recording profiles after the user recording entry
       if (recordingProfiles.length > 0) {
         const userIdx = base.findIndex((r: { id: string }) => r.id === USER_RECORDING_ID);
@@ -169,7 +208,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       }
       return base;
     },
-    [translations, recordingProfiles],
+    [translations, recordingProfiles, quira],
   );
 
   const currentReciterName = useMemo(
@@ -182,9 +221,15 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   const suraData = selectedAya ? QuranData.Sura[selectedAya.sura] : null;
   const suraNameAr = suraData?.[0] ?? "";
   const suraNameEn = suraData?.[2] ?? "";
-  const ayahText = selectedAya
-    ? getAyahText(selectedAya.sura, selectedAya.aya, quira)
-    : null;
+
+  const [ayahText, setAyahText] = useState<string | null>(null);
+  useEffect(() => {
+    if (selectedAya) {
+      getAyahText(selectedAya.sura, selectedAya.aya, quira).then(setAyahText);
+    } else {
+      setAyahText(null);
+    }
+  }, [selectedAya?.sura, selectedAya?.aya, quira]);
 
   // ===========================================================================
   // Audio setup
@@ -198,6 +243,64 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       // Note: useAudioPlayer hook auto-releases the player on unmount
     };
   }, []);
+
+  // Initialize Warsh engine + callbacks
+  useEffect(() => {
+    if (quira === "warsh") {
+      WarshEngine.initWarshEngine().catch(() => {});
+      WarshEngine.setCallbacks(
+        // onVerseChange
+        (v) => {
+          const store = useAppStore.getState();
+          const sel = store.selectedAya;
+          // DB pageNum is 2-639, app pages are 1-638 → offset -1
+          const appPage = v.pageNum - 1;
+          if (!sel || sel.sura !== v.suraID || sel.aya !== v.ayaNum) {
+            store.setSelectedAya({
+              sura: v.suraID,
+              aya: v.ayaNum,
+              page: appPage,
+              id: `s${v.suraID}a${v.ayaNum}z`,
+            });
+            currentAyaRef.current = { sura: v.suraID, aya: v.ayaNum };
+            if (sel && sel.page !== appPage) {
+              onScrollToPage(appPage);
+            }
+          }
+        },
+        // onFinished (no-op; didJustFinish listener handles it)
+        () => {}
+      );
+    }
+    return () => {
+      WarshEngine.stopWarsh();
+    };
+  }, [quira, onScrollToPage]);
+
+  // Warsh: once duration is available and we have a pending seek, compute and seek
+  useEffect(() => {
+    if (!isWarshDbMode || !warshPendingSeekRef.current) return;
+    if (status.isLoaded && status.duration > 0) {
+      WarshEngine.setDuration(status.duration);
+      const { sura, aya } = warshPendingSeekRef.current;
+      warshPendingSeekRef.current = null;
+      const seekTime = WarshEngine.computeSeekTime(sura, aya);
+      if (seekTime > 0) {
+        player.seekTo(seekTime);
+      }
+    }
+  }, [isWarshDbMode, status.isLoaded, status.duration, player]);
+
+  // Warsh: track verse position based on currentTime
+  useEffect(() => {
+    if (!isWarshDbMode || !status.playing || status.duration <= 0) return;
+    WarshEngine.updatePosition(status.currentTime);
+  }, [isWarshDbMode, status.currentTime, status.playing, status.duration]);
+
+  // Reset recitor folder cache when warshRecitorId changes
+  useEffect(() => {
+    WarshEngine.resetRecitorCache();
+  }, [warshRecitorId]);
 
   // Configure audio session once for background playback
   useEffect(() => {
@@ -220,8 +323,42 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     currentAyaRef.current = { sura, aya };
 
     const mid = moqriIdRef.current;
-    const isUser = mid === USER_RECORDING_ID;
     const q = quiraRef.current;
+
+    // Warsh DB mode: use hook player with WarshEngine data
+    if (q === "warsh" && (mid === "__warsh_db_1__" || mid === "__warsh_db_2__")) {
+      WarshEngine.getWarshPlayInfo(sura, aya, page, warshRecitorIdRef.current).then((info) => {
+        if (!info) {
+          useAppStore.getState().setIsPlaying(false);
+          return;
+        }
+        if (info.isNewFile) {
+          warshPendingSeekRef.current = { sura, aya };
+          player.replace({ uri: info.uri });
+          player.play();
+        } else {
+          // Same file - just seek
+          if (WarshEngine.getTotalDuration() > 0) {
+            const seekTime = WarshEngine.computeSeekTime(sura, aya);
+            player.seekTo(seekTime);
+            if (!player.playing) player.play();
+          }
+        }
+      });
+      return;
+    }
+
+    // Warsh CDN mode: map Warsh ayah to Hafs ayah(s) for audio URL
+    if (q === "warsh" && mid.startsWith("warsh_")) {
+      const hafsAyahs = warshToHafsAyahs(sura, aya);
+      warshCdnQueueRef.current = hafsAyahs.slice(1).map(h => getAudioKsuUri(mid, sura, h));
+      const uri = getAudioKsuUri(mid, sura, hafsAyahs[0]);
+      player.replace({ uri });
+      player.play();
+      return;
+    }
+
+    const isUser = mid === USER_RECORDING_ID;
     let uri: string | null;
     if (isUser) {
       const profileId = useAppStore.getState().activeProfileId;
@@ -237,6 +374,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       try { player.setActiveForLockScreen(true, {
         title: `${sd?.[0] ?? ""} - ${aya}`,
         artist: reciterNameRef.current,
+        artworkUrl: APP_ICON_URL,
       }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     } else {
       useAppStore.getState().setIsPlaying(false);
@@ -251,6 +389,14 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       const current = currentAyaRef.current;
       if (!current) {
         useAppStore.getState().setIsPlaying(false);
+        return;
+      }
+
+      // Warsh CDN queue: play next queued merged ayah audio before advancing
+      if (warshCdnQueueRef.current.length > 0) {
+        const queuedUri = warshCdnQueueRef.current.shift()!;
+        player.replace({ uri: queuedUri });
+        player.play();
         return;
       }
 
@@ -295,24 +441,54 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       }
 
       const q = quiraRef.current;
+      const mid = moqriIdRef.current;
+
+      // -- Warsh DB mode: auto-advance to next file --
+      if (q === "warsh" && (mid === "__warsh_db_1__" || mid === "__warsh_db_2__")) {
+        const dbId = mid === "__warsh_db_1__" ? 1 : 2;
+        WarshEngine.getNextFileInfo(dbId).then((nextInfo) => {
+          if (nextInfo) {
+            const firstV = WarshEngine.getFirstVerse();
+            if (firstV) {
+              warshPendingSeekRef.current = { sura: firstV.suraID, aya: firstV.ayaNum };
+            }
+            player.replace({ uri: nextInfo.uri });
+            player.play();
+          } else {
+            useAppStore.getState().setIsPlaying(false);
+            try { player.clearLockScreenControls(); } catch {}
+          }
+        });
+        return;
+      }
+
       const tk = tekrarRef.current;
 
       // -- Tekrar (repetition) mode --
       if (tk.active) {
+        // 1. Per-ayah repeat: replay the current aya if more ayah-repeats remain
+        const nextAyahRepeat = tk.currentAyahRepeat + 1;
+        if (nextAyahRepeat < tk.ayahRepeat) {
+          useAppStore.getState().setTekrar({ ...tk, currentAyahRepeat: nextAyahRepeat });
+          playAyaFromRef(current.sura, current.aya, current.page);
+          return;
+        }
+
+        // Ayah repeats exhausted - reset ayah counter and check range progress
         const atEnd =
           current.sura === tk.endSura && current.aya === tk.endAya;
 
         if (atEnd) {
           const nextRepeat = tk.currentRepeat + 1;
           if (nextRepeat < tk.repeatCount) {
-            // More repeats to go - go back to start aya
-            useAppStore.getState().setTekrar({ ...tk, currentRepeat: nextRepeat });
+            // More full-range repeats - go back to start aya
+            useAppStore.getState().setTekrar({ ...tk, currentRepeat: nextRepeat, currentAyahRepeat: 0 });
             const startPage = getPageBySuraAya(tk.startSura, tk.startAya, q);
             playAyaFromRef(tk.startSura, tk.startAya, startPage);
             return;
           } else {
             // All repeats done - stop
-            useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, active: false });
+            useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, currentAyahRepeat: 0, active: false });
             useAppStore.getState().setIsPlaying(false);
             try { player.clearLockScreenControls(); } catch {}
             return;
@@ -322,9 +498,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         // Not at end aya yet - advance to next aya within range
         const next = getNextAya(current.sura, current.aya, q);
         if (next) {
+          useAppStore.getState().setTekrar({ ...tk, currentAyahRepeat: 0 });
           playAyaFromRef(next.sura, next.aya, next.page);
         } else {
-          useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, active: false });
+          useAppStore.getState().setTekrar({ ...tk, currentRepeat: 0, currentAyahRepeat: 0, active: false });
           useAppStore.getState().setIsPlaying(false);
           try { player.clearLockScreenControls(); } catch {}
         }
@@ -351,6 +528,43 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
     (sura: number, aya: number, _page: number) => {
       currentAyaRef.current = { sura, aya };
 
+      // Warsh DB mode: use hook player with WarshEngine data
+      if (isWarshDbMode) {
+        WarshEngine.getWarshPlayInfo(sura, aya, _page, warshRecitorId).then((info) => {
+          if (!info) return;
+          if (info.isNewFile) {
+            warshPendingSeekRef.current = { sura, aya };
+            player.replace({ uri: info.uri });
+            player.play();
+          } else {
+            if (WarshEngine.getTotalDuration() > 0) {
+              const seekTime = WarshEngine.computeSeekTime(sura, aya);
+              player.seekTo(seekTime);
+              if (!player.playing) player.play();
+            }
+          }
+          setIsPlaying(true);
+        });
+        return;
+      }
+
+      // Warsh CDN mode: map Warsh ayah to Hafs ayah(s) for audio URL
+      if (isWarshCdnMode) {
+        const hafsAyahs = warshToHafsAyahs(sura, aya);
+        warshCdnQueueRef.current = hafsAyahs.slice(1).map(h => getAudioKsuUri(moqriId, sura, h));
+        const mappedUri = getAudioKsuUri(moqriId, sura, hafsAyahs[0]);
+        player.replace({ uri: mappedUri });
+        player.play();
+        setIsPlaying(true);
+        const sd = QuranData.Sura[sura];
+        try { player.setActiveForLockScreen(true, {
+          title: `${sd?.[0] ?? ""} - ${aya}`,
+          artist: currentReciterName,
+          artworkUrl: APP_ICON_URL,
+        }, { showSeekForward: true, showSeekBackward: true }); } catch {}
+        return;
+      }
+
       let uri: string | null;
 
       if (isUserRecording) {
@@ -371,9 +585,10 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
       try { player.setActiveForLockScreen(true, {
         title: `${sd?.[0] ?? ""} - ${aya}`,
         artist: currentReciterName,
+        artworkUrl: APP_ICON_URL,
       }, { showSeekForward: true, showSeekBackward: true }); } catch {}
     },
-    [player, moqriId, quira, isUserRecording, setIsPlaying, currentReciterName],
+    [player, moqriId, quira, isUserRecording, isWarshDbMode, isWarshCdnMode, warshRecitorId, setIsPlaying, currentReciterName],
   );
 
   // -- Handle pending play requests (from action modal, etc.) --
@@ -501,15 +716,20 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // ===========================================================================
   const handlePlayPause = useCallback(() => {
     if (!selectedAya) return;
+
     if (status.playing) {
       player.pause();
       setIsPlaying(false);
     } else if (status.isLoaded && status.currentTime > 0) {
-      // Resume existing playback
-      player.play();
-      setIsPlaying(true);
+      // Check if selectedAya changed since last play — if so, play the new ayah
+      const cur = currentAyaRef.current;
+      if (cur && (cur.sura !== selectedAya.sura || cur.aya !== selectedAya.aya)) {
+        playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
+      } else {
+        player.play();
+        setIsPlaying(true);
+      }
     } else {
-      // Start fresh
       playAya(selectedAya.sura, selectedAya.aya, selectedAya.page);
     }
   }, [selectedAya, status.playing, status.isLoaded, status.currentTime, player, setIsPlaying, playAya]);
@@ -547,6 +767,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   }, [selectedAya, quira, isPlaying, setSelectedAya, onScrollToPage, playAya]);
 
   const handleStop = useCallback(() => {
+    WarshEngine.stopWarsh();
     player.pause();
     player.replace(null);
     try { player.clearLockScreenControls(); } catch {}
@@ -557,15 +778,71 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // -- Seek on progress bar tap (full player) --
   const handleSeek = useCallback(
     async (fraction: number) => {
+      if (isWarshDbMode && WarshEngine.getTotalDuration() > 0) {
+        await player.seekTo(fraction * WarshEngine.getTotalDuration());
+        return;
+      }
       if (status.duration <= 0) return;
       await player.seekTo(fraction * status.duration);
     },
-    [player, status.duration],
+    [player, status.duration, isWarshDbMode],
   );
 
   // -- Reciter change --
   const handleReciterChange = useCallback(
     (id: string) => {
+      // Handle Warsh DB reciters
+      if (id === "__warsh_db_1__" || id === "__warsh_db_2__") {
+        const dbId = id === "__warsh_db_1__" ? 1 : 2;
+        useAppStore.getState().setWarshRecitorId(dbId);
+        WarshEngine.resetRecitorCache();
+        setMoqriId(id);
+        setShowReciterModal(false);
+        // Stop current & play with hook player via WarshEngine data
+        if (selectedAya) {
+          player.pause();
+          WarshEngine.stopWarsh();
+          WarshEngine.getWarshPlayInfo(
+            selectedAya.sura, selectedAya.aya, selectedAya.page, dbId
+          ).then((info) => {
+            if (!info) return;
+            warshPendingSeekRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
+            player.replace({ uri: info.uri });
+            player.play();
+            setIsPlaying(true);
+          });
+        }
+        return;
+      }
+
+      // Handle Warsh CDN reciters
+      if (id.startsWith("warsh_")) {
+        WarshEngine.stopWarsh();
+        setMoqriId(id);
+        setShowReciterModal(false);
+        if (selectedAya) {
+          player.pause();
+          currentAyaRef.current = { sura: selectedAya.sura, aya: selectedAya.aya };
+          const hafsAyahs = warshToHafsAyahs(selectedAya.sura, selectedAya.aya);
+          warshCdnQueueRef.current = hafsAyahs.slice(1).map(h => getAudioKsuUri(id, selectedAya.sura, h));
+          const uri = getAudioKsuUri(id, selectedAya.sura, hafsAyahs[0]);
+          player.replace({ uri });
+          player.play();
+          setIsPlaying(true);
+          const sd = QuranData.Sura[selectedAya.sura];
+          const name = reciters.find((r) => r.id === id)?.voice ?? id;
+          try { player.setActiveForLockScreen(true, {
+            title: `${sd?.[0] ?? ""} - ${selectedAya.aya}`,
+            artist: name,
+            artworkUrl: APP_ICON_URL,
+          }, { showSeekForward: true, showSeekBackward: true }); } catch {}
+        }
+        return;
+      }
+
+      // Stop Warsh engine if switching away from it
+      WarshEngine.stopWarsh();
+
       setMoqriId(id);
       setShowReciterModal(false);
       // Always stop current audio and replay with new reciter
@@ -591,6 +868,7 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
         try { player.setActiveForLockScreen(true, {
           title: `${sd?.[0] ?? ""} - ${selectedAya.aya}`,
           artist: name,
+          artworkUrl: APP_ICON_URL,
         }, { showSeekForward: true, showSeekBackward: true }); } catch {}
       }
     },
@@ -621,16 +899,6 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   }, [slideAnim]);
 
   // ===========================================================================
-  // Time formatting (seconds input)
-  // ===========================================================================
-  const formatTime = (sec: number): string => {
-    const totalSec = Math.floor(sec);
-    const min = Math.floor(totalSec / 60);
-    const s = totalSec % 60;
-    return `${min}:${s < 10 ? "0" : ""}${s}`;
-  };
-
-  // ===========================================================================
   // Render nothing if no aya selected
   // ===========================================================================
   if (!selectedAya) return null;
@@ -640,6 +908,34 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   // ===========================================================================
   const renderMiniPlayer = () => (
     <View style={[styles.miniContainer, { backgroundColor: colors.miniBar }]}>
+      {/* Tekrar mode indicator bar */}
+      {tekrar.active && (
+        <View style={styles.tekrarBar}>
+          <Ionicons name="repeat" size={14} color="#fff" />
+          <Text style={styles.tekrarBarText}>
+            {t("tekrar_mode", lang)}
+            {"  "}
+            <Text style={styles.tekrarBarCounter}>
+              {tekrar.ayahRepeat > 1 ? `×${tekrar.ayahRepeat} ` : ""}
+              {tekrar.repeatCount > 1 ? `(${tekrar.currentRepeat + 1}/${tekrar.repeatCount})` : ""}
+            </Text>
+          </Text>
+          <Pressable
+            onPress={() => {
+              useAppStore.getState().setTekrar({
+                ...tekrar,
+                active: false,
+                currentRepeat: 0,
+                currentAyahRepeat: 0,
+              });
+            }}
+            hitSlop={8}
+            style={styles.tekrarBarClose}
+          >
+            <Ionicons name="close-circle" size={16} color="#fff" />
+          </Pressable>
+        </View>
+      )}
       {/* Progress bar at very top of mini player */}
       <View style={[styles.miniProgressTrack, { backgroundColor: colors.progressTrack }]}>
         <View
@@ -724,419 +1020,46 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
   );
 
   // ===========================================================================
-  // Full Player (Modal)
-  // ===========================================================================
-  const renderFullPlayer = () => {
-    const translateY = slideAnim.interpolate({
-      inputRange: [0, 1],
-      outputRange: [SCREEN_HEIGHT, 0],
-    });
-
-    return (
-      <Modal
-        visible={showFullPlayer}
-        animationType="none"
-        transparent
-        statusBarTranslucent
-        onRequestClose={closeFullPlayer}
-      >
-        <Animated.View
-          style={[
-            styles.fullContainer,
-            {
-              backgroundColor: colors.fullBg,
-              transform: [{ translateY }],
-            },
-          ]}
-        >
-          {/* Header */}
-          <View style={styles.fullHeader}>
-            <Pressable
-              onPress={closeFullPlayer}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullHeaderBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="chevron-down" size={28} color={colors.fullText} />
-            </Pressable>
-            <Text style={[styles.fullHeaderTitle, { color: colors.fullSecondary }]}>
-              {t("telawa", lang)}
-            </Text>
-            <Pressable
-              onPress={handleStop}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullHeaderBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="stop-circle" size={28} color={colors.fullSecondary} />
-            </Pressable>
-          </View>
-
-          {/* Sura Display Card */}
-          <View style={styles.fullSuraSection}>
-            <View
-              style={[
-                styles.fullSuraCard,
-                {
-                  backgroundColor: colors.fullCard,
-                  shadowColor: isDark ? "transparent" : "#000",
-                  borderColor: isDark ? "rgba(255,255,255,0.06)" : "transparent",
-                  borderWidth: isDark ? 1 : 0,
-                },
-              ]}
-            >
-              <Text style={[styles.fullSuraName, { color: colors.fullText }]}>
-                {suraNameAr}
-              </Text>
-              <Text style={[styles.fullSuraNameEn, { color: colors.fullSecondary }]}>
-                {suraNameEn}
-              </Text>
-              <View style={styles.fullAyaBadge}>
-                <Text style={styles.fullAyaBadgeText}>
-                  {t("aya_s", lang)} {selectedAya.aya}
-                </Text>
-              </View>
-              <Text
-                style={[styles.fullPageInfo, { color: colors.fullSecondary }]}
-              >
-                {t("page", lang)} {selectedAya.page}
-              </Text>
-              {ayahText ? (
-                <ScrollView style={styles.fullAyahScroll} nestedScrollEnabled>
-                  <Text
-                    style={[styles.fullAyahText, { color: colors.fullText }]}
-                  >
-                    {ayahText}
-                  </Text>
-                </ScrollView>
-              ) : null}
-            </View>
-          </View>
-
-          {/* Reciter name (tappable) */}
-          <Pressable
-            onPress={() => setShowReciterModal(true)}
-            style={({ pressed }) => [
-              styles.fullReciterRow,
-              pressed && { opacity: 0.7 },
-            ]}
-          >
-            <Ionicons name="mic-outline" size={18} color={colors.accent} />
-            <Text
-              style={[styles.fullReciterName, { color: colors.fullText }]}
-              numberOfLines={1}
-            >
-              {currentReciterName}
-            </Text>
-            <Ionicons name="chevron-forward" size={16} color={colors.fullSecondary} />
-          </Pressable>
-
-          {/* Progress Slider */}
-          <View style={styles.fullProgressSection}>
-            <Pressable
-              style={[
-                styles.fullProgressTrack,
-                { backgroundColor: colors.fullProgressTrack },
-              ]}
-              onPress={(e) => {
-                const fraction = e.nativeEvent.locationX / (SCREEN_WIDTH - 48);
-                handleSeek(Math.max(0, Math.min(1, fraction)));
-              }}
-            >
-              <View
-                style={[
-                  styles.fullProgressFill,
-                  {
-                    backgroundColor: colors.accent,
-                    width: `${Math.min(progress * 100, 100)}%` as any,
-                  },
-                ]}
-              />
-              <View
-                style={[
-                  styles.fullProgressThumb,
-                  {
-                    backgroundColor: colors.sliderThumb,
-                    left: `${Math.min(progress * 100, 100)}%` as any,
-                  },
-                ]}
-              />
-            </Pressable>
-            <View style={styles.fullTimeRow}>
-              <Text style={[styles.fullTimeText, { color: colors.fullSecondary }]}>
-                {formatTime(status.currentTime)}
-              </Text>
-              <Text style={[styles.fullTimeText, { color: colors.fullSecondary }]}>
-                {formatTime(status.duration)}
-              </Text>
-            </View>
-          </View>
-
-          {/* Transport Controls */}
-          <View style={styles.fullControls}>
-            <Pressable
-              onPress={handlePrev}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullSideBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="play-skip-back" size={32} color={colors.fullText} />
-            </Pressable>
-
-            <Pressable
-              onPress={handlePlayPause}
-              style={({ pressed }) => [
-                styles.fullPlayBtn,
-                { backgroundColor: colors.accent },
-                pressed && { opacity: 0.85 },
-              ]}
-            >
-              {status.isBuffering ? (
-                <Ionicons name="hourglass-outline" size={38} color="#ffffff" />
-              ) : (
-                <Ionicons
-                  name={isPlaying ? "pause-circle" : "play-circle"}
-                  size={60}
-                  color="#ffffff"
-                />
-              )}
-            </Pressable>
-
-            <Pressable
-              onPress={handleNext}
-              hitSlop={12}
-              style={({ pressed }) => [styles.fullSideBtn, pressed && styles.btnPressed]}
-            >
-              <Ionicons name="play-skip-forward" size={32} color={colors.fullText} />
-            </Pressable>
-          </View>
-
-          {/* Recording buttons in full player */}
-          <View style={styles.recordSection}>
-            <View style={styles.recordButtonRow}>
-              {/* Standard record button */}
-              <Pressable
-                onPress={handleMicPress}
-                style={({ pressed }) => [
-                  styles.recordBtn,
-                  {
-                    backgroundColor:
-                      recordingState === "recording" && !listenThenRecord
-                        ? RECORDING_COLOR
-                        : isDark
-                        ? "#2a2a3e"
-                        : "#f0f0f0",
-                  },
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Ionicons
-                  name={
-                    recordingState === "recording"
-                      ? "stop"
-                      : recordingState === "saving"
-                      ? "hourglass-outline"
-                      : "mic"
-                  }
-                  size={22}
-                  color={recordingState === "recording" ? "#fff" : RECORDING_COLOR}
-                />
-                <Text
-                  style={[
-                    styles.recordBtnText,
-                    {
-                      color:
-                        recordingState === "recording"
-                          ? "#fff"
-                          : colors.fullText,
-                    },
-                  ]}
-                >
-                  {recordingState === "recording"
-                    ? t("stop_recording", lang)
-                    : recordingState === "saving"
-                    ? t("recording_saved", lang)
-                    : t("start_recording", lang)}
-                </Text>
-              </Pressable>
-
-              {/* Listen-then-record button */}
-              <Pressable
-                onPress={handleListenThenRecord}
-                style={({ pressed }) => [
-                  styles.recordBtn,
-                  {
-                    backgroundColor: listenThenRecord
-                      ? "#ff9800"
-                      : isDark
-                      ? "#2a2a3e"
-                      : "#f0f0f0",
-                  },
-                  pressed && { opacity: 0.7 },
-                ]}
-              >
-                <Ionicons
-                  name={listenThenRecord ? "stop" : "ear"}
-                  size={20}
-                  color={listenThenRecord ? "#fff" : "#ff9800"}
-                />
-                <Text
-                  style={[
-                    styles.recordBtnText,
-                    {
-                      color: listenThenRecord ? "#fff" : colors.fullText,
-                      fontSize: 12,
-                    },
-                  ]}
-                >
-                  {t("listen_then_record", lang)}
-                </Text>
-              </Pressable>
-            </View>
-          </View>
-        </Animated.View>
-      </Modal>
-    );
-  };
-
-  // ===========================================================================
-  // Reciter Selection Modal
-  // ===========================================================================
-  const renderReciterModal = () => (
-    <Modal
-      visible={showReciterModal}
-      animationType="slide"
-      transparent
-      statusBarTranslucent
-      onRequestClose={() => setShowReciterModal(false)}
-    >
-      <View style={styles.reciterModalOverlay}>
-        <View
-          style={[
-            styles.reciterModalContent,
-            {
-              backgroundColor: colors.modalBg,
-            },
-          ]}
-        >
-          {/* Handle bar */}
-          <View style={styles.reciterModalHandle}>
-            <View
-              style={[
-                styles.reciterModalHandleBar,
-                { backgroundColor: colors.modalBorder },
-              ]}
-            />
-          </View>
-
-          {/* Title */}
-          <Text style={[styles.reciterModalTitle, { color: colors.modalText }]}>
-            {t("chooseQaree", lang)}
-          </Text>
-
-          {/* Reciter list */}
-          <FlatList
-            data={reciters}
-            keyExtractor={(item) => item.id}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.reciterListContent}
-            renderItem={({ item }) => {
-              const isActive = moqriId === item.id;
-              const isUser = item.id === USER_RECORDING_ID;
-              const isProfile = !!(item as any).isProfile;
-              return (
-                <Pressable
-                  style={({ pressed }) => [
-                    styles.reciterItem,
-                    {
-                      borderBottomColor: colors.modalBorder,
-                      backgroundColor: isActive
-                        ? colors.accentLight
-                        : pressed
-                        ? colors.accentLight
-                        : "transparent",
-                    },
-                    isProfile && {
-                      borderLeftWidth: 3,
-                      borderLeftColor: "#e91e63",
-                    },
-                  ]}
-                  onPress={() => handleReciterChange(item.id)}
-                >
-                  <View style={styles.reciterItemContent}>
-                    {isActive && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={20}
-                        color={colors.accent}
-                        style={styles.reciterCheckIcon}
-                      />
-                    )}
-                    {isUser && !isActive && (
-                      <Ionicons
-                        name="mic"
-                        size={18}
-                        color={RECORDING_COLOR}
-                        style={styles.reciterCheckIcon}
-                      />
-                    )}
-                    {isProfile && !isActive && (
-                      <Ionicons
-                        name="person-circle-outline"
-                        size={18}
-                        color="#e91e63"
-                        style={styles.reciterCheckIcon}
-                      />
-                    )}
-                    <Text
-                      style={[
-                        styles.reciterItemText,
-                        { color: colors.modalText },
-                        isActive && {
-                          color: colors.accent,
-                          fontWeight: "700",
-                        },
-                        isUser && !isActive && {
-                          color: RECORDING_COLOR,
-                          fontWeight: "600",
-                        },
-                        isProfile && !isActive && {
-                          color: "#e91e63",
-                          fontWeight: "600",
-                        },
-                      ]}
-                      numberOfLines={1}
-                    >
-                      {item.voice}
-                    </Text>
-                  </View>
-                </Pressable>
-              );
-            }}
-          />
-
-          {/* Close button */}
-          <Pressable
-            style={[
-              styles.reciterModalClose,
-              { borderTopColor: colors.modalBorder },
-            ]}
-            onPress={() => setShowReciterModal(false)}
-          >
-            <Text style={[styles.reciterModalCloseText, { color: colors.accent }]}>
-              {t("close", lang)}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  // ===========================================================================
   // Main render
   // ===========================================================================
   return (
     <>
       {renderMiniPlayer()}
-      {renderFullPlayer()}
-      {renderReciterModal()}
+      <FullPlayerModal
+        visible={showFullPlayer}
+        slideAnim={slideAnim}
+        colors={colors}
+        isDark={isDark}
+        lang={lang}
+        suraNameAr={suraNameAr}
+        suraNameEn={suraNameEn}
+        quranFont={quranFont}
+        ayahText={ayahText}
+        selectedAya={selectedAya}
+        currentReciterName={currentReciterName}
+        status={status}
+        isPlaying={isPlaying}
+        recordingState={recordingState}
+        listenThenRecord={listenThenRecord}
+        progress={progress}
+        onClose={closeFullPlayer}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        onPlayPause={handlePlayPause}
+        onSeek={handleSeek}
+        onMicPress={handleMicPress}
+        onListenThenRecord={handleListenThenRecord}
+        onReciterPress={() => setShowReciterModal(true)}
+      />
+      <ReciterModal
+        visible={showReciterModal}
+        colors={colors}
+        lang={lang}
+        reciters={reciters}
+        moqriId={moqriId}
+        onClose={() => setShowReciterModal(false)}
+        onSelect={handleReciterChange}
+      />
     </>
   );
 }
@@ -1147,8 +1070,28 @@ export default function AudioPlayer({ onScrollToPage }: AudioPlayerProps) {
 const styles = StyleSheet.create({
   // ---------- Mini Player ----------
   miniContainer: {
-    height: MINI_HEIGHT + PROGRESS_HEIGHT,
     paddingBottom: Platform.OS === "ios" ? 16 : 0,
+  },
+  tekrarBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#1a5c2e",
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    gap: 6,
+  },
+  tekrarBarText: {
+    flex: 1,
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  tekrarBarCounter: {
+    color: "#a5d6b0",
+    fontWeight: "700",
+  },
+  tekrarBarClose: {
+    padding: 2,
   },
   miniProgressTrack: {
     height: PROGRESS_HEIGHT,
@@ -1159,7 +1102,7 @@ const styles = StyleSheet.create({
     borderRadius: PROGRESS_HEIGHT / 2,
   },
   miniContent: {
-    flex: 1,
+    height: MINI_HEIGHT,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -1204,256 +1147,5 @@ const styles = StyleSheet.create({
   },
   btnPressed: {
     opacity: 0.5,
-  },
-
-  // ---------- Full Player ----------
-  fullContainer: {
-    flex: 1,
-    paddingTop: Platform.OS === "ios" ? 56 : 40,
-    paddingHorizontal: 24,
-  },
-  fullHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 24,
-  },
-  fullHeaderBtn: {
-    width: 44,
-    height: 44,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 22,
-  },
-  fullHeaderTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    textTransform: "uppercase",
-    letterSpacing: 1.5,
-  },
-
-  // Sura display
-  fullSuraSection: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingVertical: 16,
-  },
-  fullSuraCard: {
-    width: SCREEN_WIDTH - 64,
-    borderRadius: 24,
-    paddingVertical: 40,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 24,
-    elevation: 6,
-  },
-  fullSuraName: {
-    fontSize: 36,
-    fontWeight: "800",
-    marginBottom: 8,
-    textAlign: "center",
-  },
-  fullSuraNameEn: {
-    fontSize: 16,
-    fontWeight: "400",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  fullAyaBadge: {
-    backgroundColor: ACCENT,
-    borderRadius: 20,
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginBottom: 12,
-  },
-  fullAyaBadgeText: {
-    color: "#ffffff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  fullPageInfo: {
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  fullAyahScroll: {
-    maxHeight: 130,
-    marginTop: 12,
-  },
-  fullAyahText: {
-    fontSize: 18,
-    lineHeight: 32,
-    textAlign: "center",
-    writingDirection: "rtl",
-    paddingHorizontal: 12,
-    fontFamily: Platform.OS === "ios" ? "Geeza Pro" : undefined,
-  },
-
-  // Reciter row
-  fullReciterRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    gap: 8,
-  },
-  fullReciterName: {
-    fontSize: 15,
-    fontWeight: "600",
-    maxWidth: SCREEN_WIDTH * 0.6,
-  },
-
-  // Progress
-  fullProgressSection: {
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  fullProgressTrack: {
-    height: 6,
-    borderRadius: 3,
-    position: "relative",
-    justifyContent: "center",
-  },
-  fullProgressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  fullProgressThumb: {
-    position: "absolute",
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    marginLeft: -8,
-    top: -5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  fullTimeRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 8,
-  },
-  fullTimeText: {
-    fontSize: 12,
-    fontWeight: "500",
-    fontVariant: ["tabular-nums"],
-  },
-
-  // Transport controls
-  fullControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 32,
-    paddingVertical: 16,
-  },
-  fullSideBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  fullPlayBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: ACCENT,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-
-  // Record section
-  recordSection: {
-    alignItems: "center",
-    paddingBottom: Platform.OS === "ios" ? 48 : 32,
-    paddingHorizontal: 16,
-  },
-  recordButtonRow: {
-    flexDirection: "row",
-    gap: 10,
-    justifyContent: "center",
-    width: "100%",
-  },
-  recordBtn: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    gap: 6,
-  },
-  recordBtnText: {
-    fontSize: 13,
-    fontWeight: "600",
-  },
-
-  // ---------- Reciter Modal ----------
-  reciterModalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "flex-end",
-  },
-  reciterModalContent: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    maxHeight: SCREEN_HEIGHT * 0.7,
-    paddingTop: 8,
-  },
-  reciterModalHandle: {
-    alignItems: "center",
-    paddingVertical: 8,
-  },
-  reciterModalHandleBar: {
-    width: 40,
-    height: 4,
-    borderRadius: 2,
-  },
-  reciterModalTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 8,
-    paddingHorizontal: 20,
-  },
-  reciterListContent: {
-    paddingBottom: 8,
-  },
-  reciterItem: {
-    paddingVertical: 14,
-    paddingHorizontal: 20,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  reciterItemContent: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  reciterCheckIcon: {
-    marginRight: 10,
-  },
-  reciterItemText: {
-    fontSize: 16,
-    flex: 1,
-    textAlign: "right",
-  },
-  reciterModalClose: {
-    padding: 18,
-    alignItems: "center",
-    borderTopWidth: 1,
-  },
-  reciterModalCloseText: {
-    fontSize: 16,
-    fontWeight: "700",
   },
 });

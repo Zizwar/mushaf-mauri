@@ -1,30 +1,23 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
   Pressable,
   StyleSheet,
   ScrollView,
-  TextInput,
   Alert,
-  Dimensions,
   StatusBar,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore, type Quira } from "../store/useAppStore";
 import { t } from "../i18n";
-import {
-  countDownloadedPages,
-  downloadPageRange,
-  deleteAllCachedImages,
-  abortDownload,
-} from "../utils/imageCache";
-import { invalidateImageCacheSet } from "../components/QuranPage";
+import { File, Paths } from "expo-file-system";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
 
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const ACCENT = "#1a5c2e";
-const TOTAL_PAGES = 604;
 
 interface SettingsScreenProps {
   onGoBack: () => void;
@@ -33,9 +26,12 @@ interface SettingsScreenProps {
 
 const FONT_OPTIONS = [
   { key: "default", labelKey: "standard_font" },
+  { key: "Maghribi", labelKey: "maghribi_font" },
   { key: "hafs", labelKey: "hafs_font" },
   { key: "rustam", labelKey: "rustam_font" },
   { key: "uthmanic", labelKey: "uthmanic_font" },
+  { key: "amiri-quran", labelKey: "amiri_quran_font" },
+  { key: "noto-naskh", labelKey: "noto_naskh_font" },
 ];
 
 function FontSelector() {
@@ -45,8 +41,9 @@ function FontSelector() {
   const setQuranFont = useAppStore((s) => s.setQuranFont);
 
   const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
+  const borderColor = theme.borderColor;
 
   return (
     <View style={{ gap: 8 }}>
@@ -57,7 +54,7 @@ function FontSelector() {
         <Pressable
           key={font.key}
           style={{
-            flexDirection: "row",
+            flexDirection: isRTL ? "row-reverse" : "row",
             alignItems: "center",
             paddingVertical: 10,
             paddingHorizontal: 12,
@@ -83,6 +80,8 @@ function FontSelector() {
               color: quranFont === font.key ? ACCENT : textColor,
               fontWeight: quranFont === font.key ? "700" : "400",
               fontFamily: font.key !== "default" ? font.key : undefined,
+              textAlign: isRTL ? "right" : "left",
+              flex: 1,
             }}
           >
             {t(font.labelKey, lang)}
@@ -105,95 +104,218 @@ function FontSelector() {
   );
 }
 
+// ---------------------------------------------------------------------------
+// Highlight Settings
+// ---------------------------------------------------------------------------
+const HIGHLIGHT_COLORS = [
+  { hex: "#4285F4", name: "أزرق" },
+  { hex: "#34A853", name: "أخضر" },
+  { hex: "#FBBC04", name: "أصفر" },
+  { hex: "#EA4335", name: "أحمر" },
+  { hex: "#9C27B0", name: "بنفسجي" },
+  { hex: "#FF6D00", name: "برتقالي" },
+  { hex: "#00BCD4", name: "سماوي" },
+  { hex: "#795548", name: "بني" },
+];
+
+const OPACITY_LEVELS = [0.1, 0.2, 0.3, 0.4, 0.5];
+
+function HighlightSettings() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const highlightColor = useAppStore((s) => s.highlightColor);
+  const highlightOpacity = useAppStore((s) => s.highlightOpacity);
+  const setHighlightColor = useAppStore((s) => s.setHighlightColor);
+  const setHighlightOpacity = useAppStore((s) => s.setHighlightOpacity);
+
+  const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
+  const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = theme.borderColor;
+
+  // Preview: parse hex + opacity
+  const h = highlightColor.replace("#", "");
+  const r = parseInt(h.substring(0, 2), 16);
+  const g = parseInt(h.substring(2, 4), 16);
+  const b = parseInt(h.substring(4, 6), 16);
+  const previewBg = `rgba(${r},${g},${b},${highlightOpacity})`;
+
+  return (
+    <View style={{ gap: 14 }}>
+      {/* Color picker */}
+      <Text style={{ fontSize: 13, color: mutedColor, textAlign: isRTL ? "right" : "left" }}>
+        {t("highlight_color", lang)}
+      </Text>
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+        {HIGHLIGHT_COLORS.map((c) => (
+          <Pressable
+            key={c.hex}
+            onPress={() => setHighlightColor(c.hex)}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 18,
+              backgroundColor: c.hex,
+              borderWidth: highlightColor === c.hex ? 3 : 1.5,
+              borderColor: highlightColor === c.hex ? ACCENT : borderColor,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            {highlightColor === c.hex && (
+              <Ionicons name="checkmark" size={16} color="#fff" />
+            )}
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Opacity picker */}
+      <Text style={{ fontSize: 13, color: mutedColor, textAlign: isRTL ? "right" : "left" }}>
+        {t("highlight_opacity", lang)}
+      </Text>
+      <View style={{ flexDirection: "row", gap: 8 }}>
+        {OPACITY_LEVELS.map((op) => (
+          <Pressable
+            key={op}
+            onPress={() => setHighlightOpacity(op)}
+            style={{
+              flex: 1,
+              paddingVertical: 8,
+              borderRadius: 8,
+              borderWidth: 1.5,
+              borderColor: highlightOpacity === op ? ACCENT : borderColor,
+              backgroundColor: highlightOpacity === op
+                ? isDark ? "#1a3a2e" : "#e8f5e9"
+                : "transparent",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: "700", color: highlightOpacity === op ? ACCENT : textColor }}>
+              {Math.round(op * 100)}%
+            </Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Preview */}
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View style={{ flex: 1, height: 28, borderRadius: 4, backgroundColor: previewBg }} />
+        <Text style={{ fontSize: 12, color: mutedColor }}>{Math.round(highlightOpacity * 100)}%</Text>
+      </View>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Backup / Restore
+// ---------------------------------------------------------------------------
+function BackupSection() {
+  const lang = useAppStore((s) => s.lang);
+  const theme = useAppStore((s) => s.theme);
+  const isDark = !!theme.night;
+  const isRTL = lang === "ar" || lang === "he";
+  const textColor = isDark ? "#e8e8e8" : theme.color;
+  const mutedColor = isDark ? "#888" : "#999";
+  const borderColor = theme.borderColor;
+  const [busy, setBusy] = useState(false);
+
+  const handleExport = async () => {
+    try {
+      setBusy(true);
+      const keys = await AsyncStorage.getAllKeys();
+      const pairs = await AsyncStorage.multiGet(keys);
+      const data: Record<string, string | null> = {};
+      pairs.forEach(([k, v]) => { data[k] = v; });
+      const json = JSON.stringify(data, null, 2);
+
+      const tempFile = new File(Paths.cache, "mushaf-backup.json");
+      if (!tempFile.exists) tempFile.create();
+      tempFile.write(json);
+
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(tempFile.uri, {
+          mimeType: "application/json",
+          dialogTitle: t("backup_export", lang),
+        });
+      }
+    } catch (e) {
+      Alert.alert(t("backup_export", lang), String(e));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleImport = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: "application/json",
+        copyToCacheDirectory: true,
+      });
+      if (result.canceled) return;
+
+      setBusy(true);
+      const file = new File(result.assets[0].uri);
+      const json = file.textSync();
+      const data: Record<string, string> = JSON.parse(json);
+
+      if (typeof data !== "object" || Array.isArray(data)) throw new Error("invalid");
+
+      const pairs: [string, string][] = Object.entries(data).map(([k, v]) => [k, String(v)]);
+      await AsyncStorage.multiSet(pairs);
+
+      Alert.alert(t("backup_import", lang), t("backup_import_success", lang));
+    } catch {
+      Alert.alert(t("backup_import", lang), t("backup_import_error", lang));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <View style={{ gap: 8 }}>
+      <Pressable
+        style={[styles.backupBtn, { borderColor, flexDirection: isRTL ? "row-reverse" : "row" }]}
+        onPress={handleExport}
+        disabled={busy}
+      >
+        <Ionicons name="cloud-upload-outline" size={20} color={ACCENT} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.backupBtnTitle, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_export", lang)}</Text>
+          <Text style={[styles.backupBtnDesc, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_export_desc", lang)}</Text>
+        </View>
+        <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+      </Pressable>
+
+      <Pressable
+        style={[styles.backupBtn, { borderColor, flexDirection: isRTL ? "row-reverse" : "row" }]}
+        onPress={handleImport}
+        disabled={busy}
+      >
+        <Ionicons name="cloud-download-outline" size={20} color={ACCENT} />
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.backupBtnTitle, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_import", lang)}</Text>
+          <Text style={[styles.backupBtnDesc, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>{t("backup_import_desc", lang)}</Text>
+        </View>
+        <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={16} color={mutedColor} />
+      </Pressable>
+    </View>
+  );
+}
+
 export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const quira = useAppStore((s) => s.quira);
   const theme = useAppStore((s) => s.theme);
   const setQuira = useAppStore((s) => s.setQuira);
-  const imageDownloadProgress = useAppStore((s) => s.imageDownloadProgress);
-  const setImageDownloadProgress = useAppStore(
-    (s) => s.setImageDownloadProgress
-  );
-  const [cachedCount, setCachedCount] = useState(0);
-  const [fromPage, setFromPage] = useState("1");
-  const [toPage, setToPage] = useState(String(TOTAL_PAGES));
 
   const isDark = !!theme.night;
-  const bgColor = isDark ? "#0d0d1a" : "#f5f5f5";
-  const cardBg = isDark ? "#1a1a2e" : "#ffffff";
+  const isRTL = lang === "ar" || lang === "he";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isDark ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isDark ? "#e8e8e8" : "#1a1a2e";
   const mutedColor = isDark ? "#888" : "#999";
-  const borderColor = isDark ? "#2a2a3e" : "#e0e0e0";
-  const inputBg = isDark ? "#2a2a3e" : "#f0f0f0";
-
-  const progress = imageDownloadProgress[quira];
-
-  // Load counts on mount and quira change
-  useEffect(() => {
-    setCachedCount(countDownloadedPages(quira));
-  }, [quira]);
-
-  const handleDownload = useCallback(async () => {
-    const from = Math.max(1, Math.min(TOTAL_PAGES, parseInt(fromPage) || 1));
-    const to = Math.max(from, Math.min(TOTAL_PAGES, parseInt(toPage) || TOTAL_PAGES));
-    const total = to - from + 1;
-
-    setImageDownloadProgress(quira, {
-      isDownloading: true,
-      downloaded: 0,
-      total,
-    });
-
-    await downloadPageRange(quira, from, to, (downloaded, t) => {
-      setImageDownloadProgress(quira, {
-        isDownloading: true,
-        downloaded,
-        total: t,
-      });
-    });
-
-    setImageDownloadProgress(quira, {
-      isDownloading: false,
-      downloaded: 0,
-      total: TOTAL_PAGES,
-    });
-
-    invalidateImageCacheSet(quira);
-    setCachedCount(countDownloadedPages(quira));
-  }, [quira, fromPage, toPage, setImageDownloadProgress]);
-
-  const handleAbort = useCallback(() => {
-    abortDownload();
-    setImageDownloadProgress(quira, {
-      isDownloading: false,
-      downloaded: 0,
-      total: TOTAL_PAGES,
-    });
-  }, [quira, setImageDownloadProgress]);
-
-  const handleDeleteDownloads = useCallback(() => {
-    Alert.alert(
-      t("delete_downloads", lang),
-      t("confirm_delete_downloads", lang),
-      [
-        { text: t("cancel", lang), style: "cancel" },
-        {
-          text: t("yes", lang),
-          style: "destructive",
-          onPress: () => {
-            deleteAllCachedImages(quira);
-            invalidateImageCacheSet(quira);
-            setCachedCount(0);
-          },
-        },
-      ]
-    );
-  }, [quira, lang]);
-
-  const progressFraction =
-    progress.isDownloading && progress.total > 0
-      ? progress.downloaded / progress.total
-      : 0;
+  const borderColor = theme.borderColor;
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: bgColor }]}>
@@ -205,7 +327,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: borderColor }]}>
         <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
-          <Ionicons name="arrow-back" size={22} color={textColor} />
+          <Ionicons name={isRTL ? "arrow-forward" : "arrow-back"} size={22} color={textColor} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: textColor }]}>
           {t("settings", lang)}
@@ -219,7 +341,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
         showsVerticalScrollIndicator={false}
       >
         {/* Mushaf Selector */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("mosshaf_type", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -233,20 +355,14 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
                     borderColor: quira === q ? ACCENT : borderColor,
                     backgroundColor:
                       quira === q
-                        ? isDark
-                          ? "#1a3a2e"
-                          : "#e8f5e9"
+                        ? isDark ? "#1a3a2e" : "#e8f5e9"
                         : "transparent",
                   },
                 ]}
                 onPress={() => setQuira(q)}
               >
                 {quira === q && (
-                  <Ionicons
-                    name="checkmark-circle"
-                    size={16}
-                    color={ACCENT}
-                  />
+                  <Ionicons name="checkmark-circle" size={16} color={ACCENT} />
                 )}
                 <Text
                   style={[
@@ -257,170 +373,74 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
                     },
                   ]}
                 >
-                  {t(
-                    q === "madina" ? "mosshaf_hafs" : "mosshaf_warsh",
-                    lang
-                  )}
+                  {t(q === "madina" ? "mosshaf_hafs" : "mosshaf_warsh", lang)}
                 </Text>
               </Pressable>
             ))}
           </View>
         </View>
 
-        {/* Download Section */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
-          {t("download_images", lang)}
+        {/* Offline / Downloads */}
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
+          {t("offline", lang)}
         </Text>
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          {/* Status */}
-          <View style={styles.statusRow}>
-            <Ionicons
-              name={
-                cachedCount >= TOTAL_PAGES
-                  ? "cloud-done-outline"
-                  : "cloud-download-outline"
-              }
-              size={22}
-              color={cachedCount >= TOTAL_PAGES ? "#4caf50" : ACCENT}
-            />
-            <Text style={[styles.statusText, { color: textColor }]}>
-              {t("downloaded_pages", lang)}: {cachedCount} / {TOTAL_PAGES}
-            </Text>
-          </View>
-
-          {/* Progress bar */}
-          <View
-            style={[styles.progressTrack, { backgroundColor: inputBg }]}
-          >
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  backgroundColor: ACCENT,
-                  width: progress.isDownloading
-                    ? `${Math.min(progressFraction * 100, 100)}%` as any
-                    : `${Math.min((cachedCount / TOTAL_PAGES) * 100, 100)}%` as any,
-                },
-              ]}
-            />
-          </View>
-
-          {progress.isDownloading && (
-            <Text style={[styles.progressText, { color: mutedColor }]}>
-              {t("downloading", lang)} {progress.downloaded}/{progress.total}
-            </Text>
-          )}
-
-          {/* Page range inputs */}
-          {!progress.isDownloading && (
-            <View style={styles.rangeRow}>
-              <View style={styles.rangeInput}>
-                <Text style={[styles.rangeLabel, { color: mutedColor }]}>
-                  {t("from_page", lang)}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: inputBg,
-                      color: textColor,
-                      borderColor,
-                    },
-                  ]}
-                  value={fromPage}
-                  onChangeText={setFromPage}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                />
-              </View>
-              <View style={styles.rangeInput}>
-                <Text style={[styles.rangeLabel, { color: mutedColor }]}>
-                  {t("to_page", lang)}
-                </Text>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      backgroundColor: inputBg,
-                      color: textColor,
-                      borderColor,
-                    },
-                  ]}
-                  value={toPage}
-                  onChangeText={setToPage}
-                  keyboardType="number-pad"
-                  maxLength={3}
-                />
-              </View>
+        <Pressable
+          style={[styles.card, { backgroundColor: cardBg, borderColor }]}
+          onPress={() => onNavigate?.("offline")}
+        >
+          <View style={[styles.navRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
+            <Ionicons name="cloud-download-outline" size={22} color={ACCENT} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.navRowTitle, { color: textColor, textAlign: isRTL ? "right" : "left" }]}>
+                {t("offline", lang)}
+              </Text>
+              <Text style={[styles.navRowDesc, { color: mutedColor, textAlign: isRTL ? "right" : "left" }]}>
+                {t("offline_desc", lang)}
+              </Text>
             </View>
-          )}
-
-          {/* Action buttons */}
-          <View style={styles.buttonRow}>
-            {progress.isDownloading ? (
-              <Pressable
-                style={[styles.btn, styles.btnDanger]}
-                onPress={handleAbort}
-              >
-                <Ionicons name="stop-circle-outline" size={18} color="#fff" />
-                <Text style={styles.btnText}>
-                  {t("abort_download", lang)}
-                </Text>
-              </Pressable>
-            ) : (
-              <>
-                <Pressable
-                  style={[styles.btn, { backgroundColor: ACCENT }]}
-                  onPress={handleDownload}
-                >
-                  <Ionicons
-                    name="cloud-download-outline"
-                    size={18}
-                    color="#fff"
-                  />
-                  <Text style={styles.btnText}>
-                    {t("download_all", lang)}
-                  </Text>
-                </Pressable>
-                {cachedCount > 0 && (
-                  <Pressable
-                    style={[styles.btn, styles.btnDanger]}
-                    onPress={handleDeleteDownloads}
-                  >
-                    <Ionicons name="trash-outline" size={18} color="#fff" />
-                    <Text style={styles.btnText}>
-                      {t("delete_downloads", lang)}
-                    </Text>
-                  </Pressable>
-                )}
-              </>
-            )}
+            <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={mutedColor} />
           </View>
-        </View>
+        </Pressable>
 
-        {/* Recordings Section */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        {/* Recordings */}
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("my_recordings", lang)}
         </Text>
         <Pressable
           style={[styles.card, { backgroundColor: cardBg, borderColor }]}
           onPress={() => onNavigate?.("recordings")}
         >
-          <View style={[styles.statusRow, { marginBottom: 0 }]}>
+          <View style={[styles.navRow, { flexDirection: isRTL ? "row-reverse" : "row" }]}>
             <Ionicons name="mic-outline" size={22} color={ACCENT} />
-            <Text style={[styles.statusText, { color: textColor, flex: 1 }]}>
+            <Text style={[styles.navRowTitle, { color: textColor, flex: 1, textAlign: isRTL ? "right" : "left" }]}>
               {t("manage_recordings", lang)}
             </Text>
-            <Ionicons name="chevron-forward" size={20} color={mutedColor} />
+            <Ionicons name={isRTL ? "chevron-back" : "chevron-forward"} size={20} color={mutedColor} />
           </View>
         </Pressable>
 
         {/* Font Selection */}
-        <Text style={[styles.sectionTitle, { color: mutedColor }]}>
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
           {t("font_selection", lang)}
         </Text>
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
           <FontSelector />
+        </View>
+
+        {/* Ayah Highlight */}
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
+          {t("highlight_settings", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <HighlightSettings />
+        </View>
+
+        {/* Backup & Restore */}
+        <Text style={[styles.sectionTitle, { color: mutedColor, textAlign: isRTL ? "right" : "left", marginLeft: isRTL ? 0 : 4, marginRight: isRTL ? 4 : 0 }]}>
+          {t("backup_data", lang)}
+        </Text>
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
+          <BackupSection />
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -428,9 +448,7 @@ export default function SettingsScreen({ onGoBack, onNavigate }: SettingsScreenP
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   header: {
     height: 48,
     flexDirection: "row",
@@ -446,17 +464,9 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 20,
   },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
+  headerTitle: { fontSize: 17, fontWeight: "700" },
+  scroll: { flex: 1 },
+  scrollContent: { padding: 16, paddingBottom: 40 },
   sectionTitle: {
     fontSize: 13,
     fontWeight: "600",
@@ -471,10 +481,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
     padding: 16,
   },
-  mushafRow: {
-    flexDirection: "row",
-    gap: 10,
-  },
+  mushafRow: { flexDirection: "row", gap: 10 },
   mushafChip: {
     flex: 1,
     flexDirection: "row",
@@ -486,75 +493,28 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     gap: 6,
   },
-  mushafChipText: {
-    fontSize: 14,
-  },
-  statusRow: {
+  mushafChipText: { fontSize: 14 },
+  navRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
-    marginBottom: 12,
+    gap: 12,
   },
-  statusText: {
+  navRowTitle: {
     fontSize: 15,
     fontWeight: "600",
   },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    marginBottom: 8,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 3,
-  },
-  progressText: {
+  navRowDesc: {
     fontSize: 12,
-    textAlign: "center",
-    marginBottom: 8,
+    marginTop: 2,
   },
-  rangeRow: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  rangeInput: {
-    flex: 1,
-  },
-  rangeLabel: {
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  input: {
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    fontSize: 15,
-    textAlign: "center",
-  },
-  buttonRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
-  },
-  btn: {
-    flex: 1,
+  backupBtn: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
+    gap: 12,
     paddingVertical: 12,
-    borderRadius: 10,
-    gap: 6,
+    paddingHorizontal: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  btnText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  btnDanger: {
-    backgroundColor: "#d32f2f",
-  },
+  backupBtnTitle: { fontSize: 15, fontWeight: "600", marginBottom: 2 },
+  backupBtnDesc: { fontSize: 12 },
 });

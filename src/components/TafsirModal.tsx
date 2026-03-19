@@ -19,7 +19,13 @@ import { t } from "../i18n";
 import { QuranData } from "../data/quranData";
 // @ts-ignore
 import { listAuthorTafsir, listAuthorTarajem } from "../data/listAuthor";
-import { fetchTafsirOnline, fetchTarjamaOnline } from "../utils/tafsir";
+import {
+  fetchTafsirOnline,
+  fetchTarjamaOnline,
+  fetchTafsirOffline,
+  fetchTarjamaOffline,
+  warshToHafsAyahs,
+} from "../utils/tafsir";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MODAL_HEIGHT = SCREEN_HEIGHT * 0.85;
@@ -62,6 +68,7 @@ export default function TafsirModal({
 }: TafsirModalProps) {
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
+  const quira = useAppStore((s) => s.quira);
 
   // Navigation state
   const [currentSura, setCurrentSura] = useState(initialSura);
@@ -81,8 +88,8 @@ export default function TafsirModal({
 
   // Theme computations
   const isNight = !!theme.night;
-  const bgColor = isNight ? "#111122" : "#ffffff";
-  const cardBg = isNight ? "#1a1a2e" : "#f7f8fa";
+  const bgColor = theme.backgroundColor;
+  const cardBg = isNight ? "#1a1a2e" : theme.backgroundColor;
   const textColor = isNight ? "#e8e8f0" : "#1a1a2e";
   const mutedColor = isNight ? "#888899" : "#888899";
   const borderColor = isNight ? "#2a2a3e" : "#e8ecf0";
@@ -147,12 +154,34 @@ export default function TafsirModal({
       setContent("");
 
       try {
+        const hafsAyahs = quira === "warsh"
+          ? warshToHafsAyahs(currentSura, currentAya)
+          : [currentAya];
+
         let result: string;
 
         if (activeTab === "tafsir") {
-          result = await fetchTafsirOnline(selectedTafsir, currentSura, currentAya);
+          // Try offline DB first, fall back to online for each Hafs ayah
+          const parts = await Promise.all(
+            hafsAyahs.map(async (aya) => {
+              const offline = await fetchTafsirOffline(selectedTafsir, currentSura, aya);
+              return offline ?? fetchTafsirOnline(selectedTafsir, currentSura, aya);
+            })
+          );
+          if (hafsAyahs.length === 1) {
+            // Single ayah: keep the "ayahText|||tafsirText" format for the styled box
+            result = parts[0];
+          } else {
+            // Merged Warsh ayah (multiple Hafs ayahs): strip the "ayahText|||" prefix
+            // from each part so they can be joined cleanly without breaking the renderer
+            result = parts
+              .map((p) => (p.includes("|||") ? p.split("|||")[1].trim() : p))
+              .join("\n\n—\n\n");
+          }
         } else {
-          result = await fetchTarjamaOnline(selectedTarjama, currentSura, currentAya);
+          // Try offline DB first (single range query), fall back to online range API
+          const offline = await fetchTarjamaOffline(selectedTarjama, currentSura, hafsAyahs);
+          result = offline ?? await fetchTarjamaOnline(selectedTarjama, currentSura, hafsAyahs);
         }
 
         if (!cancelled) {
@@ -176,7 +205,7 @@ export default function TafsirModal({
     return () => {
       cancelled = true;
     };
-  }, [visible, activeTab, selectedTafsir, selectedTarjama, currentSura, currentAya, lang]);
+  }, [visible, activeTab, selectedTafsir, selectedTarjama, currentSura, currentAya, lang, quira]);
 
   // Navigation helpers
   const suraData = QuranData.Sura[currentSura];

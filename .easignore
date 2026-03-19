@@ -1,0 +1,19 @@
+# Git
+.git
+
+# Build artifacts
+output/
+dist/
+web/
+_tmp/
+
+# IDE / tools
+.claude/
+.expo/
+.gitpod.yml
+.gitpod.dockerfile
+.travis.yml
+
+# Misc
+helpwarsh.txt
+*.log

@@ -8,6 +8,7 @@ import {
   Dimensions,
   StatusBar,
   Alert,
+  Modal,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ import AudioPlayer from "../components/AudioPlayer";
 import DrawerMenu from "../components/DrawerMenu";
 import AyahActionModal from "../components/AyahActionModal";
 import TafsirModal from "../components/TafsirModal";
+import TextMushafView from "./TextMushafView";
 import { useAppStore } from "../store/useAppStore";
 import { getTotalPages } from "../utils/coordinates";
 import { t } from "../i18n";
@@ -40,6 +42,12 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
   const setCurrentPage = useAppStore((s) => s.setCurrentPage);
   const selectedAya = useAppStore((s) => s.selectedAya);
   const setSelectedAya = useAppStore((s) => s.setSelectedAya);
+  const mushafMode = useAppStore((s) => s.mushafMode);
+  const setMushafMode = useAppStore((s) => s.setMushafMode);
+  const textFontSize = useAppStore((s) => s.textFontSize);
+  const setTextFontSize = useAppStore((s) => s.setTextFontSize);
+  const textFontFamily = useAppStore((s) => s.textFontFamily);
+  const setTextFontFamily = useAppStore((s) => s.setTextFontFamily);
   const setRecordedAyahs = useAppStore((s) => s.setRecordedAyahs);
   const activeProfileId = useAppStore((s) => s.activeProfileId);
 
@@ -64,6 +72,7 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
 
   // Modal states
   const [drawerVisible, setDrawerVisible] = useState(false);
+  const [fontPickerVisible, setFontPickerVisible] = useState(false);
   const [actionModalVisible, setActionModalVisible] = useState(false);
   const [tafsirModalVisible, setTafsirModalVisible] = useState(false);
   const [longPressInfo, setLongPressInfo] = useState<{
@@ -146,9 +155,9 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
     }
   }, [longPressInfo, setSelectedAya]);
 
-  const handleBookmark = useCallback(() => {
+  const handleBookmark = useCallback(async () => {
     if (!longPressInfo) return;
-    const text = getAyahText(longPressInfo.sura, longPressInfo.aya, quira) ?? undefined;
+    const text = (await getAyahText(longPressInfo.sura, longPressInfo.aya, quira)) ?? undefined;
     useAppStore.getState().addBookmark({
       sura: longPressInfo.sura,
       aya: longPressInfo.aya,
@@ -184,7 +193,10 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
       screen === "khatma" ||
       screen === "about" ||
       screen === "tasbih" ||
-      screen === "autoscroll"
+      screen === "autoscroll" ||
+      screen === "prayerMode" ||
+      screen === "media" ||
+      screen === "offline"
     ) {
       if (onNavigate) onNavigate(screen);
     }
@@ -209,7 +221,7 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
   const keyExtractor = useCallback((item: { id: number }) => `page_${item.id}`, []);
 
   const isDark = !!theme.night;
-  const isRTL = lang === "ar" || lang === "amz";
+  const isRTL = lang === "ar" || lang === "he";
 
   const pageInfo = useMemo(() => getPageInfo(currentPage, quira), [currentPage, quira]);
 
@@ -228,15 +240,8 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           isRTL && styles.headerRTL,
         ]}
       >
-        {/* Left side: Home + Search */}
+        {/* Left side: Search */}
         <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
-          {onGoBack ? (
-            <Pressable onPress={onGoBack} hitSlop={10} style={styles.headerBtn}>
-              <Ionicons name="home-outline" size={20} color={theme.color} />
-            </Pressable>
-          ) : (
-            <View style={styles.headerBtn} />
-          )}
           <Pressable
             onPress={() => onNavigate?.("search")}
             hitSlop={10}
@@ -246,18 +251,59 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           </Pressable>
         </View>
 
-        {/* Center: Sura name + Page/Juz */}
-        <View style={styles.headerCenter}>
-          <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
-            {pageInfo.suraName}
-          </Text>
-          <Text style={[styles.headerMeta, { color: isDark ? "#888" : "#999" }]} numberOfLines={1}>
-            {currentPage} • {t("juz", lang)} {pageInfo.juz}
-          </Text>
-        </View>
+        {/* Center: Sura name + Page/Juz/Hizb — hidden in text mode (shown in page meta bar) */}
+        {mushafMode !== "text" && (
+          <View style={styles.headerCenter}>
+            <Pressable onPress={() => onNavigate?.("search")} hitSlop={6}>
+              <Text style={[styles.headerSura, { color: theme.color }]} numberOfLines={1}>
+                {pageInfo.suraName}
+              </Text>
+            </Pressable>
+            <Text style={[styles.headerMeta, { color: isDark ? "#888" : "#999" }]} numberOfLines={1}>
+              {currentPage} • {t("juz", lang)} {pageInfo.juz}{pageInfo.hizbLabel ? ` • ${pageInfo.hizbLabel}` : ""}
+            </Text>
+          </View>
+        )}
 
-        {/* Right side: Menu */}
+        {/* Right side: font controls (text mode) + mode toggle + menu */}
         <View style={[styles.headerSide, isRTL && styles.headerSideRTL]}>
+          {mushafMode === "text" && (
+            <>
+              <Pressable
+                onPress={() => setTextFontSize(Math.max(14, textFontSize - 2))}
+                hitSlop={10}
+                style={styles.headerBtn}
+              >
+                <Text style={[styles.fontSizeBtn, { color: theme.color }]}>A-</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setTextFontSize(Math.min(36, textFontSize + 2))}
+                hitSlop={10}
+                style={styles.headerBtn}
+              >
+                <Text style={[styles.fontSizeBtn, { color: theme.color, fontSize: 16 }]}>A+</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => setFontPickerVisible(true)}
+                hitSlop={10}
+                style={styles.headerBtn}
+              >
+                <Ionicons name="text-outline" size={19} color={theme.color} />
+              </Pressable>
+            </>
+          )}
+          {/* Mode toggle */}
+          <Pressable
+            onPress={() => setMushafMode(mushafMode === "image" ? "text" : "image")}
+            hitSlop={10}
+            style={[styles.headerBtn, styles.modeToggleBtn, { borderColor: theme.borderColor }]}
+          >
+            <Ionicons
+              name={mushafMode === "text" ? "image-outline" : "reader-outline"}
+              size={19}
+              color={theme.color}
+            />
+          </Pressable>
           <Pressable
             onPress={() => setDrawerVisible(true)}
             hitSlop={10}
@@ -268,25 +314,34 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
         </View>
       </View>
 
-      {/* Quran Pages */}
-      <FlatList
-        ref={flatListRef}
-        data={pages}
-        renderItem={renderPage}
-        keyExtractor={keyExtractor}
-        horizontal
-        pagingEnabled
-        inverted
-        showsHorizontalScrollIndicator={false}
-        getItemLayout={getItemLayout}
-        onViewableItemsChanged={onViewableItemsChanged}
-        viewabilityConfig={viewabilityConfig}
-        initialScrollIndex={initialIndex}
-        initialNumToRender={1}
-        maxToRenderPerBatch={2}
-        windowSize={3}
-        removeClippedSubviews
-      />
+      {/* Quran Pages — image or text mode */}
+      {mushafMode === "text" ? (
+        <View style={{ flex: 1 }}>
+          <TextMushafView
+            fontSize={textFontSize}
+            onLongPressAya={handleLongPressAya}
+          />
+        </View>
+      ) : (
+        <FlatList
+          ref={flatListRef}
+          data={pages}
+          renderItem={renderPage}
+          keyExtractor={keyExtractor}
+          horizontal
+          pagingEnabled
+          inverted
+          showsHorizontalScrollIndicator={false}
+          getItemLayout={getItemLayout}
+          onViewableItemsChanged={onViewableItemsChanged}
+          viewabilityConfig={viewabilityConfig}
+          initialScrollIndex={initialIndex}
+          initialNumToRender={1}
+          maxToRenderPerBatch={2}
+          windowSize={3}
+          removeClippedSubviews
+        />
+      )}
 
       {/* Audio Player */}
       <AudioPlayer onScrollToPage={scrollToPage} />
@@ -321,6 +376,62 @@ export default function MushafViewer({ onGoBack, onNavigate }: MushafViewerProps
           aya={longPressInfo.aya}
         />
       )}
+
+
+      {/* Font Picker Modal (text mode) */}
+      <Modal
+        visible={fontPickerVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setFontPickerVisible(false)}
+        statusBarTranslucent
+      >
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" }}
+          onPress={() => setFontPickerVisible(false)}
+        >
+          <Pressable style={[styles.fontPickerSheet, { backgroundColor: theme.backgroundColor }]}>
+            <View style={[styles.fontPickerHandle, { backgroundColor: theme.borderColor }]} />
+            <Text style={[styles.fontPickerTitle, { color: theme.color }]}>
+              {t("text_font", lang)}
+            </Text>
+            {[
+              { key: "auto", labelKey: "font_auto" },
+              { key: "Maghribi", labelKey: "maghribi_font" },
+              { key: "hafs", labelKey: "hafs_font" },
+              { key: "uthmanic", labelKey: "uthmanic_font" },
+              { key: "rustam", labelKey: "rustam_font" },
+              { key: "amiri-quran", labelKey: "amiri_quran_font" },
+              { key: "noto-naskh", labelKey: "noto_naskh_font" },
+              { key: "default", labelKey: "standard_font" },
+            ].map((opt) => {
+              const isSelected = textFontFamily === opt.key;
+              return (
+                <Pressable
+                  key={opt.key}
+                  style={[
+                    styles.fontPickerRow,
+                    { borderColor: isSelected ? "#1a5c2e" : theme.borderColor },
+                    isSelected && { backgroundColor: isDark ? "#1a3a2e" : "#e8f5e9" },
+                  ]}
+                  onPress={() => { setTextFontFamily(opt.key); setFontPickerVisible(false); }}
+                >
+                  {isSelected && <Ionicons name="checkmark-circle" size={18} color="#1a5c2e" />}
+                  <Text style={{
+                    fontSize: 16,
+                    color: isSelected ? "#1a5c2e" : theme.color,
+                    fontFamily: opt.key !== "auto" && opt.key !== "default" ? opt.key : undefined,
+                    flex: 1,
+                  }}>
+                    {t(opt.labelKey, lang)}
+                    {opt.key !== "auto" && opt.key !== "default" ? "  —  بسم الله" : ""}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -378,5 +489,44 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 18,
+  },
+  modeToggleBtn: {
+    borderWidth: 1,
+    borderRadius: 8,
+  },
+  fontSizeBtn: {
+    fontSize: 13,
+    fontWeight: "700",
+    letterSpacing: -0.5,
+  },
+  fontPickerSheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 36,
+  },
+  fontPickerHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: 16,
+  },
+  fontPickerTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    textAlign: "center",
+    marginBottom: 14,
+  },
+  fontPickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
   },
 });
