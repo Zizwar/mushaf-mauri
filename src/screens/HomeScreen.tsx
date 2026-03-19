@@ -10,6 +10,7 @@ import {
   Animated,
   Platform,
   StatusBar,
+  NativeModules,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -22,19 +23,40 @@ import type { Theme } from "../theme/themes";
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 // ---------------------------------------------------------------------------
+// Detect device language → map to our supported LangKey
+// ---------------------------------------------------------------------------
+function getDeviceLang(): LangKey {
+  try {
+    const raw =
+      Platform.OS === "ios"
+        ? NativeModules.SettingsManager?.settings?.AppleLocale ||
+          NativeModules.SettingsManager?.settings?.AppleLanguages?.[0]
+        : NativeModules.I18nManager?.localeIdentifier;
+    if (!raw) return "ar";
+    const code = String(raw).split(/[_-]/)[0].toLowerCase();
+    const map: Record<string, LangKey> = { ar: "ar", en: "en", fr: "fr", he: "he", es: "es", nl: "nl", de: "de", it: "it" };
+    return map[code] ?? "ar";
+  } catch {
+    return "ar";
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 const ACCENT = "#1a5c2e";
 const ACCENT_LIGHT = "#e8f5e9";
 const GOLD = "#c9a96e";
-const TOTAL_STEPS = 4; // welcome, language, mushaf, theme+font
+const TOTAL_STEPS = 5; // welcome, language, mushaf, mode, theme+font
 
 const FONT_OPTIONS = [
-  { key: "default",   labelKey: "standard_font",  sample: "بِسْمِ اللَّهِ" },
-  { key: "Maghribi",  labelKey: "maghribi_font",   sample: "بِسْمِ اللَّهِ" },
-  { key: "hafs",      labelKey: "hafs_font",       sample: "بِسْمِ اللَّهِ" },
-  { key: "rustam",    labelKey: "rustam_font",     sample: "بِسْمِ اللَّهِ" },
-  { key: "uthmanic",  labelKey: "uthmanic_font",   sample: "بِسْمِ اللَّهِ" },
+  { key: "default",      labelKey: "standard_font" },
+  { key: "Maghribi",     labelKey: "maghribi_font" },
+  { key: "hafs",         labelKey: "hafs_font" },
+  { key: "rustam",       labelKey: "rustam_font" },
+  { key: "uthmanic",     labelKey: "uthmanic_font" },
+  { key: "amiri-quran",  labelKey: "amiri_quran_font" },
+  { key: "noto-naskh",   labelKey: "noto_naskh_font" },
 ];
 
 interface HomeScreenProps {
@@ -54,8 +76,20 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   const setHasCompletedSetup = useAppStore((s) => s.setHasCompletedSetup);
   const quranFont = useAppStore((s) => s.quranFont);
   const setQuranFont = useAppStore((s) => s.setQuranFont);
+  const mushafMode = useAppStore((s) => s.mushafMode);
+  const setMushafMode = useAppStore((s) => s.setMushafMode);
 
   const [step, setStep] = useState(0);
+
+  // Auto-detect device language on first mount
+  const langDetected = useRef(false);
+  useEffect(() => {
+    if (!langDetected.current) {
+      langDetected.current = true;
+      const detected = getDeviceLang();
+      if (detected !== lang) setLang(detected);
+    }
+  }, []);
 
   // Animations
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -154,11 +188,16 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   const mutedColor = isDark ? "#888" : "#888";
   const borderColor = isDark ? "#2a2a3e" : "#e8e8e8";
 
-  const languages: { key: LangKey; label: string; nativeLabel: string }[] = [
-    { key: "ar", label: "Arabic", nativeLabel: "العربية" },
-    { key: "en", label: "English", nativeLabel: "English" },
-    { key: "fr", label: "French", nativeLabel: "Français" },
-    { key: "amz", label: "Tamazight", nativeLabel: "ⵜⴰⵎⴰⵣⵉⵖⵜ" },
+  const languages: { key: LangKey; label: string; nativeLabel: string; flag: string }[] = [
+    { key: "ar",  label: "Arabic",     nativeLabel: "العربية",     flag: "🇲🇷" },
+    { key: "en",  label: "English",    nativeLabel: "English",    flag: "🇬🇧" },
+    { key: "fr",  label: "Français",   nativeLabel: "Français",   flag: "🇫🇷" },
+    { key: "amz", label: "Tamazight",  nativeLabel: "ⵜⴰⵎⴰⵣⵉⵖⵜ", flag: "ⵣ" },
+    { key: "es",  label: "Español",    nativeLabel: "Español",    flag: "🇪🇸" },
+    { key: "de",  label: "Deutsch",    nativeLabel: "Deutsch",    flag: "🇩🇪" },
+    { key: "it",  label: "Italiano",   nativeLabel: "Italiano",   flag: "🇮🇹" },
+    { key: "nl",  label: "Nederlands", nativeLabel: "Nederlands", flag: "🇳🇱" },
+    { key: "he",  label: "עברית",      nativeLabel: "עברית",      flag: "🇮🇱" },
   ];
 
   const mushafs: {
@@ -249,7 +288,7 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   );
 
   // =========================================================================
-  // Step 1: Language Selection
+  // Step 1: Language Selection (compact chips for 9 languages)
   // =========================================================================
   const renderLanguageStep = () => (
     <View style={styles.stepContent}>
@@ -272,12 +311,10 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
             <Pressable
               key={l.key}
               style={({ pressed }) => [
-                styles.langCard,
+                styles.langChip,
                 {
                   backgroundColor: isActive
-                    ? isDark
-                      ? "#1a3a2e"
-                      : ACCENT_LIGHT
+                    ? isDark ? "#1a3a2e" : ACCENT_LIGHT
                     : cardBg,
                   borderColor: isActive ? ACCENT : borderColor,
                   borderWidth: isActive ? 2 : 1,
@@ -286,25 +323,21 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
               ]}
               onPress={() => setLang(l.key)}
             >
-              {isActive && (
-                <View style={[styles.langCheckBadge, { backgroundColor: ACCENT }]}>
-                  <Ionicons name="checkmark" size={14} color="#fff" />
-                </View>
-              )}
+              <Text style={styles.langFlag}>{l.flag}</Text>
               <Text
                 style={[
                   styles.langNative,
                   {
                     color: isActive ? ACCENT : textColor,
-                    fontWeight: isActive ? "800" : "600",
+                    fontWeight: isActive ? "800" : "500",
                   },
                 ]}
               >
                 {l.nativeLabel}
               </Text>
-              <Text style={[styles.langSub, { color: mutedColor }]}>
-                {l.label}
-              </Text>
+              {isActive && (
+                <Ionicons name="checkmark-circle" size={18} color={ACCENT} />
+              )}
             </Pressable>
           );
         })}
@@ -392,7 +425,82 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
   );
 
   // =========================================================================
-  // Step 3: Theme + Font Selection
+  // Step 3: Mushaf Mode (Image vs Text)
+  // =========================================================================
+  const renderModeStep = () => {
+    const modes: { key: "image" | "text"; icon: keyof typeof Ionicons.glyphMap; titleKey: string; descKey: string }[] = [
+      { key: "image", icon: "image",          titleKey: "mode_image",      descKey: "mode_image_desc" },
+      { key: "text",  icon: "reader-outline",  titleKey: "mode_text",       descKey: "mode_text_desc" },
+    ];
+    return (
+      <View style={styles.stepContent}>
+        <View style={styles.stepIconWrap}>
+          <View style={[styles.stepIconCircle, { backgroundColor: isDark ? "#1a2a2e" : "#e0f2f1" }]}>
+            <Ionicons name="eye" size={36} color="#00796b" />
+          </View>
+        </View>
+        <Text style={[styles.stepTitle, { color: textColor }]}>
+          {t("step_mode", lang)}
+        </Text>
+        <Text style={[styles.stepDesc, { color: mutedColor }]}>
+          {t("step_mode_desc", lang)}
+        </Text>
+
+        <View style={styles.mushafGrid}>
+          {modes.map((m) => {
+            const isActive = mushafMode === m.key;
+            return (
+              <Pressable
+                key={m.key}
+                style={({ pressed }) => [
+                  styles.mushafCard,
+                  {
+                    backgroundColor: isActive
+                      ? isDark ? "#1a3a2e" : ACCENT_LIGHT
+                      : cardBg,
+                    borderColor: isActive ? ACCENT : borderColor,
+                    borderWidth: isActive ? 2.5 : 1,
+                  },
+                  pressed && { transform: [{ scale: 0.96 }] },
+                ]}
+                onPress={() => setMushafMode(m.key)}
+              >
+                <View
+                  style={[
+                    styles.mushafIconCircle,
+                    {
+                      backgroundColor: isActive ? ACCENT : isDark ? "#2a2a3e" : "#f0f0f0",
+                    },
+                  ]}
+                >
+                  <Ionicons name={m.icon} size={32} color={isActive ? "#fff" : mutedColor} />
+                </View>
+                <Text
+                  style={[
+                    styles.mushafLabel,
+                    { color: isActive ? ACCENT : textColor, fontWeight: isActive ? "800" : "600" },
+                  ]}
+                >
+                  {t(m.titleKey, lang)}
+                </Text>
+                <Text style={{ color: mutedColor, fontSize: 11, textAlign: "center", marginTop: 4, lineHeight: 16 }}>
+                  {t(m.descKey, lang)}
+                </Text>
+                {isActive && (
+                  <View style={[styles.mushafCheckBadge, { backgroundColor: ACCENT }]}>
+                    <Ionicons name="checkmark" size={16} color="#fff" />
+                  </View>
+                )}
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+    );
+  };
+
+  // =========================================================================
+  // Step 4: Theme + Font Selection
   // =========================================================================
   const renderThemeStep = () => (
     <View style={styles.stepContent}>
@@ -612,7 +720,8 @@ export default function HomeScreen({ onOpenMushaf }: HomeScreenProps) {
             >
               {step === 1 && renderLanguageStep()}
               {step === 2 && renderMushafStep()}
-              {step === 3 && renderThemeStep()}
+              {step === 3 && renderModeStep()}
+              {step === 4 && renderThemeStep()}
             </Animated.View>
           </ScrollView>
 
@@ -756,44 +865,29 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // ---- Language Cards ----
+  // ---- Language Chips ----
   langGrid: {
     width: "100%",
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 12,
+    gap: 8,
     justifyContent: "center",
   },
-  langCard: {
-    width: (SCREEN_WIDTH - 72) / 2,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    borderRadius: 16,
+  langChip: {
+    flexDirection: "row",
     alignItems: "center",
-    justifyContent: "center",
-    position: "relative",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  langCheckBadge: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    width: 24,
-    height: 24,
+    gap: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
     borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
+    minWidth: (SCREEN_WIDTH - 80) / 3,
+  },
+  langFlag: {
+    fontSize: 16,
   },
   langNative: {
-    fontSize: 20,
-    marginBottom: 6,
-  },
-  langSub: {
-    fontSize: 12,
+    fontSize: 14,
+    flex: 1,
   },
 
   // ---- Mushaf Cards ----
