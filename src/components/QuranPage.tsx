@@ -6,8 +6,6 @@ import {
   Text,
   StyleSheet,
   Dimensions,
-  ScrollView,
-  TextInput,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { getPageCoordinates, madinaConfig } from "../utils/coordinates";
@@ -16,8 +14,6 @@ import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
 import type { AyahPosition } from "../types";
 
-// Debug flag — set to true to show the tuning panel
-const __DEV_COORD_TUNER__ = true;
 
 // Show the "switch to text mode" hint at most once per app session
 let textModeHintShown = false;
@@ -107,142 +103,6 @@ const AyahOverlay = React.memo(
   }
 );
 
-// ────────────────────────────────────────────────────────────────────────────
-// DEBUG: Coordinate Tuner Panel — remove after calibration
-// ────────────────────────────────────────────────────────────────────────────
-let Clipboard: any = null;
-try { Clipboard = require("expo-clipboard"); } catch (_) {}
-
-const TUNER_FIELDS: { key: keyof typeof madinaConfig; label: string; step: number }[] = [
-  { key: "SCREEN_DEFAULT_WIDTH", label: "ImgW", step: 1 },
-  { key: "MARGIN_PAGE", label: "MrgP", step: 1 },
-  { key: "LEFT_OFFSET", label: "L.Off", step: 1 },
-  { key: "TOP_OFFSET", label: "T.Off", step: 1 },
-  { key: "TOP_OFFSET_P12", label: "T.P12", step: 1 },
-  { key: "overlayTopExtra", label: "OvT", step: 1 },
-  { key: "overlayLeftExtra", label: "OvL", step: 1 },
-  { key: "height", label: "LnH", step: 1 },
-  { key: "tWidth", label: "TxW", step: 1 },
-  { key: "ofWidth", label: "ofW", step: 1 },
-  { key: "ofHeight", label: "ofH", step: 1 },
-  { key: "mgWidth", label: "MgW", step: 1 },
-];
-
-// Defaults snapshot for reset
-const MADINA_DEFAULTS: Record<string, number> = {
-  SCREEN_DEFAULT_WIDTH: 451, MARGIN_PAGE: 48,
-  LEFT_OFFSET: -10, TOP_OFFSET: -30, TOP_OFFSET_P12: -20,
-  overlayTopExtra: 5, overlayLeftExtra: 8,
-  height: 38, tWidth: 416, ofWidth: 10, ofHeight: 8, mgWidth: 20,
-};
-
-function CoordTunerPanel({ onApply }: { onApply: () => void }) {
-  const [localVals, setLocalVals] = useState(() => {
-    const vals: Record<string, number> = {};
-    TUNER_FIELDS.forEach((f) => { vals[f.key] = madinaConfig[f.key] as number; });
-    return vals;
-  });
-  const [copied, setCopied] = useState(false);
-
-  const handleChange = (key: string, text: string) => {
-    const n = parseFloat(text);
-    if (!isNaN(n)) setLocalVals((prev) => ({ ...prev, [key]: n }));
-  };
-
-  const handleStep = (key: string, step: number) => {
-    setLocalVals((prev) => ({ ...prev, [key]: +(prev[key] + step).toFixed(1) }));
-  };
-
-  const handleApply = () => {
-    TUNER_FIELDS.forEach((f) => { (madinaConfig as any)[f.key] = localVals[f.key]; });
-    madinaConfig._rev++;
-    onApply();
-  };
-
-  const handleReset = () => {
-    setLocalVals({ ...MADINA_DEFAULTS });
-    TUNER_FIELDS.forEach((f) => { (madinaConfig as any)[f.key] = MADINA_DEFAULTS[f.key]; });
-    madinaConfig._rev++;
-    onApply();
-  };
-
-  const handleCopy = async () => {
-    const lines = TUNER_FIELDS.map((f) => `${f.key}: ${localVals[f.key]}`).join("\n");
-    try {
-      if (Clipboard?.setStringAsync) await Clipboard.setStringAsync(lines);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch (_) {}
-  };
-
-  const PW = SCREEN_WIDTH * 0.72; // panel width — centered & compact
-
-  return (
-    <View style={{
-      position: "absolute", top: 40, left: (SCREEN_WIDTH - PW) / 2, width: PW, zIndex: 998,
-      backgroundColor: "rgba(0,0,0,0.92)", borderRadius: 14, padding: 8,
-      maxHeight: 320,
-    }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        {TUNER_FIELDS.map((f) => {
-          const changed = localVals[f.key] !== MADINA_DEFAULTS[f.key];
-          return (
-            <View key={f.key} style={{ flexDirection: "row", alignItems: "center", marginBottom: 3, gap: 3 }}>
-              <Text style={{ color: changed ? "#0f0" : "#888", fontSize: 9, width: 32, fontWeight: changed ? "700" : "400" }}>{f.label}</Text>
-              <Pressable
-                onPress={() => handleStep(f.key, -f.step)}
-                style={{ backgroundColor: "#444", borderRadius: 5, width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
-              >
-                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>−</Text>
-              </Pressable>
-              <TextInput
-                style={{
-                  flex: 1, backgroundColor: "#1a1a1a", color: changed ? "#0f0" : "#aaa",
-                  fontSize: 12, fontWeight: "700", textAlign: "center", borderRadius: 5,
-                  paddingVertical: 1, fontVariant: ["tabular-nums"],
-                }}
-                value={String(localVals[f.key])}
-                onChangeText={(t) => handleChange(f.key, t)}
-                keyboardType="numeric"
-                selectTextOnFocus
-              />
-              <Pressable
-                onPress={() => handleStep(f.key, f.step)}
-                style={{ backgroundColor: "#444", borderRadius: 5, width: 24, height: 24, alignItems: "center", justifyContent: "center" }}
-              >
-                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "700" }}>+</Text>
-              </Pressable>
-            </View>
-          );
-        })}
-      </ScrollView>
-      {/* Action buttons */}
-      <View style={{ flexDirection: "row", gap: 6, marginTop: 6 }}>
-        <Pressable
-          onPress={handleReset}
-          style={{ flex: 1, backgroundColor: "#555", borderRadius: 7, paddingVertical: 7, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 4 }}
-        >
-          <Ionicons name="refresh" size={13} color="#fff" />
-          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>إعادة</Text>
-        </Pressable>
-        <Pressable
-          onPress={handleCopy}
-          style={{ flex: 1, backgroundColor: copied ? "#1a5c2e" : "#336699", borderRadius: 7, paddingVertical: 7, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 4 }}
-        >
-          <Ionicons name={copied ? "checkmark" : "copy-outline"} size={13} color="#fff" />
-          <Text style={{ color: "#fff", fontSize: 11, fontWeight: "700" }}>{copied ? "تم" : "نسخ"}</Text>
-        </Pressable>
-        <Pressable
-          onPress={handleApply}
-          style={{ flex: 1.3, backgroundColor: "#1a5c2e", borderRadius: 7, paddingVertical: 7, alignItems: "center" }}
-        >
-          <Text style={{ color: "#fff", fontSize: 12, fontWeight: "800" }}>تطبيق</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
 // Module-level cache for cached page sets
 let cachedPageSets: Record<string, Set<number>> = {};
 let cacheInitialized: Record<string, boolean> = {};
@@ -260,8 +120,6 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
 
   const [imageError, setImageError] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [configRev, setConfigRev] = useState(0);
-  const [showTuner, setShowTuner] = useState(false);
 
   const { imageUri, isRemote } = useMemo(() => {
     if (!cachedPageSets[quira] || !cacheInitialized[quira]) {
@@ -296,7 +154,7 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
 
   const positions = useMemo(
     () => getPageCoordinates(pageId, quira),
-    [pageId, quira, configRev]
+    [pageId, quira]
   );
 
   const selectedId = selectedAya?.id ?? null;
@@ -366,29 +224,6 @@ function QuranPage({ pageId, isVisible, onLongPressAya }: QuranPageProps) {
           />
         ))}
 
-      {/* ── DEBUG: Coordinate Tuner Panel (Hafs only) ── */}
-      {__DEV_COORD_TUNER__ && isVisible && quira === "madina" && (
-        <>
-          {/* Toggle button */}
-          <Pressable
-            onPress={() => setShowTuner((v) => !v)}
-            style={{
-              position: "absolute", top: 4, left: 4, zIndex: 999,
-              backgroundColor: showTuner ? "#c0392b" : "rgba(0,0,0,0.5)",
-              borderRadius: 14, width: 28, height: 28,
-              alignItems: "center", justifyContent: "center",
-            }}
-          >
-            <Ionicons name={showTuner ? "close" : "construct"} size={16} color="#fff" />
-          </Pressable>
-
-          {showTuner && (
-            <CoordTunerPanel
-              onApply={() => setConfigRev((r) => r + 1)}
-            />
-          )}
-        </>
-      )}
     </View>
   );
 }

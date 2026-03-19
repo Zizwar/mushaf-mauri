@@ -30,11 +30,9 @@ export const madinaConfig = {
   faselSura: 110,
   pageTop: 37,
   pageSuraTop: 80,
-  // extra offsets applied in QuranPage overlay render
+  // extra offsets applied in QuranPage overlay render (Hafs only)
   overlayTopExtra: 5,
   overlayLeftExtra: 8,
-  // revision counter — bump to force re-render
-  _rev: 0,
 };
 
 function getWidthScreenRender() {
