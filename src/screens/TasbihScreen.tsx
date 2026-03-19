@@ -1,9 +1,10 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useMemo } from "react";
 import {
   View,
   Text,
   Pressable,
   ScrollView,
+  FlatList,
   StyleSheet,
   Animated,
   Modal,
@@ -11,18 +12,22 @@ import {
   Alert,
   Platform,
   KeyboardAvoidingView,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore, type DhikrItem } from "../store/useAppStore";
 import { t } from "../i18n";
 import { getAyahText } from "../utils/ayahText";
+import { allSuwar, getAyahCount } from "../utils/quranHelpers";
 
 const ACCENT = "#1a5c2e";
 const BLUE = "#336699";
+const SCREEN_HEIGHT = Dimensions.get("window").height;
 const RING_SIZE = 220;
 const RING_STROKE = 8;
 const SEGMENT_COUNT = 72;
+const INFINITY_TARGET = 0; // 0 means infinite
 
 let Haptics: any = null;
 try {
@@ -77,7 +82,7 @@ function ProgressRing({
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Target stepper (- number +) with presets
+// Target stepper (- number +) with presets + infinity
 // ────────────────────────────────────────────────────────────────────────────
 const TARGET_PRESETS = [33, 99, 100, 200, 500, 1000];
 
@@ -87,15 +92,24 @@ function TargetStepper({
   textColor,
   borderColor,
   mutedColor,
+  lang,
 }: {
   value: number;
   onChange: (v: number) => void;
   textColor: string;
   borderColor: string;
   mutedColor: string;
+  lang: string;
 }) {
-  const dec = () => onChange(Math.max(1, value - 1));
-  const inc = () => onChange(value + 1);
+  const isInfinite = value === INFINITY_TARGET;
+  const dec = () => {
+    if (isInfinite) onChange(1000);
+    else onChange(Math.max(1, value - 1));
+  };
+  const inc = () => {
+    if (isInfinite) return;
+    onChange(value + 1);
+  };
 
   return (
     <View style={{ gap: 8 }}>
@@ -110,13 +124,14 @@ function TargetStepper({
         </Pressable>
         <TextInput
           style={[styles.stepperInput, { color: textColor, borderColor }]}
-          value={String(value)}
+          value={isInfinite ? "∞" : String(value)}
           onChangeText={(v) => {
             const n = parseInt(v, 10);
             if (!isNaN(n) && n > 0) onChange(n);
           }}
           keyboardType="number-pad"
           selectTextOnFocus
+          editable={!isInfinite}
         />
         <Pressable
           onPress={inc}
@@ -126,7 +141,7 @@ function TargetStepper({
           <Ionicons name="add" size={20} color={ACCENT} />
         </Pressable>
       </View>
-      {/* Quick presets */}
+      {/* Quick presets + infinity */}
       <View style={styles.presetsRow}>
         {TARGET_PRESETS.map((p) => (
           <Pressable
@@ -151,10 +166,207 @@ function TargetStepper({
             </Text>
           </Pressable>
         ))}
+        <Pressable
+          onPress={() => onChange(INFINITY_TARGET)}
+          style={[
+            styles.presetPill,
+            {
+              borderColor: isInfinite ? ACCENT : borderColor,
+              backgroundColor: isInfinite ? ACCENT + "18" : "transparent",
+            },
+          ]}
+        >
+          <Text
+            style={{
+              fontSize: 14,
+              color: isInfinite ? ACCENT : mutedColor,
+              fontWeight: isInfinite ? "700" : "400",
+            }}
+          >
+            ∞
+          </Text>
+        </Pressable>
       </View>
     </View>
   );
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Sura picker modal (full bottom sheet like PrayerMode)
+// ────────────────────────────────────────────────────────────────────────────
+function SuraPickerModal({
+  visible,
+  isDark,
+  textColor,
+  mutedColor,
+  borderColor,
+  lang,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  isDark: boolean;
+  textColor: string;
+  mutedColor: string;
+  borderColor: string;
+  lang: string;
+  onSelect: (sura: number, aya: number) => void;
+  onClose: () => void;
+}) {
+  const [selectedSura, setSelectedSura] = useState<number | null>(null);
+  const [suraFilter, setSuraFilter] = useState("");
+  const suwar = useMemo(() => allSuwar(), []);
+  const ayaCount = selectedSura ? getAyahCount(selectedSura) : 0;
+  const inputBg = isDark ? "#2a2a3e" : "#f5f5f5";
+  const sheetBg = isDark ? "#1a1a2e" : "#fff";
+
+  // Reset on open
+  React.useEffect(() => {
+    if (visible) {
+      setSelectedSura(null);
+      setSuraFilter("");
+    }
+  }, [visible]);
+
+  const handleClose = () => {
+    setSuraFilter("");
+    setSelectedSura(null);
+    onClose();
+  };
+
+  if (selectedSura !== null) {
+    // Show aya number grid
+    const ayaNumbers = Array.from({ length: ayaCount }, (_, i) => i + 1);
+    return (
+      <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={handleClose}>
+        <Pressable style={suraPickerStyles.overlay} onPress={handleClose}>
+          <Pressable style={[suraPickerStyles.sheet, { backgroundColor: sheetBg }]}>
+            <View style={[suraPickerStyles.header, { borderBottomColor: borderColor }]}>
+              <Pressable onPress={() => setSelectedSura(null)} hitSlop={8} style={{ padding: 4 }}>
+                <Ionicons name="arrow-back" size={22} color={ACCENT} />
+              </Pressable>
+              <Text style={{ color: textColor, fontSize: 16, fontWeight: "700", flex: 1, textAlign: "right", writingDirection: "rtl" }}>
+                {suwar.find((s) => s.value === selectedSura)?.label}
+              </Text>
+              <Text style={{ color: mutedColor, fontSize: 13 }}>
+                {t("aya_s", lang as any)}
+              </Text>
+            </View>
+            <ScrollView
+              contentContainerStyle={{ flexDirection: "row", flexWrap: "wrap", padding: 10, gap: 6 }}
+              keyboardShouldPersistTaps="handled"
+            >
+              {ayaNumbers.map((num) => (
+                <Pressable
+                  key={num}
+                  style={{
+                    width: 50,
+                    height: 40,
+                    borderRadius: 10,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: isDark ? "#333" : "#e8e8e8",
+                  }}
+                  onPress={() => {
+                    onSelect(selectedSura, num);
+                    handleClose();
+                  }}
+                >
+                  <Text style={{ color: textColor, fontSize: 15, fontWeight: "600" }}>{num}</Text>
+                </Pressable>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    );
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={handleClose}>
+      <Pressable style={suraPickerStyles.overlay} onPress={handleClose}>
+        <Pressable style={[suraPickerStyles.sheet, { backgroundColor: sheetBg }]}>
+          {/* Filter input */}
+          <View style={[suraPickerStyles.header, { borderBottomColor: borderColor }]}>
+            <TextInput
+              style={[suraPickerStyles.filterInput, { backgroundColor: inputBg, color: textColor }]}
+              placeholder="ابحث عن سورة..."
+              placeholderTextColor={mutedColor}
+              value={suraFilter}
+              onChangeText={setSuraFilter}
+              autoFocus
+              textAlign="right"
+            />
+            <Pressable onPress={handleClose} style={{ padding: 4 }}>
+              <Ionicons name="close" size={22} color={mutedColor} />
+            </Pressable>
+          </View>
+          {/* Sura list */}
+          <FlatList
+            data={suwar.filter((s) => !suraFilter || s.label.includes(suraFilter))}
+            keyExtractor={(s) => String(s.value)}
+            keyboardShouldPersistTaps="handled"
+            renderItem={({ item: s }) => (
+              <Pressable
+                style={suraPickerStyles.item}
+                onPress={() => setSelectedSura(s.value)}
+              >
+                <Text style={[suraPickerStyles.itemText, { color: textColor }]}>
+                  {s.label}
+                </Text>
+                <Ionicons name="chevron-forward" size={16} color={mutedColor} />
+              </Pressable>
+            )}
+          />
+        </Pressable>
+      </Pressable>
+    </Modal>
+  );
+}
+
+const suraPickerStyles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    justifyContent: "flex-end",
+  },
+  sheet: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: SCREEN_HEIGHT * 0.7,
+    paddingBottom: 24,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
+  },
+  filterInput: {
+    flex: 1,
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    fontSize: 15,
+    writingDirection: "rtl",
+  },
+  item: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 12,
+    paddingHorizontal: 18,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: "#f0f0f0",
+  },
+  itemText: {
+    fontSize: 16,
+    textAlign: "right",
+    flex: 1,
+    writingDirection: "rtl",
+  },
+});
 
 // ────────────────────────────────────────────────────────────────────────────
 // Add / Edit modal
@@ -186,43 +398,41 @@ function AddEditModal({
 }) {
   const [arabic, setArabic] = useState(initial?.arabic ?? "");
   const [target, setTarget] = useState(initial?.target ?? 33);
-  const [suraInput, setSuraInput] = useState("");
-  const [ayaInput, setAyaInput] = useState("");
+  const [ayahRef, setAyahRef] = useState<{ sura: number; aya: number } | undefined>(
+    initial?.ayahRef
+  );
   const [loadingAyah, setLoadingAyah] = useState(false);
+  const [showQuranPicker, setShowQuranPicker] = useState(false);
 
   // Reset when modal opens with new initial
   React.useEffect(() => {
     if (visible) {
       setArabic(initial?.arabic ?? "");
       setTarget(initial?.target ?? 33);
-      setSuraInput("");
-      setAyaInput("");
+      setAyahRef(initial?.ayahRef);
+      setShowQuranPicker(false);
     }
-  }, [visible, initial?.arabic, initial?.target]);
+  }, [visible, initial?.arabic, initial?.target, initial?.ayahRef]);
 
-  const handleLoadAyah = async () => {
-    const sura = parseInt(suraInput, 10);
-    const aya = parseInt(ayaInput, 10);
-    if (!sura || !aya || sura < 1 || sura > 114 || aya < 1) return;
+  const handleQuranSelect = async (sura: number, aya: number) => {
     setLoadingAyah(true);
     try {
       const text = await getAyahText(sura, aya, quira);
-      if (text) setArabic(text);
+      if (text) {
+        setArabic(text);
+        setAyahRef({ sura, aya });
+      }
     } catch (_) {}
     setLoadingAyah(false);
+    setShowQuranPicker(false);
   };
 
   const handleSave = () => {
     if (!arabic.trim()) return;
-    const sura = parseInt(suraInput, 10);
-    const aya = parseInt(ayaInput, 10);
     onSave({
       arabic: arabic.trim(),
       target,
-      ayahRef:
-        sura >= 1 && sura <= 114 && aya >= 1
-          ? { sura, aya }
-          : initial?.ayahRef,
+      ayahRef,
     });
   };
 
@@ -248,66 +458,69 @@ function AddEditModal({
           >
             <View style={[styles.modalHandle, { backgroundColor: borderColor }]} />
 
-            {/* Arabic text */}
-            <Text style={[styles.modalLabel, { color: mutedColor }]}>
-              {t("dhikr_arabic", lang as any)}
-            </Text>
-            <TextInput
-              style={[
-                styles.arabicInput,
-                { color: textColor, borderColor },
-              ]}
-              value={arabic}
-              onChangeText={setArabic}
-              placeholder="..."
-              placeholderTextColor={mutedColor}
-              multiline
-              textAlign="right"
-            />
-
-            {/* Target */}
-            <Text style={[styles.modalLabel, { color: mutedColor }]}>
-              {t("target", lang as any)}
-            </Text>
-            <TargetStepper
-              value={target}
-              onChange={setTarget}
-              textColor={textColor}
-              borderColor={borderColor}
-              mutedColor={mutedColor}
-            />
-
-            {/* From Quran */}
-            <Text style={[styles.modalLabel, { color: mutedColor, marginTop: 16 }]}>
-              {t("from_quran", lang as any)}
-            </Text>
-            <View style={styles.ayahPickerRow}>
+            <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+              {/* Arabic text */}
+              <Text style={[styles.modalLabel, { color: mutedColor }]}>
+                {t("dhikr_arabic", lang as any)}
+              </Text>
               <TextInput
-                style={[styles.ayahInput, { color: textColor, borderColor }]}
-                value={suraInput}
-                onChangeText={setSuraInput}
-                placeholder={t("sura_s", lang as any)}
+                style={[
+                  styles.arabicInput,
+                  { color: textColor, borderColor },
+                ]}
+                value={arabic}
+                onChangeText={setArabic}
+                placeholder="..."
                 placeholderTextColor={mutedColor}
-                keyboardType="number-pad"
+                multiline
+                textAlign="right"
               />
-              <TextInput
-                style={[styles.ayahInput, { color: textColor, borderColor }]}
-                value={ayaInput}
-                onChangeText={setAyaInput}
-                placeholder={t("aya_s", lang as any)}
-                placeholderTextColor={mutedColor}
-                keyboardType="number-pad"
+
+              {/* Target */}
+              <Text style={[styles.modalLabel, { color: mutedColor }]}>
+                {t("target", lang as any)}
+              </Text>
+              <TargetStepper
+                value={target}
+                onChange={setTarget}
+                textColor={textColor}
+                borderColor={borderColor}
+                mutedColor={mutedColor}
+                lang={lang}
               />
-              <Pressable
-                style={[styles.loadBtn, { backgroundColor: BLUE }]}
-                onPress={handleLoadAyah}
-                disabled={loadingAyah}
-              >
-                <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>
-                  {t("load_ayah", lang as any)}
-                </Text>
-              </Pressable>
-            </View>
+
+              {/* From Quran */}
+              <Text style={[styles.modalLabel, { color: mutedColor, marginTop: 16 }]}>
+                {t("from_quran", lang as any)}
+              </Text>
+
+              {loadingAyah ? (
+                <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                  <Ionicons name="hourglass-outline" size={24} color={mutedColor} />
+                </View>
+              ) : (
+                <Pressable
+                  style={[styles.loadBtn, { backgroundColor: BLUE, alignSelf: "flex-start" }]}
+                  onPress={() => setShowQuranPicker(true)}
+                >
+                  <Ionicons name="book-outline" size={16} color="#fff" style={{ marginRight: 6 }} />
+                  <Text style={{ color: "#fff", fontSize: 13, fontWeight: "600" }}>
+                    {t("load_ayah", lang as any)}
+                  </Text>
+                </Pressable>
+              )}
+
+              <SuraPickerModal
+                visible={showQuranPicker}
+                isDark={isDark}
+                textColor={textColor}
+                mutedColor={mutedColor}
+                borderColor={borderColor}
+                lang={lang}
+                onSelect={handleQuranSelect}
+                onClose={() => setShowQuranPicker(false)}
+              />
+            </ScrollView>
 
             {/* Save / Cancel */}
             <View style={styles.modalBtns}>
@@ -378,25 +591,35 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
 
   const selectedDhikr = dhikrList.find((d) => d.id === selectedId) ?? dhikrList[0];
   const currentCount = selectedDhikr ? (counts[selectedDhikr.id] ?? 0) : 0;
+  const isInfinite = selectedDhikr?.target === INFINITY_TARGET;
   const progress = selectedDhikr
-    ? Math.min(currentCount / selectedDhikr.target, 1)
+    ? isInfinite
+      ? 0
+      : Math.min(currentCount / selectedDhikr.target, 1)
     : 0;
   const isCompleted = selectedDhikr
-    ? currentCount >= selectedDhikr.target
+    ? !isInfinite && currentCount >= selectedDhikr.target
     : false;
 
-  const triggerHaptic = useCallback(() => {
-    if (!vibrateEnabled) return;
-    try {
-      if (Haptics?.impactAsync) {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle?.Light ?? "light");
-      }
-    } catch (_) {}
-  }, [vibrateEnabled]);
+  const triggerHaptic = useCallback(
+    (style: "light" | "medium" = "light") => {
+      if (!vibrateEnabled) return;
+      try {
+        if (Haptics?.impactAsync) {
+          const feedbackStyle =
+            style === "medium"
+              ? Haptics.ImpactFeedbackStyle?.Medium ?? "medium"
+              : Haptics.ImpactFeedbackStyle?.Light ?? "light";
+          Haptics.impactAsync(feedbackStyle);
+        }
+      } catch (_) {}
+    },
+    [vibrateEnabled]
+  );
 
   const handleTap = useCallback(() => {
     if (!selectedDhikr) return;
-    triggerHaptic();
+    triggerHaptic("light");
     pulseAnim.setValue(0.93);
     Animated.spring(pulseAnim, {
       toValue: 1,
@@ -411,13 +634,17 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
     }));
     setTotalSession((prev) => prev + 1);
 
-    // Auto-advance to next dhikr when target reached
-    if (newCount >= selectedDhikr.target && dhikrList.length > 1) {
+    // Auto-advance to next dhikr when target reached (not for infinite)
+    if (
+      !isInfinite &&
+      newCount >= selectedDhikr.target &&
+      dhikrList.length > 1
+    ) {
       const currentIdx = dhikrList.findIndex((d) => d.id === selectedDhikr.id);
       const nextIdx = (currentIdx + 1) % dhikrList.length;
       setTimeout(() => setSelectedId(dhikrList[nextIdx].id), 600);
     }
-  }, [selectedDhikr, pulseAnim, triggerHaptic, counts, dhikrList]);
+  }, [selectedDhikr, pulseAnim, triggerHaptic, counts, dhikrList, isInfinite]);
 
   const handleReset = useCallback(() => {
     if (!selectedDhikr) return;
@@ -506,10 +733,15 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
           onPress={() => {
             const newVal = !vibrateEnabled;
             setVibrateEnabled(newVal);
+            // Always vibrate on enable to confirm vibration works
             if (newVal) {
               try {
-                if (Haptics?.impactAsync) {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle?.Medium ?? "medium");
+                if (Haptics?.notificationAsync) {
+                  Haptics.notificationAsync(
+                    Haptics.NotificationFeedbackType?.Success ?? "success"
+                  );
+                } else if (Haptics?.impactAsync) {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle?.Heavy ?? "heavy");
                 }
               } catch (_) {}
             }
@@ -568,7 +800,8 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
                     { color: isSelected ? ACCENT : mutedColor },
                   ]}
                 >
-                  {cnt > 0 ? `${cnt}/` : ""}{dhikr.target}
+                  {cnt > 0 ? `${cnt}/` : ""}
+                  {dhikr.target === INFINITY_TARGET ? "∞" : dhikr.target}
                 </Text>
               </Pressable>
             );
@@ -586,44 +819,41 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
             <Ionicons name="add-circle-outline" size={20} color={BLUE} />
           </Pressable>
         </ScrollView>
-
-        {/* Edit / Delete bar for selected dhikr */}
-        {selectedDhikr && (
-          <View style={[styles.chipActions, { borderTopColor: borderColor }]}>
-            <Pressable
-              style={styles.chipActionBtn}
-              onPress={() => handleOpenEdit(selectedDhikr)}
-            >
-              <Ionicons name="pencil-outline" size={15} color={mutedColor} />
-              <Text style={[styles.chipActionText, { color: mutedColor }]}>
-                {t("edit_dhikr", lang)}
-              </Text>
-            </Pressable>
-            {dhikrList.length > 1 && (
-              <Pressable
-                style={styles.chipActionBtn}
-                onPress={() => handleDelete(selectedDhikr)}
-              >
-                <Ionicons name="trash-outline" size={15} color="#c0392b" />
-                <Text style={[styles.chipActionText, { color: "#c0392b" }]}>
-                  {t("delete_dhikr", lang)}
-                </Text>
-              </Pressable>
-            )}
-          </View>
-        )}
       </View>
 
       {/* Main counter */}
       <View style={styles.mainContent}>
-        {/* Arabic text */}
+        {/* Arabic text with edit/delete inline */}
         {selectedDhikr && (
-          <Text
-            style={[styles.dhikrArabic, { color: textColor }]}
-            numberOfLines={3}
-          >
-            {selectedDhikr.arabic}
-          </Text>
+          <View style={styles.dhikrTextRow}>
+            <ScrollView
+              style={styles.dhikrTextScroll}
+              contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text style={[styles.dhikrArabic, { color: textColor }]}>
+                {selectedDhikr.arabic}
+              </Text>
+            </ScrollView>
+            <View style={styles.dhikrActions}>
+              <Pressable
+                style={styles.dhikrActionBtn}
+                onPress={() => handleOpenEdit(selectedDhikr)}
+                hitSlop={6}
+              >
+                <Ionicons name="pencil-outline" size={16} color={mutedColor} />
+              </Pressable>
+              {dhikrList.length > 1 && (
+                <Pressable
+                  style={styles.dhikrActionBtn}
+                  onPress={() => handleDelete(selectedDhikr)}
+                  hitSlop={6}
+                >
+                  <Ionicons name="trash-outline" size={16} color="#c0392b" />
+                </Pressable>
+              )}
+            </View>
+          </View>
         )}
 
         {/* Tap circle */}
@@ -640,13 +870,24 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
             ]}
           >
             <View style={styles.ringContainer}>
-              <ProgressRing
-                progress={progress}
-                size={RING_SIZE}
-                strokeWidth={RING_STROKE}
-                color={ringFillColor}
-                trackColor={ringTrackColor}
-              />
+              {!isInfinite && (
+                <ProgressRing
+                  progress={progress}
+                  size={RING_SIZE}
+                  strokeWidth={RING_STROKE}
+                  color={ringFillColor}
+                  trackColor={ringTrackColor}
+                />
+              )}
+              {isInfinite && (
+                <ProgressRing
+                  progress={1}
+                  size={RING_SIZE}
+                  strokeWidth={RING_STROKE}
+                  color={ACCENT + "30"}
+                  trackColor={ringTrackColor}
+                />
+              )}
               <View style={styles.countContainer}>
                 <Text
                   style={[
@@ -671,7 +912,9 @@ export default function TasbihScreen({ onGoBack }: TasbihScreenProps) {
 
         {/* count / target */}
         <Text style={[styles.targetText, { color: mutedColor }]}>
-          {currentCount} / {selectedDhikr?.target ?? 0}
+          {isInfinite
+            ? currentCount.toString()
+            : `${currentCount} / ${selectedDhikr?.target ?? 0}`}
           {isCompleted ? `  •  ${t("completed", lang)}` : ""}
         </Text>
 
@@ -774,25 +1017,6 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     marginTop: 2,
   },
-  chipActions: {
-    flexDirection: "row",
-    gap: 20,
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 4,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    marginTop: 8,
-  },
-  chipActionBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingVertical: 2,
-  },
-  chipActionText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
 
   // Main counter
   mainContent: {
@@ -802,15 +1026,40 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 30,
   },
+
+  // Dhikr text row with inline edit/delete
+  dhikrTextRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    width: "100%",
+    maxHeight: 80,
+    marginBottom: 12,
+    paddingHorizontal: 4,
+  },
+  dhikrTextScroll: {
+    flex: 1,
+    maxHeight: 80,
+  },
   dhikrArabic: {
     fontSize: 20,
     fontWeight: "700",
     textAlign: "center",
     writingDirection: "rtl",
-    marginBottom: 20,
-    paddingHorizontal: 16,
     lineHeight: 34,
   },
+  dhikrActions: {
+    gap: 8,
+    paddingLeft: 8,
+    paddingTop: 4,
+  },
+  dhikrActionBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
   tapArea: {
     alignItems: "center",
     justifyContent: "center",
@@ -876,6 +1125,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingHorizontal: 20,
     paddingBottom: Platform.OS === "ios" ? 44 : 28,
+    maxHeight: "80%",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
@@ -965,6 +1215,8 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   loadBtn: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 10,

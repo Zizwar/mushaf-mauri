@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from "react";
-import { BackHandler, View, useColorScheme } from "react-native";
+import React, { useState, useCallback, useEffect, useRef } from "react";
+import { BackHandler, View, useColorScheme, Linking, Alert } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -9,6 +9,8 @@ const SPLASH_MIN_MS = 2000;
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 import { initWarshDB } from "./src/utils/warshAudioDB";
+import { getPageBySuraAya } from "./src/utils/quranHelpers";
+import { importProfileFromUri } from "./src/utils/recordings";
 import HomeScreen from "./src/screens/HomeScreen";
 import MushafViewer from "./src/screens/MushafViewer";
 import SettingsScreen from "./src/screens/SettingsScreen";
@@ -48,6 +50,8 @@ export default function App() {
     rustam: require("./assets/fonts/rustam.ttf"),
     uthmanic: require("./assets/fonts/uthmanic.ttf"),
     Maghribi: require("./assets/fonts/maghribi.otf"),
+    "amiri-quran": require("./assets/fonts/amiri-quran.ttf"),
+    "noto-naskh": require("./assets/fonts/noto-naskh.ttf"),
   });
 
   // Wait for Zustand persist to hydrate from AsyncStorage before deciding the initial screen
@@ -86,6 +90,83 @@ export default function App() {
 
   // Initialize Warsh DB early
   useEffect(() => { initWarshDB().catch((e) => console.warn("[App] initWarshDB failed:", e)); }, []);
+
+  // ─── Deep linking: mushaf.ma/#/a{aya}s{sura}q{quira} & .mrec files ───
+  const deepLinkHandled = useRef(false);
+
+  const handleDeepLink = useCallback(async (url: string) => {
+    if (!url) return;
+    try {
+      // Handle .mrec file URIs
+      if (url.endsWith(".mrec") || url.includes("mrec")) {
+        const quira = useAppStore.getState().quira;
+        const profile = await importProfileFromUri(url, quira);
+        if (profile) {
+          Alert.alert("✓", `${profile.name}`);
+          setScreen("recordings");
+        }
+        return;
+      }
+
+      // Extract path from URL
+      // Formats: mushaf.ma/#/a1s1q1 | mushafmauri://a1s1q1 | mushaf.ma (no hash)
+      const hash = url.includes("#/") ? url.split("#/")[1] : url.split("://")[1];
+
+      // Default values — always open the app even if params are missing
+      const store = useAppStore.getState();
+      let sura = 1;
+      let aya = 1;
+      let targetQuira = store.quira; // keep current quira as default
+
+      if (hash) {
+        // Parse each part independently — any can be missing
+        const sMatch = hash.match(/s(\d+)/i);
+        const aMatch = hash.match(/a(\d+)/i);
+        const qMatch = hash.match(/q(\d+)/i);
+
+        if (sMatch) {
+          const s = parseInt(sMatch[1], 10);
+          if (s >= 1 && s <= 114) sura = s;
+        }
+        if (aMatch) {
+          const a = parseInt(aMatch[1], 10);
+          if (a >= 1) aya = a;
+        }
+        if (qMatch) {
+          const q = parseInt(qMatch[1], 10);
+          targetQuira = q === 2 ? "madina" : "warsh";
+        }
+      }
+
+      // Switch quira if needed
+      if (store.quira !== targetQuira) {
+        store.setQuira(targetQuira);
+      }
+
+      const page = getPageBySuraAya(sura, aya, targetQuira);
+      store.setCurrentPage(page);
+      store.setSelectedAya({ sura, aya, page, id: `s${sura}a${aya}z` });
+      setScreen("mushaf");
+    } catch (e) {
+      console.warn("[DeepLink] error:", e);
+      // Even on error, open the mushaf
+      setScreen("mushaf");
+    }
+  }, []);
+
+  useEffect(() => {
+    // Handle initial URL (app opened via link)
+    Linking.getInitialURL().then((url) => {
+      if (url && !deepLinkHandled.current) {
+        deepLinkHandled.current = true;
+        handleDeepLink(url);
+      }
+    });
+
+    // Handle URL while app is open
+    const sub = Linking.addEventListener("url", ({ url }) => handleDeepLink(url));
+    return () => sub.remove();
+  }, [handleDeepLink]);
 
   // Android back button
   useEffect(() => {

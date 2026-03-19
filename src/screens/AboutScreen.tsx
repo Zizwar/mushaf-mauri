@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,91 +8,17 @@ import {
   Linking,
   Share,
   TextInput,
-  Animated,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAppStore } from "../store/useAppStore";
 import { t } from "../i18n";
-import DonateModal from "../components/DonateModal";
 // @ts-ignore
 import appJson from "../../app.json";
-import donorsData from "../data/donors.json";
 
 const ACCENT = "#1a5c2e";
 const RTL_LANGS = ["ar", "he"];
 const APP_VERSION: string = appJson?.expo?.version ?? "—";
-
-interface Donor {
-  name: string;
-  txId: string;
-  amount: number;
-  currency: string;
-  message: string;
-  color: string;
-}
-
-const DONORS: Donor[] = donorsData as Donor[];
-
-/** Show partial txId: TXN-3387 → TXN-33•• */
-function maskTxId(txId: string): string {
-  const parts = txId.split("-");
-  if (parts.length < 2) return txId;
-  const last = parts[parts.length - 1];
-  const masked = last.slice(0, 2) + "••";
-  return parts.slice(0, -1).join("-") + "-" + masked;
-}
-
-// ── Auto-scrolling vertical donor ticker ──────────────────────────────────────
-const ITEM_H = 52;
-const VISIBLE = 3;
-
-function DonorTicker({ isDark, textColor, mutedColor, borderColor }: {
-  isDark: boolean; textColor: string; mutedColor: string; borderColor: string;
-}) {
-  const translateY = useRef(new Animated.Value(0)).current;
-  const total = DONORS.length;
-
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.timing(translateY, {
-        toValue: -(ITEM_H * total),
-        duration: total * 2800,
-        useNativeDriver: true,
-      })
-    );
-    loop.start();
-    return () => loop.stop();
-  }, []);
-
-  const doubled = [...DONORS, ...DONORS];
-
-  return (
-    <View style={{ height: ITEM_H * VISIBLE, overflow: "hidden", borderRadius: 8, borderWidth: StyleSheet.hairlineWidth, borderColor }}>
-      <Animated.View style={{ transform: [{ translateY }] }}>
-        {doubled.map((d, i) => (
-          <View key={i} style={[styles.tickerRow, { height: ITEM_H, borderBottomColor: borderColor }]}>
-            {/* Avatar dot */}
-            <View style={[styles.tickerDot, { backgroundColor: d.color }]}>
-              <Text style={styles.tickerDotText}>{d.name.charAt(0)}</Text>
-            </View>
-            {/* Info */}
-            <View style={styles.tickerInfo}>
-              <View style={styles.tickerTopRow}>
-                <Text style={[styles.tickerName, { color: textColor }]} numberOfLines={1}>{d.name}</Text>
-                <Text style={[styles.tickerTx, { color: mutedColor }]}>{maskTxId(d.txId)}</Text>
-                <Text style={[styles.tickerAmount, { color: ACCENT }]}>{d.currency}{d.amount}</Text>
-              </View>
-              {!!d.message && (
-                <Text style={[styles.tickerMsg, { color: mutedColor }]} numberOfLines={1}>"{d.message}"</Text>
-              )}
-            </View>
-          </View>
-        ))}
-      </Animated.View>
-    </View>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────────────────────
 interface AboutScreenProps {
@@ -103,7 +29,6 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
   const lang = useAppStore((s) => s.lang);
   const theme = useAppStore((s) => s.theme);
   const [feedbackText, setFeedbackText] = useState("");
-  const [donateVisible, setDonateVisible] = useState(false);
 
   const isDark = !!theme.night;
   const isRTL = RTL_LANGS.includes(lang);
@@ -206,21 +131,14 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
           </Pressable>
         </View>
 
-        {/* ── Support / Donors ── */}
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
-          <Text style={[styles.sectionTitle, { color: textColor, textAlign }]}>{t("support_project", lang)}</Text>
-          <Text style={[styles.supportDesc, { color: mutedColor, textAlign }]}>{t("support_desc", lang)}</Text>
-          <Pressable
-            onPress={() => setDonateVisible(true)}
-            style={({ pressed }) => [styles.donateBtn, { opacity: pressed ? 0.85 : 1 }]}
-          >
-            <Ionicons name="heart" size={18} color="#fff" />
-            <Text style={styles.donateBtnText}>{t("donate", lang)}</Text>
-          </Pressable>
-          <Text style={[styles.donorsLabel, { color: textColor, textAlign, marginTop: 14 }]}>{t("donors", lang)}</Text>
-          <DonorTicker isDark={isDark} textColor={textColor} mutedColor={mutedColor} borderColor={borderColor} />
-          <Text style={[styles.thankDonors, { color: mutedColor }]}>{t("thank_donors", lang)}</Text>
-        </View>
+        {/* ── Support ── */}
+        <Pressable
+          onPress={() => openLink("https://mushaf.ma/support")}
+          style={({ pressed }) => [styles.supportBtn, { opacity: pressed ? 0.85 : 1 }]}
+        >
+          <Ionicons name="heart-outline" size={20} color="#fff" />
+          <Text style={styles.supportBtnText}>{t("support_project", lang)}</Text>
+        </Pressable>
 
         {/* ── Developer ── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor }]}>
@@ -256,8 +174,6 @@ export default function AboutScreen({ onGoBack }: AboutScreenProps) {
         </View>
 
       </ScrollView>
-
-      <DonateModal visible={donateVisible} onClose={() => setDonateVisible(false)} />
     </SafeAreaView>
   );
 }
@@ -307,34 +223,12 @@ const styles = StyleSheet.create({
   },
   feedbackSendText: { color: "#fff", fontSize: 13, fontWeight: "600" },
 
-  supportDesc: { fontSize: 13, lineHeight: 19, marginBottom: 12 },
-  donateBtn: {
+  supportBtn: {
     flexDirection: "row", alignItems: "center", justifyContent: "center",
-    gap: 8, paddingVertical: 11, borderRadius: 10,
-    backgroundColor: "#c0392b",
+    gap: 8, paddingVertical: 12, borderRadius: 10,
+    backgroundColor: "#336699",
   },
-  donateBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
-  donorsLabel: { fontSize: 14, fontWeight: "700", marginBottom: 8 },
-
-  tickerRow: {
-    flexDirection: "row", alignItems: "center",
-    paddingHorizontal: 10, gap: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  tickerDot: {
-    width: 32, height: 32, borderRadius: 16,
-    alignItems: "center", justifyContent: "center",
-    flexShrink: 0,
-  },
-  tickerDotText: { color: "#fff", fontSize: 13, fontWeight: "700" },
-  tickerInfo: { flex: 1, justifyContent: "center", gap: 2 },
-  tickerTopRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-  tickerName: { flex: 1, fontSize: 13, fontWeight: "600" },
-  tickerTx: { fontSize: 10, fontFamily: "monospace" },
-  tickerAmount: { fontSize: 13, fontWeight: "700" },
-  tickerMsg: { fontSize: 11, fontStyle: "italic" },
-
-  thankDonors: { fontSize: 12, textAlign: "center", marginTop: 8, fontStyle: "italic" },
+  supportBtnText: { color: "#fff", fontSize: 15, fontWeight: "700" },
 
   sectionTitle: { fontSize: 15, fontWeight: "700", marginBottom: 10 },
   infoText: { fontSize: 15, marginBottom: 4 },

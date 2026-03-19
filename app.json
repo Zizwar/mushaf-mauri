@@ -2,7 +2,7 @@
   "expo": {
     "name": "Mushaf Mauri",
     "slug": "mushaf-mauri-v3",
-    "version": "3.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -12,27 +12,92 @@
       "backgroundColor": "#369",
       "imageResizeMode": "cover"
     },
+    "scheme": "mushafmauri",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mushaf.mauri.v3",
+      "bundleIdentifier": "wino.ma.mushaf.mauri",
       "infoPlist": {
         "UIBackgroundModes": [
           "audio"
+        ],
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Mushaf Recording",
+            "CFBundleTypeRole": "Viewer",
+            "LSHandlerRank": "Owner",
+            "LSItemContentTypes": ["ma.wino.mushaf.mrec"],
+            "CFBundleTypeExtensions": ["mrec"]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "ma.wino.mushaf.mrec",
+            "UTTypeDescription": "Mushaf Recording Backup",
+            "UTTypeConformsTo": ["public.json"],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": ["mrec"]
+            }
+          }
         ]
-      }
+      },
+      "associatedDomains": ["applinks:mushaf.ma"]
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/icon.png",
         "backgroundColor": "#046f98"
       },
-      "package": "com.mushaf.mauri.v3",
+      "package": "wino.ma.mushaf.mauri",
       "permissions": [
         "android.permission.RECORD_AUDIO",
         "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "mushaf.ma"
+            },
+            {
+              "scheme": "http",
+              "host": "www.mushaf.ma"
+            },
+            {
+              "scheme": "https",
+              "host": "www.mushaf.ma"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        },
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "content",
+              "mimeType": "application/*"
+            },
+            {
+              "scheme": "file",
+              "pathPattern": ".*\\.mrec"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
       ]
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": "100%",
+          "resizeMode": "cover",
+          "backgroundColor": "#ccc"
+        }
+      ],
       "expo-sqlite",
       [
         "expo-audio",

@@ -30,6 +30,8 @@ const FONT_OPTIONS = [
   { key: "hafs", labelKey: "hafs_font" },
   { key: "rustam", labelKey: "rustam_font" },
   { key: "uthmanic", labelKey: "uthmanic_font" },
+  { key: "amiri-quran", labelKey: "amiri_quran_font" },
+  { key: "noto-naskh", labelKey: "noto_naskh_font" },
 ];
 
 function FontSelector() {
