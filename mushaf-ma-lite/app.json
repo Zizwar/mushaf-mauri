@@ -1,0 +1,87 @@
+{
+  "expo": {
+    "name": "Mushaf MA Lite",
+    "slug": "mushaf-ma-lite",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#1a5c2e"
+    },
+    "scheme": "mushafmalite",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "wino.ma.mushaf.lite",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"],
+        "CFBundleDocumentTypes": [
+          {
+            "CFBundleTypeName": "Mushaf MA Lite Recording",
+            "CFBundleTypeRole": "Viewer",
+            "LSHandlerRank": "Owner",
+            "LSItemContentTypes": ["ma.wino.mushaf.mlrec"],
+            "CFBundleTypeExtensions": ["mlrec"]
+          }
+        ],
+        "UTExportedTypeDeclarations": [
+          {
+            "UTTypeIdentifier": "ma.wino.mushaf.mlrec",
+            "UTTypeDescription": "Mushaf MA Lite Recording Backup",
+            "UTTypeConformsTo": ["public.json"],
+            "UTTypeTagSpecification": {
+              "public.filename-extension": ["mlrec"]
+            }
+          }
+        ]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#1a5c2e"
+      },
+      "package": "wino.ma.mushaf.lite",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "file",
+              "pathPattern": ".*\\.mlrec"
+            },
+            {
+              "scheme": "content",
+              "mimeType": "application/*"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "resizeMode": "cover",
+          "backgroundColor": "#1a5c2e"
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow Mushaf MA Lite to access your microphone to record your Quran recitation."
+        }
+      ],
+      "expo-sharing",
+      "expo-font"
+    ]
+  }
+}
