@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-#include "JsiIntegrationTest.h"
+#include "TracingTest.h"
 #include "engines/JsiIntegrationTestHermesEngineAdapter.h"
 
 #include <folly/executors/QueuedImmediateExecutor.h>
@@ -31,17 +31,17 @@ struct NetworkReporterTestParams {
  */
 template <typename Params>
   requires std::convertible_to<Params, NetworkReporterTestParams>
-class NetworkReporterTestBase : public JsiIntegrationPortableTestBase<
+class NetworkReporterTestBase : public TracingTestBase<
                                     JsiIntegrationTestHermesEngineAdapter,
                                     folly::QueuedImmediateExecutor>,
                                 public WithParamInterface<Params> {
  protected:
   NetworkReporterTestBase()
-      : JsiIntegrationPortableTestBase({
-            .networkInspectionEnabled = true,
+      : TracingTestBase({
             .enableNetworkEventReporting =
                 WithParamInterface<Params>::GetParam()
                     .enableNetworkEventReporting,
+            .networkInspectionEnabled = true,
         }) {}
 
   void SetUp() override {
@@ -66,58 +66,6 @@ class NetworkReporterTestBase : public JsiIntegrationPortableTestBase<
     return ResultOf(
         [this](const auto& id) { return getScriptUrlById(id.getString()); },
         urlMatcher);
-  }
-
-  void startTracing() {
-    this->expectMessageFromPage(JsonEq(R"({
-                                          "id": 1,
-                                          "result": {}
-                                        })"));
-
-    this->toPage_->sendMessage(R"({
-                                  "id": 1,
-                                  "method": "Tracing.start"
-                                })");
-  }
-
-  /**
-   * Helper method to end tracing and collect all trace events from potentially
-   * multiple chunked Tracing.dataCollected messages.
-   * \returns A vector containing all collected trace events
-   */
-  std::vector<folly::dynamic> endTracingAndCollectEvents() {
-    InSequence s;
-
-    this->expectMessageFromPage(JsonEq(R"({
-                                          "id": 1,
-                                          "result": {}
-                                        })"));
-
-    std::vector<folly::dynamic> allTraceEvents;
-
-    EXPECT_CALL(
-        fromPage(),
-        onMessage(JsonParsed(AtJsonPtr("/method", "Tracing.dataCollected"))))
-        .Times(AtLeast(1))
-        .WillRepeatedly(Invoke([&allTraceEvents](const std::string& message) {
-          auto parsedMessage = folly::parseJson(message);
-          auto& events = parsedMessage.at("params").at("value");
-          allTraceEvents.insert(
-              allTraceEvents.end(),
-              std::make_move_iterator(events.begin()),
-              std::make_move_iterator(events.end()));
-        }));
-
-    this->expectMessageFromPage(JsonParsed(AllOf(
-        AtJsonPtr("/method", "Tracing.tracingComplete"),
-        AtJsonPtr("/params/dataLossOccurred", false))));
-
-    this->toPage_->sendMessage(R"({
-                                  "id": 1,
-                                  "method": "Tracing.end"
-                                })");
-
-    return allTraceEvents;
   }
 
  private:
@@ -640,6 +588,40 @@ TEST_P(NetworkReporterTest, testCreateRequestIdWithoutNetworkDomain) {
   EXPECT_NE(id1, id2);
 }
 
+TEST_P(NetworkReporterTest, testTwoSessionsReceiveNetworkEvents) {
+  auto secondary = this->connectSecondary();
+
+  this->expectMessageFromPage(JsonEq(R"({"id": 1, "result": {}})"));
+  this->toPage_->sendMessage(R"({"id": 1, "method": "Network.enable"})");
+
+  EXPECT_CALL(
+      secondary.fromPage(), onMessage(JsonEq(R"({"id": 2, "result": {}})")));
+  secondary.toPage().sendMessage(R"({"id": 2, "method": "Network.enable"})");
+
+  // Both sessions should receive the network event
+  this->expectMessageFromPage(JsonParsed(AllOf(
+      AtJsonPtr("/method", "Network.requestWillBeSent"),
+      AtJsonPtr("/params/requestId", "multi-session-request"))));
+  EXPECT_CALL(
+      secondary.fromPage(),
+      onMessage(JsonParsed(AllOf(
+          AtJsonPtr("/method", "Network.requestWillBeSent"),
+          AtJsonPtr("/params/requestId", "multi-session-request")))));
+
+  RequestInfo requestInfo;
+  requestInfo.url = "https://example.com/test";
+  requestInfo.httpMethod = "GET";
+  NetworkReporter::getInstance().reportRequestStart(
+      "multi-session-request", requestInfo, 0, std::nullopt);
+
+  this->expectMessageFromPage(JsonEq(R"({"id": 3, "result": {}})"));
+  this->toPage_->sendMessage(R"({"id": 3, "method": "Network.disable"})");
+
+  EXPECT_CALL(
+      secondary.fromPage(), onMessage(JsonEq(R"({"id": 4, "result": {}})")));
+  secondary.toPage().sendMessage(R"({"id": 4, "method": "Network.disable"})");
+}
+
 struct NetworkReporterTracingTestParams {
   bool enableNetworkEventReporting;
   bool enableNetworkDomain;
@@ -706,6 +688,13 @@ TEST_P(
         AtJsonPtr("/params/hasExtraInfo", false))));
 
     this->expectMessageFromPage(JsonParsed(AllOf(
+        AtJsonPtr("/method", "Network.dataReceived"),
+        AtJsonPtr("/params/requestId", "trace-events-request"),
+        AtJsonPtr("/params/timestamp", Gt(0)),
+        AtJsonPtr("/params/dataLength", 512),
+        AtJsonPtr("/params/encodedDataLength", 512))));
+
+    this->expectMessageFromPage(JsonParsed(AllOf(
         AtJsonPtr("/method", "Network.loadingFinished"),
         AtJsonPtr("/params/requestId", "trace-events-request"),
         AtJsonPtr("/params/timestamp", Gt(0)),
@@ -733,6 +722,9 @@ TEST_P(
           .headers = Headers{{"Content-Type", "application/json"}},
       },
       1024);
+
+  NetworkReporter::getInstance().reportDataReceived(
+      "trace-events-request", 512, 512);
 
   NetworkReporter::getInstance().reportResponseEnd(
       "trace-events-request", 1024);
@@ -782,6 +774,18 @@ TEST_P(
                   AtJsonPtr("/sendEnd", Ge(0)),
                   AtJsonPtr("/receiveHeadersStart", Ge(0)),
                   AtJsonPtr("/receiveHeadersEnd", Ge(0)))))));
+
+  EXPECT_THAT(
+      allTraceEvents,
+      Contains(AllOf(
+          AtJsonPtr("/name", "ResourceReceivedData"),
+          AtJsonPtr("/cat", "devtools.timeline"),
+          AtJsonPtr("/ph", "I"),
+          AtJsonPtr("/s", "t"),
+          AtJsonPtr("/tid", oscompat::getCurrentThreadId()),
+          AtJsonPtr("/pid", oscompat::getCurrentProcessId()),
+          AtJsonPtr("/args/data/requestId", "trace-events-request"),
+          AtJsonPtr("/args/data/encodedDataLength", 512))));
 
   EXPECT_THAT(
       allTraceEvents,

@@ -1,0 +1,37 @@
+{
+  "name": "mushaf-ma-lite",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "^56.0.15",
+    "expo-asset": "~56.0.19",
+    "expo-audio": "~56.0.12",
+    "expo-build-properties": "~56.0.22",
+    "expo-clipboard": "~56.0.4",
+    "expo-file-system": "~56.0.8",
+    "expo-font": "~56.0.7",
+    "expo-haptics": "~56.0.3",
+    "expo-keep-awake": "~56.0.3",
+    "expo-sharing": "~56.0.21",
+    "expo-splash-screen": "~56.0.12",
+    "expo-status-bar": "~56.0.4",
+    "react": "19.2.3",
+    "react-native": "0.85.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "zustand": "^5.0.10"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  },
+  "private": true
+}

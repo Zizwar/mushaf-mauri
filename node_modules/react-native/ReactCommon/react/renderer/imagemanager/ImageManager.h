@@ -17,10 +17,6 @@
 
 namespace facebook::react {
 
-class ImageManager;
-
-using SharedImageManager [[deprecated("Use std::shared_ptr<ImageManager> instead.")]] = std::shared_ptr<ImageManager>;
-
 /*
  * Cross platform facade for image management (e.g. iOS-specific
  * RCTImageManager)
@@ -37,6 +33,9 @@ class ImageManager {
       Tag tag = {}) const;
 
  private:
+#ifdef ANDROID
+  std::shared_ptr<const ContextContainer> contextContainer_{};
+#endif
   void *self_{};
 };
 

@@ -6,12 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "cover",
-      "backgroundColor": "#369",
-      "imageResizeMode": "cover"
-    },
     "scheme": "mushafmauri",
     "ios": {
       "supportsTablet": true,
@@ -25,22 +19,32 @@
             "CFBundleTypeName": "Mushaf Recording",
             "CFBundleTypeRole": "Viewer",
             "LSHandlerRank": "Owner",
-            "LSItemContentTypes": ["ma.wino.mushaf.mrec"],
-            "CFBundleTypeExtensions": ["mrec"]
+            "LSItemContentTypes": [
+              "ma.wino.mushaf.mrec"
+            ],
+            "CFBundleTypeExtensions": [
+              "mrec"
+            ]
           }
         ],
         "UTExportedTypeDeclarations": [
           {
             "UTTypeIdentifier": "ma.wino.mushaf.mrec",
             "UTTypeDescription": "Mushaf Recording Backup",
-            "UTTypeConformsTo": ["public.json"],
+            "UTTypeConformsTo": [
+              "public.json"
+            ],
             "UTTypeTagSpecification": {
-              "public.filename-extension": ["mrec"]
+              "public.filename-extension": [
+                "mrec"
+              ]
             }
           }
         ]
       },
-      "associatedDomains": ["applinks:mushaf.ma"]
+      "associatedDomains": [
+        "applinks:mushaf.ma"
+      ]
     },
     "android": {
       "adaptiveIcon": {
@@ -70,7 +74,10 @@
               "host": "www.mushaf.ma"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         },
         {
           "action": "VIEW",
@@ -84,7 +91,10 @@
               "pathPattern": ".*\\.mrec"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -107,7 +117,8 @@
       ],
       "expo-sharing",
       "expo-font",
-      "expo-asset"
+      "expo-asset",
+      "expo-status-bar"
     ],
     "owner": "2600ma",
     "extra": {

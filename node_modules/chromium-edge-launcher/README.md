@@ -1,18 +1,26 @@
-# Edge Launcher [![NPM chromium-edge-launcher package](https://img.shields.io/npm/v/chromium-edge-launcher.svg)](https://npmjs.org/package/chromium-edge-launcher)
+[action-image]: https://github.com/cezaraugusto/chromium-edge-launcher/actions/workflows/ci.yml/badge.svg?branch=main
+[action-url]: https://github.com/cezaraugusto/chromium-edge-launcher/actions
+[npm-image]: https://img.shields.io/npm/v/chromium-edge-launcher.svg
+[npm-url]: https://npmjs.org/package/chromium-edge-launcher
+[downloads-image]: https://img.shields.io/npm/dm/chromium-edge-launcher.svg
+[downloads-url]: https://npmjs.org/package/chromium-edge-launcher
+[snyk-image]: https://snyk.io/test/github/cezaraugusto/chromechromium-edge-launcher/badge.svg
+[snyk-url]: https://snyk.io/test/github/cezaraugusto/chromium-edge-launcher
+
+
+# Edge Launcher [![npm][npm-image]][npm-url] [![workflow][action-image]][action-url] [![Known Vulnerabilities][snyk-image]][snyk-url] [![downloads][downloads-image]][downloads-url] 
 
 
 <img src="https://user-images.githubusercontent.com/4672033/107800563-adb9ce00-6d3d-11eb-8425-2256d0278894.png" align=right height=200>
 
-Launch Microsoft Edge with ease from node.
+Launch Microsoft Edge with ease from Node.js.
 
-* [Disables many Edge services](https://github.com/cezaraugusto/chromium-edge-launcher/blob/master/src/flags.ts) that add noise to automated scenarios
-* Opens up the browser's `remote-debugging-port` on an available port
-* Automagically locates a Edge binary to launch
-* Uses a fresh Edge profile for each launch, and cleans itself up on `kill()`
-* Binds `Ctrl-C` (by default) to terminate the Edge process
-* Exposes a small set of [options](#api) for configurability over these details
-
-> _This project started as a fork of [Chrome Launcher](https://github.com/GoogleChrome/chrome-launcher) and inherits, whereas possible, all its features.
+* [Disables many Edge services](https://github.com/cezaraugusto/chromium-edge-launcher/blob/master/src/flags.ts) that add noise to automated scenarios.
+* Opens up the browser's `remote-debugging-port` on an available port.
+* Automagically locates a Edge binary to launch.
+* Uses a fresh Edge profile for each launch, and cleans itself up on `kill()`.
+* Binds `Ctrl-C` (by default) to terminate the Edge process.
+* Exposes a small set of [options](#api) for configurability over these details.
 
 ### Installing
 
@@ -23,7 +31,6 @@ yarn add chromium-edge-launcher
 npm install chromium-edge-launcher
 ```
 
-
 ## API
 
 ### `.launch([opts])`
@@ -32,28 +39,33 @@ npm install chromium-edge-launcher
 
 ```js
 {
-  // (optional) remote debugging port number to use. If provided port is already busy, launch() will reject
+  // (optional) remote debugging port number to use.
+  // If provided port is already busy, launch() will reject.
   // Default: an available port is autoselected
   port: number;
 
-  // (optional) Additional flags to pass to Edge, for example: ['--headless', '--disable-gpu']
-  // See: https://github.com/cezaraugusto/chromium-edge-launcher/blob/master/docs/edge-flags-for-tools.md
-  // Do note, many flags are set by default: https://github.com/cezaraugusto/chromium-edge-launcher/blob/master/src/flags.ts
+  // (optional) Additional flags to pass to Edge,
+  // for example: ['--headless', '--disable-gpu'].
+  // See: https://github.com/cezaraugusto/chromium-edge-launcher/blob/main/docs/edge-flags-for-tools.md
+  // Do note, many flags are set by default.
+  // See https://github.com/cezaraugusto/chromium-edge-launcher/blob/master/src/flags.ts
   edgeFlags: Array<string>;
 
-  // (optional) Close the Edge process on `Ctrl-C`
+  // (optional) Close the Edge process on `Ctrl-C`.
   // Default: true
   handleSIGINT: boolean;
 
-  // (optional) Explicit path of intended Edge binary
+  // (optional) Explicit path of intended Edge binary.
   // * If this `edgePath` option is defined, it will be used.
-  // * Otherwise, the `EDGE_PATH` env variable will be used if set. (`LIGHTHOUSE_CHROMIUM_PATH` is deprecated)
-  // * Otherwise, a detected Edge Canary will be used if found
-  // * Otherwise, a detected Edge (stable) will be used
+  // * Otherwise, the `EDGE_PATH` env variable will be used if set.
+  // (`LIGHTHOUSE_CHROMIUM_PATH` is deprecated)
+  // * Otherwise, a detected Edge Canary will be used if found.
+  // * Otherwise, a detected Edge (stable) will be used.
   edgePath: string;
 
-  // (optional) Edge profile path to use, if set to `false` then the default profile will be used.
-  // By default, a fresh Edge profile will be created
+  // (optional) Edge profile path to use, if set to `false` then
+  // the default profile will be used.
+  // Default: a fresh Edge profile.
   userDataDir: string | boolean;
 
   // (optional) Starting URL to open the browser with
@@ -64,20 +76,24 @@ npm install chromium-edge-launcher
   // Default: 'silent'
   logLevel: 'verbose'|'info'|'error'|'silent';
 
-  // (optional) Flags specific in [flags.ts](src/flags.ts) will not be included.
-  // Typically used with the defaultFlags() method and edgeFlags option.
+  // (optional) Flags specific in [flags.ts](src/flags.ts) will
+  // not be included. Typically used with the defaultFlags() method
+  // and edgeFlags option.
   // Default: false
   ignoreDefaultFlags: boolean;
 
-  // (optional) Interval in ms, which defines how often launcher checks browser port to be ready.
+  // (optional) Interval in ms, which defines how often launcher checks
+  // browser port to be ready.
   // Default: 500
   connectionPollInterval: number;
 
-  // (optional) A number of retries, before browser launch considered unsuccessful.
+  // (optional) A number of retries, before browser launch
+  // considered unsuccessful.
   // Default: 50
   maxConnectionRetries: number;
 
-  // (optional) A dict of environmental key value pairs to pass to the spawned edge process.
+  // (optional) A dict of environmental key value pairs to pass to
+  // the spawned edge process.
   envVars: {[key: string]: string};
 };
 ```
@@ -126,7 +142,7 @@ async function cleanup() {
 
 ## Examples
 
-#### Launching edge:
+#### Launching Edge:
 
 ```js
 const EdgeLauncher = require('chromium-edge-launcher');
@@ -139,7 +155,7 @@ EdgeLauncher.launch({
 ```
 
 
-#### Launching headless edge:
+#### Launching headless Edge:
 
 ```js
 const EdgeLauncher = require('chromium-edge-launcher');
@@ -185,6 +201,6 @@ addons:
   edge: stable
 ```
 
-### Acknowledgements
+## Acknowledgements
 
-This project started as a fork of, and is inspired by https://github.com/cezaraugusto/chromium-edge-launcher which is released under the Apache-2.0 License, and is copyright of Google Inc. Original contributors and git commit history kept as-is after the fork.
+This project started as a fork of [Chrome Launcher](https://github.com/GoogleChrome/chrome-launcher), which is released under the Apache-2.0 License, and is copyright of Google Inc. Original contributors and git commit history kept intact for proper attribution.

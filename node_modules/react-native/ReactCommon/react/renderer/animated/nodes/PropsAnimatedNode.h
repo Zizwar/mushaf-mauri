@@ -14,12 +14,18 @@
 #include "AnimatedNode.h"
 
 #include <react/renderer/animated/internal/primitives.h>
+#include <react/renderer/core/ShadowNode.h>
 #include <mutex>
 
 namespace facebook::react {
 class PropsAnimatedNode final : public AnimatedNode {
  public:
   PropsAnimatedNode(Tag tag, const folly::dynamic &config, NativeAnimatedNodesManager &manager);
+
+  // Only called when `useSharedAnimatedBackend`==true
+  void connectToShadowNodeFamily(ShadowNodeFamily::Weak shadowNodeFamily);
+  void disconnectFromShadowNodeFamily();
+
   void connectToView(Tag viewTag);
   void disconnectFromView(Tag viewTag);
   void restoreDefaultValues();
@@ -27,6 +33,11 @@ class PropsAnimatedNode final : public AnimatedNode {
   Tag connectedViewTag() const
   {
     return connectedViewTag_;
+  }
+
+  SurfaceId connectedRootTag() const
+  {
+    return connectedRootTag_;
   }
 
   folly::dynamic props()
@@ -45,5 +56,9 @@ class PropsAnimatedNode final : public AnimatedNode {
   bool layoutStyleUpdated_{false};
 
   Tag connectedViewTag_{animated::undefinedAnimatedNodeIdentifier};
+  ShadowNodeFamily::Weak shadowNodeFamily_;
+
+  // Needed for PlatformColor resolver
+  SurfaceId connectedRootTag_{animated::undefinedAnimatedNodeIdentifier};
 };
 } // namespace facebook::react

@@ -11,6 +11,7 @@
 #include "InspectorInterfaces.h"
 
 #include <jsinspector-modern/cdp/CdpJson.h>
+#include <jsinspector-modern/tracing/HostTracingProfile.h>
 #include <jsinspector-modern/tracing/Timing.h>
 #include <react/timing/primitives.h>
 
@@ -40,11 +41,6 @@ class TracingAgent {
    */
   bool handleRequest(const cdp::PreparsedRequest &req);
 
-  /**
-   * Emits the Trace Recording that was stashed externally by the HostTarget.
-   */
-  void emitExternalTraceRecording(tracing::TraceRecordingState traceRecording) const;
-
  private:
   /**
    * A channel used to send responses and events to the frontend.
@@ -54,12 +50,6 @@ class TracingAgent {
   SessionState &sessionState_;
 
   HostTargetController &hostTargetController_;
-
-  /**
-   * Emits the captured Trace Recording state in a series of
-   * Tracing.dataCollected events, followed by a Tracing.tracingComplete event.
-   */
-  void emitTraceRecording(tracing::TraceRecordingState traceRecording) const;
 };
 
 } // namespace facebook::react::jsinspector_modern

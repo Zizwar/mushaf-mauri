@@ -17,6 +17,7 @@
  */
 
 require('./compiled-check.js')('./dist/chromium-edge-launcher.js');
+// @ts-ignore
 const {Launcher, launch} = require('./dist/chromium-edge-launcher');
 
 const args = process.argv.slice(2);

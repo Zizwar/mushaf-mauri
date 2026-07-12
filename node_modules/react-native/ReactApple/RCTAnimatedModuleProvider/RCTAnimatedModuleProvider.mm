@@ -14,6 +14,8 @@
 #else
 #import <QuartzCore/CADisplayLink.h>
 #endif
+
+#import <react/featureflags/ReactNativeFeatureFlags.h>
 #import <react/renderer/animated/AnimatedModule.h>
 #import <react/renderer/animated/NativeAnimatedNodesManagerProvider.h>
 
@@ -24,11 +26,43 @@
   CADisplayLink *_displayLink;
 #endif
   std::function<void()> _onRender;
+
+  std::weak_ptr<facebook::react::NativeAnimatedNodesManagerProvider> _nativeAnimatedNodesManagerProvider;
+}
+
+- (void)dealloc
+{
+  [self invalidate];
+}
+
+- (void)invalidate
+{
+  if (_displayLink != nil) {
+#if TARGET_OS_OSX
+    RCTPlatformDisplayLink *displayLink = _displayLink;
+#else
+    CADisplayLink *displayLink = _displayLink;
+#endif
+    _displayLink = nil;
+    if ([NSThread isMainThread]) {
+      [displayLink invalidate];
+    } else {
+      dispatch_sync(dispatch_get_main_queue(), ^{
+        [displayLink invalidate];
+      });
+    }
+    _onRender = nullptr;
+  }
 }
 
 - (void)_onDisplayLinkTick
 {
-  if (_displayLink != nullptr && _onRender != nullptr) {
+  // Hold a strong reference to the provider during callback execution to prevent
+  // use-after-free during hot reload. The provider must remain alive for the
+  // entire duration of _onRender() since it holds references to the animation
+  // nodes manager and related data structures.
+  auto strongProvider = _nativeAnimatedNodesManagerProvider.lock();
+  if (strongProvider != nullptr && _displayLink != nullptr && _onRender != nullptr) {
     _onRender();
   }
 }
@@ -69,11 +103,16 @@
             const auto stop_render = [weakSelf]() {
               RCTAnimatedModuleProvider *strongSelf = weakSelf;
               if (strongSelf) {
-                if (strongSelf->_displayLink != nil) {
-                  [strongSelf->_displayLink invalidate];
-                  strongSelf->_displayLink = nil;
-                  strongSelf->_onRender = nullptr;
+#if TARGET_OS_OSX
+                RCTPlatformDisplayLink *displayLink = strongSelf->_displayLink;
+#else
+                CADisplayLink *displayLink = strongSelf->_displayLink;
+#endif
+                strongSelf->_displayLink = nil;
+                if (displayLink != nil) {
+                  [displayLink invalidate];
                 }
+                strongSelf->_onRender = nullptr;
               }
             };
 
@@ -85,6 +124,7 @@
               stop_render();
             }
           });
+      _nativeAnimatedNodesManagerProvider = provider;
       return std::make_shared<facebook::react::AnimatedModule>(std::move(jsInvoker), std::move(provider));
     }
   }

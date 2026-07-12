@@ -9,7 +9,10 @@ package com.facebook.react.uimanager
 
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Paint
 import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
 import android.graphics.Rect
 import android.graphics.RectF
 import android.graphics.drawable.Drawable
@@ -17,8 +20,10 @@ import android.os.Build
 import android.view.View
 import android.widget.ImageView
 import androidx.annotation.ColorInt
+import androidx.core.graphics.withClip
 import com.facebook.react.bridge.ReadableArray
 import com.facebook.react.common.annotations.UnstableReactNativeAPI
+import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
 import com.facebook.react.uimanager.PixelUtil.dpToPx
 import com.facebook.react.uimanager.PixelUtil.pxToDp
 import com.facebook.react.uimanager.common.UIManagerType
@@ -467,7 +472,7 @@ public object BackgroundStyleApplicator {
    */
   @JvmStatic
   public fun setFeedbackUnderlay(view: View, drawable: Drawable?) {
-    ensureCompositeBackgroundDrawable(view).withNewFeedbackUnderlay(drawable)
+    view.background = ensureCompositeBackgroundDrawable(view).withNewFeedbackUnderlay(drawable)
   }
 
   /**
@@ -481,12 +486,36 @@ public object BackgroundStyleApplicator {
    */
   @JvmStatic
   public fun clipToPaddingBox(view: View, canvas: Canvas) {
+    clipToPaddingBoxWithAntiAliasing(view, canvas, null)
+  }
+
+  /**
+   * Clips the canvas to the padding box of the view.
+   *
+   * The padding box is the area within the borders of the view, accounting for border radius if
+   * present.
+   *
+   * On Android 28 and below, when border radius is present, this uses an antialiased clipping
+   * approach with Porter-Duff compositing to avoid jagged edges. The drawContent lambda is invoked
+   * to draw the actual content after setting up the layer but before applying the mask.
+   *
+   * @param view The view whose padding box defines the clipping region
+   * @param canvas The canvas to clip
+   * @param drawContent Lambda that draws the content after clipping is set up
+   */
+  @JvmStatic
+  public fun clipToPaddingBoxWithAntiAliasing(
+      view: View,
+      canvas: Canvas,
+      drawContent: (() -> Unit)?,
+  ) {
     val drawingRect = Rect()
     view.getDrawingRect(drawingRect)
 
     val composite = getCompositeBackgroundDrawable(view)
     if (composite == null) {
       canvas.clipRect(drawingRect)
+      drawContent?.invoke()
       return
     }
 
@@ -508,12 +537,86 @@ public object BackgroundStyleApplicator {
               paddingBoxRect,
               computedBorderInsets,
           )
-
       paddingBoxPath.offset(drawingRect.left.toFloat(), drawingRect.top.toFloat())
-      canvas.clipPath(paddingBoxPath)
+
+      // On Android 28 and below, use antialiased clipping with Porter-Duff compositing. On newer
+      // Android versions, use the standard clipPath.
+      if (
+          ReactNativeFeatureFlags.enableAndroidAntialiasedBorderRadiusClipping() &&
+              Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+              view.width > 0 &&
+              view.height > 0 &&
+              drawContent != null
+      ) {
+        clipWithAntiAliasing(
+            view,
+            canvas,
+            paddingBoxPath,
+            drawContent,
+        )
+      } else {
+        canvas.clipPath(paddingBoxPath)
+        drawContent?.invoke()
+      }
     } else {
       paddingBoxRect.offset(drawingRect.left.toFloat(), drawingRect.top.toFloat())
       canvas.clipRect(paddingBoxRect)
+      drawContent?.invoke()
+    }
+  }
+
+  /**
+   * Applies antialiased clipping using Porter-Duff compositing for Android 28 and below. This draws
+   * content to a layer, then applies an antialiased mask to clip it.
+   */
+  private fun clipWithAntiAliasing(
+      view: View,
+      canvas: Canvas,
+      paddingBoxPath: Path,
+      drawContent: () -> Unit,
+  ) {
+    // Clip to the view's own bounds before saveLayer. On API <= 28 hardware-accelerated canvases,
+    // the window boundary is tracked by the GPU scissor but not reflected in the canvas clip stack.
+    // Without an explicit software clip, saveLayer may allocate a buffer with uninitialized pixels
+    // beyond the GPU scissor. Adding clipRect in the view's local coordinate space forces HWUI to
+    // include it in the clip stack, ensuring saveLayer properly constrains its buffer. This clip is
+    // stable across parent transform animations since it's in the view's own coordinate space.
+    canvas.withClip(0, 0, view.width, view.height) {
+      // Save the layer for Porter-Duff compositing
+      val saveCount = canvas.saveLayer(0f, 0f, view.width.toFloat(), view.height.toFloat(), null)
+
+      // Draw the content first
+      drawContent()
+
+      val maskPaint = Paint(Paint.ANTI_ALIAS_FLAG)
+      maskPaint.style = Paint.Style.FILL
+
+      // Transparent pixels with INVERSE_WINDING only works on API 28
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+        maskPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        maskPaint.color = Color.TRANSPARENT
+        paddingBoxPath.setFillType(Path.FillType.INVERSE_WINDING)
+        canvas.drawPath(paddingBoxPath, maskPaint)
+      } else {
+        // API < 28: Use a nested saveLayer with DST_IN compositing to mask content to the
+        // padding box path. EVEN_ODD fill + DST_OUT has rendering bugs on API 24's hardware
+        // renderer, so we avoid that technique. Instead, draw the mask shape into a separate
+        // layer; when restored with DST_IN, content is preserved only where the mask is opaque.
+        val dstInPaint = Paint()
+        dstInPaint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_IN)
+        val maskSave =
+            canvas.saveLayer(0f, 0f, view.width.toFloat(), view.height.toFloat(), dstInPaint)
+        // Clear the layer to ensure it starts fully transparent. On API 24, saveLayer may not
+        // initialize the buffer to transparent, causing DST_IN to see non-zero alpha everywhere.
+        canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR)
+        maskPaint.xfermode = null
+        maskPaint.color = Color.BLACK
+        canvas.drawPath(paddingBoxPath, maskPaint)
+        canvas.restoreToCount(maskSave)
+      }
+
+      // Restore the layer
+      canvas.restoreToCount(saveCount)
     }
   }
 
