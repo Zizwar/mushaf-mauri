@@ -52,6 +52,8 @@ import com.facebook.react.devsupport.DevServerHelper.PackagerCommandListener
 import com.facebook.react.devsupport.InspectorFlags.getFuseboxEnabled
 import com.facebook.react.devsupport.StackTraceHelper.convertJavaStackTrace
 import com.facebook.react.devsupport.StackTraceHelper.convertJsStackTrace
+import com.facebook.react.devsupport.inspector.TracingState
+import com.facebook.react.devsupport.inspector.TracingStateProvider
 import com.facebook.react.devsupport.interfaces.BundleLoadCallback
 import com.facebook.react.devsupport.interfaces.DebuggerFrontendPanelName
 import com.facebook.react.devsupport.interfaces.DevBundleDownloadListener
@@ -66,8 +68,6 @@ import com.facebook.react.devsupport.interfaces.PackagerStatusCallback
 import com.facebook.react.devsupport.interfaces.PausedInDebuggerOverlayManager
 import com.facebook.react.devsupport.interfaces.RedBoxHandler
 import com.facebook.react.devsupport.interfaces.StackFrame
-import com.facebook.react.devsupport.interfaces.TracingState
-import com.facebook.react.devsupport.interfaces.TracingStateProvider
 import com.facebook.react.devsupport.perfmonitor.PerfMonitorDevHelper
 import com.facebook.react.devsupport.perfmonitor.PerfMonitorOverlayManager
 import com.facebook.react.internal.featureflags.ReactNativeFeatureFlags
@@ -396,21 +396,21 @@ public abstract class DevSupportManagerBase(
 
       val analyzePerformanceItemString =
           when (tracingState) {
-            TracingState.ENABLEDINBACKGROUNDMODE ->
+            TracingState.ENABLED_IN_BACKGROUND_MODE ->
                 applicationContext.getString(R.string.catalyst_performance_background)
-            TracingState.ENABLEDINCDPMODE ->
+            TracingState.ENABLED_IN_CDP_MODE ->
                 applicationContext.getString(R.string.catalyst_performance_cdp)
             TracingState.DISABLED ->
                 applicationContext.getString(R.string.catalyst_performance_disabled)
           }
 
-      if (!isConnected || tracingState == TracingState.ENABLEDINCDPMODE) {
+      if (!isConnected || tracingState == TracingState.ENABLED_IN_CDP_MODE) {
         disabledItemKeys.add(analyzePerformanceItemString)
       }
 
       options[analyzePerformanceItemString] =
           when (tracingState) {
-            TracingState.ENABLEDINBACKGROUNDMODE ->
+            TracingState.ENABLED_IN_BACKGROUND_MODE ->
                 DevOptionHandler {
                   UiThreadUtil.runOnUiThread {
                     if (reactInstanceDevHelper is PerfMonitorDevHelper) {
@@ -427,7 +427,7 @@ public abstract class DevSupportManagerBase(
                   if (reactInstanceDevHelper is PerfMonitorDevHelper)
                       reactInstanceDevHelper.inspectorTarget?.resumeBackgroundTrace()
                 }
-            TracingState.ENABLEDINCDPMODE -> DevOptionHandler {}
+            TracingState.ENABLED_IN_CDP_MODE -> DevOptionHandler {}
           }
     }
 
@@ -789,8 +789,8 @@ public abstract class DevSupportManagerBase(
               callback.onSuccess(bundleLoader)
             }
 
-            override fun onProgress(status: String?, done: Int?, total: Int?) {
-              devLoadingViewManager?.updateProgress(status, done, total)
+            override fun onProgress(status: String?, done: Int?, total: Int?, percent: Int?) {
+              devLoadingViewManager?.updateProgress(status, done, total, percent)
             }
 
             override fun onFailure(cause: Exception) {
@@ -856,9 +856,9 @@ public abstract class DevSupportManagerBase(
             callback.onSuccess()
           }
 
-          override fun onProgress(status: String?, done: Int?, total: Int?) {
-            devLoadingViewManager?.updateProgress(status, done, total)
-            devBundleDownloadListener?.onProgress(status, done, total)
+          override fun onProgress(status: String?, done: Int?, total: Int?, percent: Int?) {
+            devLoadingViewManager?.updateProgress(status, done, total, percent)
+            devBundleDownloadListener?.onProgress(status, done, total, percent)
           }
 
           override fun onFailure(cause: Exception) {

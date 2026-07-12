@@ -14,6 +14,7 @@ import { usePrevious } from './helpers/usePrevious';
 import { SHEET_DIMMED_ALWAYS, resolveSheetAllowedDetents, resolveSheetInitialDetentIndex, resolveSheetLargestUndimmedDetent } from './helpers/sheet';
 import { parseBooleanToOptionalBooleanNativeProp } from '../utils';
 import featureFlags from '../flags';
+import warnOnce from 'warn-once';
 const AnimatedNativeScreen = Animated.createAnimatedComponent(ScreenNativeComponent);
 const AnimatedNativeModalScreen = Animated.createAnimatedComponent(ModalScreenNativeComponent);
 
@@ -92,6 +93,7 @@ export const InnerScreen = /*#__PURE__*/React.forwardRef(function InnerScreen(pr
       console.warn('It appears that you are using old version of react-navigation library. Please update @react-navigation/bottom-tabs, @react-navigation/stack and @react-navigation/drawer to version 5.10.0 or above to take full advantage of new functionality added to react-native-screens');
       activityState = active !== 0 ? 2 : 0; // in the new version, we need one of the screens to have value of 2 after the transition
     }
+    warnOnce(Platform.OS === 'ios' && featureFlags.experiment.ios26AllowInteractionsDuringTransition && !featureFlags.experiment.iosPreventReattachmentOfDismissedScreens, '[RNScreens] Using featureFlags `ios26AllowInteractionsDuringTransition` with `iosPreventReattachmentOfDismissedScreens` disabled is discouraged and will result in visual bugs on screen transitions. See flags description for details.');
     if (isNativeStack && prevActivityState !== undefined && activityState !== undefined) {
       if (prevActivityState > activityState) {
         throw new Error('[RNScreens] activityState cannot be decreased in NativeStack');
@@ -179,7 +181,8 @@ export const InnerScreen = /*#__PURE__*/React.forwardRef(function InnerScreen(pr
       rightScrollEdgeEffect: scrollEdgeEffects?.right,
       topScrollEdgeEffect: scrollEdgeEffects?.top,
       synchronousShadowStateUpdatesEnabled: featureFlags.experiment.synchronousScreenUpdatesEnabled,
-      androidResetScreenShadowStateOnOrientationChangeEnabled: featureFlags.experiment.androidResetScreenShadowStateOnOrientationChangeEnabled
+      androidResetScreenShadowStateOnOrientationChangeEnabled: featureFlags.experiment.androidResetScreenShadowStateOnOrientationChangeEnabled,
+      ios26AllowInteractionsDuringTransition: featureFlags.experiment.ios26AllowInteractionsDuringTransition
     }), !isNativeStack ?
     // see comment of this prop in types.tsx for information why it is needed
     children : /*#__PURE__*/React.createElement(TransitionProgressContext.Provider, {

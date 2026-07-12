@@ -17,10 +17,10 @@
 #include <react/debug/flags.h>
 #include <react/renderer/animated/EventEmitterListener.h>
 #include <react/renderer/animated/event_drivers/EventAnimationDriver.h>
-#ifdef RN_USE_ANIMATION_BACKEND
+#include <react/renderer/animationbackend/AnimatedPropsBuilder.h>
 #include <react/renderer/animationbackend/AnimationBackend.h>
-#endif
 #include <react/renderer/core/ReactPrimitives.h>
+#include <react/renderer/core/ShadowNode.h>
 #include <react/renderer/uimanager/UIManagerAnimationBackend.h>
 #include <chrono>
 #include <memory>
@@ -58,10 +58,12 @@ class NativeAnimatedNodesManager {
   using StartOnRenderCallback = std::function<void(std::function<void()> &&, bool isAsync)>;
   using StopOnRenderCallback = std::function<void(bool isAsync)>;
   using FrameRateListenerCallback = std::function<void(bool /* shouldEnableListener */)>;
+  using ResolvePlatformColor = std::function<void(SurfaceId surfaceId, const RawValue &value, SharedColor &result)>;
 
   explicit NativeAnimatedNodesManager(
       DirectManipulationCallback &&directManipulationCallback,
       FabricCommitCallback &&fabricCommitCallback,
+      ResolvePlatformColor &&resolvePlatformColor,
       StartOnRenderCallback &&startOnRenderCallback = nullptr,
       StopOnRenderCallback &&stopOnRenderCallback = nullptr,
       FrameRateListenerCallback &&frameRateListenerCallback = nullptr) noexcept;
@@ -69,6 +71,12 @@ class NativeAnimatedNodesManager {
   explicit NativeAnimatedNodesManager(std::shared_ptr<UIManagerAnimationBackend> animationBackend) noexcept;
 
   ~NativeAnimatedNodesManager() noexcept;
+
+  // Non-copyable and non-movable to prevent accidental copies or moves of this resource-heavy manager
+  NativeAnimatedNodesManager(const NativeAnimatedNodesManager &) = delete;
+  NativeAnimatedNodesManager &operator=(const NativeAnimatedNodesManager &) = delete;
+  NativeAnimatedNodesManager(NativeAnimatedNodesManager &&) = delete;
+  NativeAnimatedNodesManager &operator=(NativeAnimatedNodesManager &&) = delete;
 
   template <typename T, typename = std::enable_if_t<std::is_base_of_v<AnimatedNode, T>>>
   T *getAnimatedNode(Tag tag) const
@@ -93,6 +101,8 @@ class NativeAnimatedNodesManager {
 
   void connectAnimatedNodeToView(Tag propsNodeTag, Tag viewTag) noexcept;
 
+  void connectAnimatedNodeToShadowNodeFamily(Tag propsNodeTag, std::shared_ptr<ShadowNodeFamily> family) noexcept;
+
   void disconnectAnimatedNodes(Tag parentTag, Tag childTag) noexcept;
 
   void disconnectAnimatedNodeFromView(Tag propsNodeTag, Tag viewTag) noexcept;
@@ -109,9 +119,13 @@ class NativeAnimatedNodesManager {
 
   void setAnimatedNodeOffset(Tag tag, double offset);
 
-#ifdef RN_USE_ANIMATION_BACKEND
-  AnimationMutations pullAnimationMutations();
-#endif
+  void insertMutations(
+      std::unordered_map<Tag, std::pair<ShadowNodeFamily::Weak, folly::dynamic>> &updates,
+      AnimationMutations &mutations,
+      AnimatedPropsBuilder &propsBuilder,
+      bool hasLayoutUpdates = false);
+  AnimationMutations onAnimationFrameForBackend(AnimatedPropsBuilder &propsBuilder, AnimationTimestamp timestamp);
+  AnimationMutations pullAnimationMutations(AnimationTimestamp timestamp);
 
 #pragma mark - Drivers
 
@@ -142,7 +156,8 @@ class NativeAnimatedNodesManager {
       Tag viewTag,
       const folly::dynamic &props,
       bool layoutStyleUpdated,
-      bool forceFabricCommit) noexcept;
+      bool forceFabricCommit,
+      ShadowNodeFamily::Weak shadowNodeFamily = {}) noexcept;
 
   /**
    * Commits all pending animated property updates to their respective views.
@@ -177,13 +192,15 @@ class NativeAnimatedNodesManager {
 
   void updateNodes(const std::set<int> &finishedAnimationValueNodes = {}) noexcept;
 
-  folly::dynamic managedProps(Tag tag) const noexcept;
+  folly::dynamic getManagedProps(Tag tag) const noexcept;
 
   bool hasManagedProps() const noexcept;
 
   void onManagedPropsRemoved(Tag tag) noexcept;
 
   bool isOnRenderThread() const noexcept;
+
+  void resolvePlatformColor(SurfaceId surfaceId, const RawValue &value, SharedColor &result) const;
 
  private:
   void stopRenderCallbackIfNeeded(bool isAsync) noexcept;
@@ -233,6 +250,8 @@ class NativeAnimatedNodesManager {
   const DirectManipulationCallback directManipulationCallback_;
   const FabricCommitCallback fabricCommitCallback_;
 
+  const ResolvePlatformColor resolvePlatformColor_;
+
   /*
    * Tracks whether the render callback loop for animations is currently active.
    */
@@ -245,7 +264,9 @@ class NativeAnimatedNodesManager {
 
   std::unordered_map<Tag, folly::dynamic> updateViewProps_{};
   std::unordered_map<Tag, folly::dynamic> updateViewPropsDirect_{};
-
+  std::unordered_map<Tag, std::pair<ShadowNodeFamily::Weak, folly::dynamic>> updateViewPropsForBackend_{};
+  std::unordered_map<Tag, std::pair<ShadowNodeFamily::Weak, folly::dynamic>> updateViewPropsDirectForBackend_{};
+  std::unordered_set<Tag> shouldRequestAsyncFlush_{};
   /*
    * Sometimes a view is not longer connected to a PropsAnimatedNode, but
    * NativeAnimated has previously changed the view's props via direct
@@ -260,6 +281,8 @@ class NativeAnimatedNodesManager {
 #ifdef REACT_NATIVE_DEBUG
   bool warnedAboutGraphTraversal_ = false;
 #endif
+
+  CallbackId animationBackendCallbackId_{0};
 
   friend class ColorAnimatedNode;
   friend class AnimationDriver;

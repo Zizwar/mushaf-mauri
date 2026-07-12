@@ -39,7 +39,7 @@ static std::string GetMutationInstructionString(
       ? mutation.newChildShadowView.tag
       : mutation.oldChildShadowView.tag;
   return getDebugName(mutation) + " [" + std::to_string(tag) + "]->[" +
-      std::to_string(mutation.parentShadowView.tag) + "] @" +
+      std::to_string(mutation.parentTag) + "] @" +
       std::to_string(mutation.index);
 }
 
@@ -256,8 +256,7 @@ LayoutAnimationKeyFrameManager::pullTransaction(
       //   Catch delete+create (reparenting) (this should be optimized away at
       //   the diffing level eventually?)
       // TODO: to prevent this step we could tag Remove/Insert mutations as
-      // being moves on the Differ level, since we know that there? We could use
-      // TinyMap here, but it's not exposed by Differentiator (yet).
+      // being moves on the Differ level, since we know that there?
       std::unordered_set<Tag> insertedTags;
       std::unordered_set<Tag> deletedTags;
       std::unordered_set<Tag>
@@ -1162,7 +1161,7 @@ void LayoutAnimationKeyFrameManager::queueFinalMutationsForCompletedKeyFrame(
     const AnimationKeyFrame& keyframe,
     ShadowViewMutation::List& mutationsList,
     bool interrupted,
-    const std::string& /*logPrefix*/) const {
+    [[maybe_unused]] const std::string& logPrefix) const {
   if (!keyframe.finalMutationsForKeyFrame.empty()) {
     // TODO: modularize this segment, it is repeated 2x in KeyFrameManager
     // as well.

@@ -16,6 +16,7 @@ var _usePrevious = require("./helpers/usePrevious");
 var _sheet = require("./helpers/sheet");
 var _utils = require("../utils");
 var _flags = _interopRequireDefault(require("../flags"));
+var _warnOnce = _interopRequireDefault(require("warn-once"));
 function _interopRequireDefault(e) { return e && e.__esModule ? e : { default: e }; }
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); } // Native components
 const AnimatedNativeScreen = _reactNative.Animated.createAnimatedComponent(_ScreenNativeComponent.default);
@@ -96,6 +97,7 @@ const InnerScreen = exports.InnerScreen = /*#__PURE__*/_react.default.forwardRef
       console.warn('It appears that you are using old version of react-navigation library. Please update @react-navigation/bottom-tabs, @react-navigation/stack and @react-navigation/drawer to version 5.10.0 or above to take full advantage of new functionality added to react-native-screens');
       activityState = active !== 0 ? 2 : 0; // in the new version, we need one of the screens to have value of 2 after the transition
     }
+    (0, _warnOnce.default)(_reactNative.Platform.OS === 'ios' && _flags.default.experiment.ios26AllowInteractionsDuringTransition && !_flags.default.experiment.iosPreventReattachmentOfDismissedScreens, '[RNScreens] Using featureFlags `ios26AllowInteractionsDuringTransition` with `iosPreventReattachmentOfDismissedScreens` disabled is discouraged and will result in visual bugs on screen transitions. See flags description for details.');
     if (isNativeStack && prevActivityState !== undefined && activityState !== undefined) {
       if (prevActivityState > activityState) {
         throw new Error('[RNScreens] activityState cannot be decreased in NativeStack');
@@ -183,7 +185,8 @@ const InnerScreen = exports.InnerScreen = /*#__PURE__*/_react.default.forwardRef
       rightScrollEdgeEffect: scrollEdgeEffects?.right,
       topScrollEdgeEffect: scrollEdgeEffects?.top,
       synchronousShadowStateUpdatesEnabled: _flags.default.experiment.synchronousScreenUpdatesEnabled,
-      androidResetScreenShadowStateOnOrientationChangeEnabled: _flags.default.experiment.androidResetScreenShadowStateOnOrientationChangeEnabled
+      androidResetScreenShadowStateOnOrientationChangeEnabled: _flags.default.experiment.androidResetScreenShadowStateOnOrientationChangeEnabled,
+      ios26AllowInteractionsDuringTransition: _flags.default.experiment.ios26AllowInteractionsDuringTransition
     }), !isNativeStack ?
     // see comment of this prop in types.tsx for information why it is needed
     children : /*#__PURE__*/_react.default.createElement(_TransitionProgressContext.default.Provider, {

@@ -100,10 +100,14 @@ val preparePrefab by
                       Pair("../ReactCommon/hermes/inspector-modern/", "hermes/inspector-modern/"),
                       // fabricjni
                       Pair("src/main/jni/react/fabric", "react/fabric/"),
+                      // uimanagerjni
+                      Pair("src/main/jni/react/uimanager", "react/uimanager/"),
                       // glog
                       Pair(File(buildDir, "third-party-ndk/glog/exported/").absolutePath, ""),
                       // jsiinpsector
                       Pair("../ReactCommon/jsinspector-modern/", "jsinspector-modern/"),
+                      // jsitooling
+                      Pair("../ReactCommon/jsitooling/", ""),
                       // mapbufferjni
                       Pair("src/main/jni/react/mapbuffer", ""),
                       // turbomodulejsijni
@@ -266,6 +270,13 @@ val preparePrefab by
                       // yoga
                       Pair("../ReactCommon/yoga/", ""),
                       Pair("src/main/jni/first-party/yogajni/jni", ""),
+                      // oscompat
+                      Pair("../ReactCommon/oscompat/", "oscompat/"),
+                      // react_renderer_animationbackend
+                      Pair(
+                          "../ReactCommon/react/renderer/animationbackend/",
+                          "react/renderer/animationbackend/",
+                      ),
                   ),
               ),
               PrefabPreprocessingEntry(

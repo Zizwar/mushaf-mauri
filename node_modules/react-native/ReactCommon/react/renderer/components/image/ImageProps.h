@@ -33,11 +33,11 @@ class ImageProps final : public ViewProps {
   EdgeInsets capInsets{};
   SharedColor tintColor{};
   std::string internal_analyticTag{};
-  std::string resizeMethod{};
-  Float resizeMultiplier{};
+  std::string resizeMethod{"auto"};
+  Float resizeMultiplier{1.f};
   bool shouldNotifyLoadEvents{};
   SharedColor overlayColor{};
-  Float fadeDuration{};
+  Float fadeDuration{300.f};
   bool progressiveRenderingEnabled{};
 
 #ifdef RN_SERIALIZABLE_STATE

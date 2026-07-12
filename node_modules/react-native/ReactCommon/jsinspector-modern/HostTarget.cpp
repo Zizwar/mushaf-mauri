@@ -8,6 +8,7 @@
 #include "HostTarget.h"
 #include "HostAgent.h"
 #include "HostTargetTraceRecording.h"
+#include "HostTargetTracing.h"
 #include "InspectorInterfaces.h"
 #include "InspectorUtilities.h"
 #include "InstanceTarget.h"
@@ -102,17 +103,12 @@ class HostTargetSession {
     }
   }
 
-  /**
-   * Returns whether the ReactNativeApplication CDP domain is enabled.
-   *
-   * Chrome DevTools Frontend enables this domain as a client.
-   */
-  bool hasFuseboxClient() const {
-    return hostAgent_.hasFuseboxClientConnected();
+  HostAgent& agent() {
+    return hostAgent_;
   }
 
-  void emitTraceRecording(tracing::TraceRecordingState traceRecording) const {
-    hostAgent_.emitExternalTraceRecording(std::move(traceRecording));
+  FrontendChannel dangerouslyGetFrontendChannel() {
+    return frontendChannel_;
   }
 
  private:
@@ -323,11 +319,16 @@ bool HostTargetController::decrementPauseOverlayCounter() {
   return --pauseOverlayCounter_ != 0;
 }
 
+bool HostTargetController::maybeEmitStashedBackgroundTrace() {
+  return target_.maybeEmitStashedBackgroundTrace();
+}
+
 namespace {
 
 struct StaticHostTargetMetadata {
   std::optional<bool> isProfilingBuild;
   std::optional<bool> networkInspectionEnabled;
+  std::optional<bool> frameRecordingEnabled;
 };
 
 StaticHostTargetMetadata getStaticHostMetadata() {
@@ -335,7 +336,8 @@ StaticHostTargetMetadata getStaticHostMetadata() {
 
   return {
       .isProfilingBuild = inspectorFlags.getIsProfilingBuild(),
-      .networkInspectionEnabled = inspectorFlags.getNetworkInspectionEnabled()};
+      .networkInspectionEnabled = inspectorFlags.getNetworkInspectionEnabled(),
+      .frameRecordingEnabled = inspectorFlags.getFrameRecordingEnabled()};
 }
 
 } // namespace
@@ -370,36 +372,41 @@ folly::dynamic createHostMetadataPayload(const HostTargetMetadata& metadata) {
     result["unstable_networkInspectionEnabled"] =
         staticMetadata.networkInspectionEnabled.value();
   }
+  if (staticMetadata.frameRecordingEnabled) {
+    result["unstable_frameRecordingEnabled"] =
+        staticMetadata.frameRecordingEnabled.value();
+  }
 
   return result;
 }
 
-bool HostTarget::hasActiveSessionWithFuseboxClient() const {
-  bool hasActiveFuseboxSession = false;
-  sessions_.forEach([&](HostTargetSession& session) {
-    hasActiveFuseboxSession |= session.hasFuseboxClient();
+bool HostTarget::maybeEmitStashedBackgroundTrace() {
+  std::vector<FrontendChannel> eligibleFrontendChannels;
+  eligibleFrontendChannels.reserve(sessions_.size());
+  sessions_.forEach([&eligibleFrontendChannels](auto& session) {
+    if (session.agent().isEligibleForBackgroundTrace()) {
+      eligibleFrontendChannels.push_back(
+          session.dangerouslyGetFrontendChannel());
+    }
   });
-  return hasActiveFuseboxSession;
+
+  if (eligibleFrontendChannels.empty()) {
+    return false;
+  }
+
+  auto stashedTrace = std::exchange(stashedTracingProfile_, std::nullopt);
+  if (stashedTrace) {
+    emitNotificationsForTracingProfile(
+        std::move(*stashedTrace),
+        eligibleFrontendChannels,
+        /* isBackgroundTrace */ true);
+  }
+  return true;
 }
 
-void HostTarget::emitTraceRecordingForFirstFuseboxClient(
-    tracing::TraceRecordingState traceRecording) const {
-  bool emitted = false;
-  sessions_.forEach([&](HostTargetSession& session) {
-    if (emitted) {
-      /**
-       * TraceRecordingState object is not copiable for performance reasons,
-       * because it could contain large Runtime sampling profile object.
-       *
-       * This approach would not work with multi-client debugger setup.
-       */
-      return;
-    }
-    if (session.hasFuseboxClient()) {
-      session.emitTraceRecording(std::move(traceRecording));
-      emitted = true;
-    }
-  });
+bool HostTarget::stopAndMaybeEmitBackgroundTrace() {
+  stashedTracingProfile_ = stopTracing();
+  return maybeEmitStashedBackgroundTrace();
 }
 
 } // namespace facebook::react::jsinspector_modern
